@@ -1,0 +1,26 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pre-commit = "*"
+recommonmark = "==0.6.0"
+sphinx = "==3.1.1"
+sphinx-rtd-theme = "==0.4.3"
+
+[packages]
+surrortg = {editable = true, path = "."}
+
+[scripts]
+tests = "python -m unittest discover tests"
+black = "black --check --diff --config=pyproject.toml ."
+flake8 = "flake8 --config=.flake8"
+pipeline = """bash -c '\
+           echo tests: && pipenv run tests && \
+           echo black: && pipenv run black && \
+           echo flake8: && pipenv run flake8 \
+           '"""
+docs = "docs/rebuild.sh"
+pdf-docs = "docs/rebuild_pdf.sh"
+dummy = "python -m games.dummy_game.game"

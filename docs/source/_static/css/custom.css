@@ -1,0 +1,121 @@
+.wy-side-nav-search, .wy-nav-top {
+    background:rgb(34, 14, 67); /*top left*/
+}
+
+.wy-side-nav-search input[type="text"] {
+    border: 2px solid #ccc; /*widen border a bit*/
+    border-color:rgb(236, 0, 140); /*search box border*/
+}
+
+.wy-nav-side {
+    background:rgb(28, 9, 52); /*side bar*/
+}
+
+.wy-menu-vertical p.caption {
+    color:#ffffff; /*left menu text*/
+}
+
+.rst-content dl:not(.docutils) dt {
+    background:#f0f0f0; /*class box background*/
+    color:rgb(236, 0, 140); /*box text*/
+    border-top:solid 3px rgb(69, 196, 222); /*top border*/
+}
+
+/*function box*/
+.rst-content dl:not(.docutils) dl dt {
+    border-left: solid 3px rgb(69, 196, 222);
+    background: #f0f0f0;
+    color: #555;
+}
+
+/* unvisited link */
+a:link {
+    color: rgb(69, 196, 222);
+}
+
+/* visited link */
+a:visited {
+    color: rgb(101, 45, 145);
+}
+
+/* mouse over link */
+a:hover {
+    color: #EC008C;
+}
+
+/* selected link */
+a:active {
+    color:#EC008C;
+}
+
+/*left menu hover*/
+.wy-menu-vertical a:hover {
+    background-color:rgb(34, 14, 67);
+}
+
+/* left currently selected */
+.wy-menu-vertical li.toctree-l2.current > a {
+    background: #f0f0f0;
+    border-left: solid 3px rgb(69, 196, 222);
+    border-right: solid 1px #c9c9c9;
+}
+
+/*non hover left not selected*/
+.wy-menu-vertical li.current {
+    background: #ffffff;
+}
+
+/*parenthesis*/
+.sig-paren {
+    color: rgb(236, 0, 140);
+}
+
+/*parameters*/
+.sig-param {
+    /*color: #555*/
+    color: rgb(69, 196, 222);
+}
+
+/*class*/
+.property {
+    color: rgb(236, 0, 140);
+}
+
+/*parameter types*/
+em {
+    color: rgb(69, 196, 222);
+}
+
+/*left current opened directory*/
+.wy-menu-vertical li.toctree-l1.current > a {
+    border-right: solid 1px #c9c9c9;
+}
+
+/*mobile top bar*/
+.wy-nav-top {
+    background-image: url(logo.png);
+    background-repeat: no-repeat;
+    background-position: 50% 8px;
+    background-size: 214px 50px;
+}
+
+/*mobile top bar text*/
+.wy-nav-top > a{
+    /* Hide the text. */
+    color: transparent;
+}
+
+/*source code link*/
+.rst-content .viewcode-link{
+    color: #555;
+}
+
+/*text*/
+.rst-content {
+    color: #424242; 
+}
+
+/*markdown between ``*/
+.rst-content code.literal {
+    color: rgb(236, 0, 140);
+}

@@ -1,0 +1,5 @@
+aiohttp
+python-socketio
+python-engineio==3.13.1
+toml
+pigpio

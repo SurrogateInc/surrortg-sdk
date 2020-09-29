@@ -1,0 +1,8 @@
+__pycache__
+*.pio
+*wifi_secrets.h
+docs/build/
+docs/source/modules/
+surrortg.egg-info/
+.python-version
+*config_local.py

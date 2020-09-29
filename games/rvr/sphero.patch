@@ -1,0 +1,13 @@
+diff --git a/sphero_sdk/asyncio/client/toys/sphero_rvr_async.py b/sphero_sdk/asyncio/clie$
+index 8cff919..e010b81 100644
+--- a/sphero_sdk/asyncio/client/toys/sphero_rvr_async.py
++++ b/sphero_sdk/asyncio/client/toys/sphero_rvr_async.py
+@@ -32,7 +32,7 @@ class SpheroRvrAsync(RvrFwCheckAsync):
+         self._drive_control = DriveControlAsync(self)
+         self._infrared_control = InfraredControlAsync(self)
+         self._sensor_control = SensorControlAsync(self)
+-        asyncio.get_event_loop().run_until_complete(
++        asyncio.get_event_loop().create_task(
+             self._check_rvr_fw()
+         )
+ 

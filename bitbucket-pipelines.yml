@@ -1,0 +1,35 @@
+image: python:3.7.3
+
+pipelines:
+  default:
+    - parallel:
+      - step:
+          name: unittests
+          script:
+            - pip install pipenv
+            - pipenv sync
+            - pipenv run tests
+      - step:
+          name: black
+          script:
+            - pip install black==19.10b0 # if version changed, change also on .pre-commit-config.yaml!
+            - black --check --diff --config=pyproject.toml .
+      - step:
+          name: flake8
+          script:
+            - pip install flake8==3.7.9 # if version changed, change also on .pre-commit-config.yaml!
+            - flake8 --config=.flake8
+  branches:
+    master:
+      - step:
+          name: docs
+          script:
+            - pip install pipenv
+            - pipenv sync --dev
+            - pipenv run docs
+            - pipe: atlassian/aws-s3-deploy:0.4.4
+              variables:
+                AWS_DEFAULT_REGION: 'us-east-1'
+                S3_BUCKET: 'surrortg-sdk-docs'
+                LOCAL_PATH: 'docs/build/html'
+                DELETE_FLAG: 'true'

@@ -1,0 +1,15 @@
+from surrortg import Game
+from games.rvr.rvr import RVR
+
+
+class RVRGame(Game):
+    async def on_init(self):
+        self.rvr = RVR()
+        await self.rvr.init_sphero()
+        self.io.register_inputs({"joystick_main": self.rvr})
+
+    async def on_exit(self, reason, exception):
+        await self.rvr.shutdown()
+
+
+RVRGame().run()

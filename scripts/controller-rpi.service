@@ -1,0 +1,13 @@
+[Unit]
+Description=Surrogate robot control software
+After=network.target pigpiod.service
+Wants=pigpiod.service
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=10
+WorkingDirectory=/home/pi/surrortg-public-sdk
+ExecStart=/usr/bin/python3 -m game_templates.simple_game
+[Install]
+WantedBy=multi-user.target

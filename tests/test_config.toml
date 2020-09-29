@@ -1,0 +1,6 @@
+device_id = "testrobot"
+
+[game_engine]
+url = "http://localhost:9123"
+token = "abcd"
+id = "efgh"

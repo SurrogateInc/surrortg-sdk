@@ -1,0 +1,9 @@
+repos:
+  - repo: https://github.com/ambv/black
+    rev: 19.10b0 # if version changed, change also on bitbucket-pipelines.yml!
+    hooks:
+      - id: black
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.7.9 # if version changed, change also on bitbucket-pipelines.yml!
+    hooks:
+      - id: flake8
