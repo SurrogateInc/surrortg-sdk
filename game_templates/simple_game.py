@@ -22,7 +22,7 @@ class MyJoystick(Joystick):
         logging.info(f"{self.get_direction_8(x,y)}")
         # handle player input here
 
-    async def reset(self):
+    async def reset(self, seat=0):
         logging.info(f"reset")
 
 

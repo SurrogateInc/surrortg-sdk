@@ -20,7 +20,7 @@ Start your creation journey from :doc:`./getting_started`
    getting_started
    easy_games_to_hook_up
    custom_game_creation
-   systemctl and journalctl
+   systemctl_and_journalctl
    modules/surrortg
    contributing_to_the_project
 

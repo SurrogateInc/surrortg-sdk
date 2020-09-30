@@ -7,7 +7,7 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=10
-WorkingDirectory=/home/pi/surrortg-public-sdk
+WorkingDirectory=/home/pi/surrortg-sdk
 ExecStart=/usr/bin/python3 -m game_templates.simple_game
 [Install]
 WantedBy=multi-user.target
