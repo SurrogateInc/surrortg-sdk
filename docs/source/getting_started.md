@@ -68,7 +68,7 @@ sudo reboot
 Next we will install Surrogate streamer module and configuration files. The following commands add our custom repository and its key to your apt-sources and installs our srtg-streamer apt-package.
 
 ```
-sudo sh -c 'echo deb https://apt.surrogate.tv/ streamer main >> /etc/apt/sources.list'
+sudo sh -c 'echo deb https://apt.surrogate.tv/ buster main >> /etc/apt/sources.list'
 
 sudo apt-key adv --keyserver hkps://keys.openpgp.org --recv-keys 8C794AFF2B546ADC
 
@@ -91,12 +91,16 @@ sudo nano /etc/srtg/srtg.toml
 
 We will get back to the configurations and getting the streamer to work after we have installed the Surrogate Controller SDK.
 
+<strong>We recommend increasing the memory available to the GPU to make the streaming experience smoother and more robust.</strong>
+
+`sudo raspi-config` -> `advanced options` -> `memory split` -> 256 (or 512 if you Pi has 1GB or more RAM available) or by editing `/boot/config.txt` -> `gpu_mem=256`. Reboot the system after.
+
 #### Installing Surrogate Controller
 
 First we need to install git and some other depencies.
 
 ```
-sudo apt-get install python3-setuptools python3-pip pigpio python3-pigpio libatlas-base-dev git
+sudo apt-get install python3-setuptools python3-pip pigpio python3-pigpio git
 
 sudo systemctl enable pigpiod
 
@@ -105,11 +109,11 @@ sudo systemctl daemon-reload
 sudo systemctl start pigpiod
 ```
 
-After this we can clone the github repository. If you specify a folder name the folder will be used instead of the default folder name from github.
+After this we can clone the github repository.
 
 ```
 cd <folder you want to download the git folder>
-git clone GIT_URL_HERE <optional_folder_name>
+git clone https://github.com/SurrogateInc/surrortg-sdk.git
 ```
 
 Now before installing required python packages. Let's make sure we are using the correct python and pip versions.
@@ -179,7 +183,7 @@ sudo systemctl restart controller
 
 you can see how to create the systemd unit for controller [here](#Creating-systemd-unit-for-your-code)
 
-Here is how your config file should look like.
+Here is how your config file should look like. If you are using USB camera the `[sources.videoparams] -> type` should be `"v4l2"` and if you are using raspi camera it should be `"rpi_csi"`.
 
 ```toml
 device_id = "<INSERT ROBOT NAME HERE>"
@@ -188,8 +192,6 @@ device_id = "<INSERT ROBOT NAME HERE>"
 url = ""https://ge.surrogate.tv/signaling""
 
 token = "<INSERT TOKEN HERE>"
-
-
 
 [rtc_config]
 [[rtc_config.ice_servers]]
@@ -200,10 +202,10 @@ kind = "video"
 label = "main"
 
 [sources.video_params]
-#possible values v4l2, h264_passthrough, csi-rpi
+#possible values v4l2, h264_passthrough, rpi_csi
 type = "v4l2"
-width = 1920
-height = 1080
+width = 1280
+height = 720
 framerate = 30
 #v4l2_dev = "path to your video device: /dev/videoX" needed if you have multiple cameras connected
 #optional capture format: raw, mpjeg. Defaults to mpjeg or available one
@@ -216,7 +218,7 @@ framerate = 30
 
 ```
 
-If you want to know what resolutions and formats your camera supports use v4l2-utils (you need to install v4l2-utils first):
+If you want to know what resolutions and formats your `usb camera` supports use v4l2-utils (`sudo apt install v4l-utils`):
 
 ```
 v4l2-utils -d /dev/video<ID> --list-formats-ext
@@ -272,7 +274,7 @@ sudo systemctl restart controller
 otherwise, you must run
 
 ```
-./setup-systemd
+./scripts/setup-systemd.sh
 ```
 
 to start the systemd unit for the first time.
