@@ -20,7 +20,7 @@ pipelines:
             - pip install flake8==3.7.9 # if version changed, change also on .pre-commit-config.yaml!
             - flake8 --config=.flake8
   branches:
-    master:
+    main:
       - step:
           name: docs
           script:
