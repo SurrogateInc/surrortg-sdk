@@ -20,6 +20,12 @@ class InputBinding:
     admin: bool
 
 
+@dataclass
+class SeatStatus:
+    enabled: bool
+    clientType: str
+
+
 class MessageRouter:
     """Basic message router that routes a command to the correct input.
 
@@ -72,10 +78,9 @@ class MessageRouter:
             return
 
         if input_id in self.inputs:
-            if self.inputs[input_id].admin:
-                if not msg.isAdmin:
-                    logging.warning(f"Non-admin trying to use admin input")
-                    return
+            if self.inputs[input_id].admin and not msg.isAdmin:
+                logging.warning(f"Non-admin trying to use admin input")
+                return
             await self.inputs[input_id].dev._on_input(
                 msg.payload["command"], seat
             )
@@ -161,7 +166,7 @@ class MultiSeatMessageRouter:
     def __init__(self, robot_log_handler):
         self.router = MessageRouter()
         self.route_mappings = {"gameEngine": "gameEngine"}
-        self.seats_enabled = {}
+        self.seat_statuses = {}
         self.robot_log_handler = robot_log_handler
 
     async def handle_message(self, msg):
@@ -180,11 +185,12 @@ class MultiSeatMessageRouter:
             await self.handle_routing_messages(msg)
         elif msg.src in self.route_mappings:
             seat = self.route_mappings[msg.src]
-            if msg.src == SRC_GAME_ENGINE or seat in self.seats_enabled:
+            if msg.src == SRC_GAME_ENGINE or seat in self.seat_statuses:
                 if (
                     msg.src == SRC_GAME_ENGINE
                     or msg.isAdmin
-                    or self.seats_enabled[seat]
+                    or self.seat_statuses[seat].clientType == "admin"
+                    or self.seat_statuses[seat].enabled
                 ):
                     await self.router.handle_message(msg, seat)
             else:
@@ -217,17 +223,20 @@ class MultiSeatMessageRouter:
         :rtype: bool
         """
         if msg.event == EVENT_NEW_PEER and msg.payload is not None:
-            if "seat" in msg.payload:
+            if "seat" in msg.payload and "clientType" in msg.payload:
                 seat = msg.payload["seat"]
+                client_type = msg.payload["clientType"]
             else:
                 logging.warning(
-                    f"Registering new route failed, seat not found "
-                    f"for new peer on msg: {msg}"
+                    f"Registering new route failed, seat or clientType "
+                    f"not found for new peer on msg: {msg}"
                 )
                 return True
             self.route_mappings[msg.payload["id"]] = seat
-            if seat not in self.seats_enabled:
-                self.seats_enabled[seat] = False
+            if seat not in self.seat_statuses:
+                self.seat_statuses[seat] = SeatStatus(False, client_type)
+            else:
+                self.seat_statuses[seat].clientType = client_type
             logging.info(
                 f"Registered route {msg.payload['id']}->"
                 f"{msg.payload['seat']}"
@@ -265,8 +274,8 @@ class MultiSeatMessageRouter:
         :param enabled: State to set the routings to
         :type enabled: bool
         """
-        for seat in self.seats_enabled:
-            self.seats_enabled[seat] = enabled
+        for seat in self.seat_statuses:
+            self.set_enabled_seat(seat, enabled)
 
     def set_enabled_seat(self, seat, enabled):
         """Sets message routing states for the specified seat
@@ -276,7 +285,7 @@ class MultiSeatMessageRouter:
         :param enabled: State to set the routings to
         :type enabled: bool
         """
-        self.seats_enabled[seat] = enabled
+        self.seat_statuses[seat].enabled = enabled
 
     def get_all_seats(self):
         """Returns all the seats that have routings set
@@ -284,4 +293,4 @@ class MultiSeatMessageRouter:
         :return: All the seats that have routings set
         :rtype: list[int]
         """
-        return self.seats_enabled
+        return self.seat_statuses.keys()
