@@ -1,3 +1,8 @@
+"""
+DO NOT MODIFY THE VALUES FROM THIS FILE
+TO OVERRIDE THESE VALUES, USE config_local.py
+"""
+
 from enum import Enum, auto
 
 
@@ -48,3 +53,9 @@ assert (
 assert (
     MAX_BLINKING_START_WAIT_DURING_PREPARE > REQUIRED_BLINKING_TIME
 ), "might not detect blinking during prepare"
+
+# Override values in this file with those found in config_local.py
+try:
+    from games.arcade_pinball.config_local import *  # noqa
+except ModuleNotFoundError:
+    pass
