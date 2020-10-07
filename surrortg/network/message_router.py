@@ -49,7 +49,7 @@ class MessageRouter:
         self.inputs = {}
         self.reset_tasks = {}
 
-    async def handle_message(self, msg, seat):
+    async def handle_message(self, msg, seat, is_admin_msg):
         """Routes a message according to input type and id.
 
         Reads type and id from message and lookups corresponding route from
@@ -62,6 +62,8 @@ class MessageRouter:
         :type msg: dict
         :param seat: Robot seat
         :type seat: int
+        :param is_admin_msg: Defines if the message is an admin message
+        :type is_admin_msg: bool
         """
 
         # We received a message from peer. Reset watchdog
@@ -78,7 +80,7 @@ class MessageRouter:
             return
 
         if input_id in self.inputs:
-            if self.inputs[input_id].admin and not msg.isAdmin:
+            if self.inputs[input_id].admin and not is_admin_msg:
                 logging.warning(f"Non-admin trying to use admin input")
                 return
             await self.inputs[input_id].dev._on_input(
@@ -185,14 +187,14 @@ class MultiSeatMessageRouter:
             await self.handle_routing_messages(msg)
         elif msg.src in self.route_mappings:
             seat = self.route_mappings[msg.src]
+            is_admin_msg = (
+                msg.src == SRC_GAME_ENGINE
+                or self.seat_statuses[seat].clientType == "admin"
+                or msg.isAdmin
+            )
             if msg.src == SRC_GAME_ENGINE or seat in self.seat_statuses:
-                if (
-                    msg.src == SRC_GAME_ENGINE
-                    or msg.isAdmin
-                    or self.seat_statuses[seat].clientType == "admin"
-                    or self.seat_statuses[seat].enabled
-                ):
-                    await self.router.handle_message(msg, seat)
+                if is_admin_msg or self.seat_statuses[seat].enabled:
+                    await self.router.handle_message(msg, seat, is_admin_msg)
             else:
                 logging.warning(
                     f"Seat route registered but enabled status not defined. "
@@ -223,15 +225,22 @@ class MultiSeatMessageRouter:
         :rtype: bool
         """
         if msg.event == EVENT_NEW_PEER and msg.payload is not None:
-            if "seat" in msg.payload and "clientType" in msg.payload:
+            if "seat" in msg.payload:
                 seat = msg.payload["seat"]
+            else:
+                logging.warning(
+                    f"Registering new route failed, seat not found "
+                    f"for new peer on msg: {msg}"
+                )
+                return True
+            if "clientType" in msg.payload:
                 client_type = msg.payload["clientType"]
             else:
                 logging.warning(
-                    f"Registering new route failed, seat or clientType "
-                    f"not found for new peer on msg: {msg}"
+                    f"clientType not found from message payload, "
+                    f"defaulting clientType to player for seat {seat}"
                 )
-                return True
+                client_type = "player"
             self.route_mappings[msg.payload["id"]] = seat
             if seat not in self.seat_statuses:
                 self.seat_statuses[seat] = SeatStatus(False, client_type)
