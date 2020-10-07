@@ -237,8 +237,10 @@ class MultiSeatMessageRouter:
                 self.seat_statuses[seat] = SeatStatus(False, client_type)
             else:
                 self.seat_statuses[seat].clientType = client_type
+
+            admin_info = "admin " if client_type == "admin" else ""
             logging.info(
-                f"Registered route {msg.payload['id']}->"
+                f"Registered {admin_info}route {msg.payload['id']}->"
                 f"{msg.payload['seat']}"
             )
         elif msg.event == EVENT_PEER_LEFT and msg.payload is not None:
