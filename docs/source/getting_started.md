@@ -1,20 +1,18 @@
 # Getting started
 
-This document guides you how to [install the SurroRTG SDK](#sdk-installation), [configure the Admin panel](#admin-panel-configuration) and running a [simple game](simple_game).
+This document guides you how to [install the SurroRTG SDK](#sdk-installation), [creating a game instance](#create-a-game-instance) and running a [simple game](simple_game).
 
 To get everything running smoothly you should follow the order in which you do the steps
 
-1. [setup raspberry pi](#SDK-installation)
-2. [install streamer](#Installing-Surrogate-Streamer)
-3. [install controller sdk](#Installing-Surrogate-Controller)
-4. [create a game on surrogate.tv](#Admin-panel-configuration)
-5. [configure your streamer and controller](#Configuration-file)
-6. [test simple game](#Running-template-game)
-7. [create systemd unit from controller](#Creating-systemd-unit-for-your-code)
+1. [setup raspberry pi](#sdk-installation)
+2. [create a game on surrogate.tv](#create-a-game-instance)
+3. [install controller sdk](#installing-surrogate-controller)
+4. [install streamer](#installing-surrogate-streamer)
+5. [configure your streamer and controller](#configuration-file)
+6. [test simple game](#running-template-game)
+7. [create systemd unit from controller](#running-controller-automatically-on-boot)
 
-You might need to jump betweens steps 5-7 in case you missed something so remember to look around if you run in trouble. Also take a look at the [troubleshooting](troubleshooting).
-
-you should also checkout our help for using some related [linux tools](systemctl_and_journalctl)
+You might need to jump betweens steps 5-7 in case you missed something so remember to look around if you run in trouble. Also take a look at the [troubleshooting](troubleshooting). You can also find out how to read logs and restart the code modules from the [same page](troubleshooting)
 
 ## Requirements
 
@@ -63,6 +61,26 @@ sudo apt full-upgrade
 sudo reboot
 ```
 
+### Create a game instance
+
+Your own game can be controlled from the game's Admin panel.
+
+To get one, you must first create a new game. Create a new game by going to
+[surrogate.tv's Admin page](https://www.surrogate.tv/admin/)
+and click `Create a new game`. <strong>Note: you must have an account and login to create the game</strong>
+
+After that choose game name, title and short ID. Then choose the type of game.
+For now, choose a game type of `arcade`. All of these can be edited later.
+
+This will create you a new Surrogate game, with Admin panel to
+`www.surrogate.tv/admin/game/<SHORT_ID_YOU_CHOSE>`. From the Admin panel,
+you can turn the game online from the switch on the top left corner.
+Now the game should be online on `www.surrogate.tv/game/<SHORT_ID_YOU_CHOSE>`
+
+We will get back to the configurations and getting the streamer to work after we have installed the Surrogate Controller SDK.
+
+<strong>You will need to continue the tutorial to get your streamer and controller connected to the game.</strong>
+
 #### Installing Surrogate Streamer
 
 Next we will install Surrogate streamer module and configuration files. The following commands add our custom repository and its key to your apt-sources and installs our srtg-streamer apt-package.
@@ -70,7 +88,7 @@ Next we will install Surrogate streamer module and configuration files. The foll
 ```
 sudo sh -c 'echo deb https://apt.surrogate.tv/ buster main >> /etc/apt/sources.list'
 
-sudo apt-key adv --keyserver hkps://keys.openpgp.org --recv-keys 8C794AFF2B546ADC
+sudo apt-key adv --keyserver "hkps://keys.openpgp.org" --recv-keys "58278AC826D269F82F1AD74AD7337870E6E07980"
 
 sudo apt-get update
 
@@ -83,13 +101,7 @@ Now you should have our streamer installed on your raspberry pi. However it is n
 sudo systemctl status srtg
 ```
 
-The installed configuration file is located in /etc/srtg/srtg.toml, you can edit it with the following commands, or with your favorite text editor.
-
-```
-sudo nano /etc/srtg/srtg.toml
-```
-
-We will get back to the configurations and getting the streamer to work after we have installed the Surrogate Controller SDK.
+The streamer will not work yet as it hasn't been [configured](#configuration-file)
 
 <strong>We recommend increasing the memory available to the GPU to make the streaming experience smoother and more robust.</strong>
 
@@ -150,29 +162,17 @@ sudo pip3 install <package>
 
 The reason we are installing the python packages as super-user (sudo) is that your controller code will be running as systemd unit that is executed as sudo and thus needs to have the packages installed in the correct location. This will be later changed to use python virtual enviroments but at the moment this is the only approach supported out-of-the-box.
 
-## Admin panel configuration
-
-Your own game can be controlled from the game's Admin panel.
-
-To get one, you must first create a new game. Create a new game by going to
-[surrogate.tv's Admin page](https://www.surrogate.tv/admin/)
-and click `Create a new game`. <strong>Note: you must have an account and login to create the game</strong>
-
-After that choose game name, title and short ID. Then choose the type of game.
-For now, choose a game type of `arcade`. All of these can be edited later.
-
-This will create you a new Surrogate game, with Admin panel to
-`www.surrogate.tv/admin/game/<SHORT_ID_YOU_CHOSE>`. From the Admin panel,
-you can turn the game online from the switch on the top left corner.
-Now the game should be online on `www.surrogate.tv/game/<SHORT_ID_YOU_CHOSE>`
-
-Next you will need to copy your robot token from the admin panel to the [configuration file](#configuration-file).
-
-<strong>You will need to continue the tutorial to get your streamer and controller connected to the game.</strong>
-
 ## Configuration file
 
-As mentioned, the configuration file that is used both by the srtg and the controller is located at /etc/srtg/srtg.toml. You need sudo privilidges to edit the file. <strong>Note: you will need to restart the systemd units to activate the changes</strong>
+When you installed the streamer, it added a configuration file to `/etc/srtg/srtg.toml`, you can edit it with the following commands, or with your favorite text editor.
+
+```
+sudo nano /etc/srtg/srtg.toml
+```
+
+Next you will need to copy your robot `token` from `the admin panel` to the congiraution file.
+
+The configuration file is used both by the streamer and the controller. You need sudo privilidges to edit the file. <strong>Note: you will need to restart all code using these configurations to activate the changes</strong>
 
 As a reminder, you can restart the systemd modules by running:
 
@@ -181,7 +181,7 @@ sudo systemctl restart srtg
 sudo systemctl restart controller
 ```
 
-you can see how to create the systemd unit for controller [here](#Creating-systemd-unit-for-your-code)
+you can see how to start your controller code automatically on boot [here](#running-controller-automatically-on-boot)
 
 Here is how your config file should look like. If you are using USB camera the `[sources.videoparams] -> type` should be `"v4l2"` and if you are using raspi camera it should be `"rpi_csi"`.
 
@@ -239,15 +239,15 @@ sudo python3 -m game_templates.simple_game
 
 This game creates you a switch and joystick inputs that can be used to control a device. You should be able to test the inputs from the admin panel preview.
 
-<strong>Note: if you want that your code runs constantly and starts automatically after boots, you should setup a systemd unit [this way](#creating-systemd-unit-for-your-code). </strong>
+<strong>Note: if you want that your code runs constantly and starts automatically after boots, you should setup a systemd unit [this way](#running-controller-automatically-on-boot). </strong>
 Now you are ready to move to beginner friendly [easy games to hook up](easy_games_to_hook_up)
 section or to more advanced [custom game creation](custom_game_creation), where we explain in
 detail how the games work!
 
-## Creating systemd unit for your code
+## Running controller automatically on boot
 
-Below is example contents of the existing "controller-rpi.service" file that is located in the sdk root folder. You will need to make sure that the following options are correct:
-<strong>WorkingDirectory:</strong> has absolute path to your sdk root folder, <strong>ExecStart</strong> has the correct python path inside the sdk folder.
+To make the python code automatically start after restarting the raspberry pi, you will need to follow the steps here to do so. Below is example contents of the existing "controller-rpi.service" file that is located in the sdk `scripts folder`. You will need to make sure that the following options are correct:
+`WorkingDirectory` has absolute path to your sdk root folder, `ExecStart` has the correct python path inside the sdk folder.
 
 ```
 [Unit]
@@ -259,7 +259,7 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=10
-WorkingDirectory=/home/pi/srtg-python
+WorkingDirectory=/home/pi/surrortg-sdk
 ExecStart=/usr/bin/python3 -m game_templates.simple_game
 [Install]
 WantedBy=multi-user.target
@@ -271,7 +271,7 @@ then run the setup-system.sh script to update and reload your new systemd module
 sudo systemctl restart controller
 ```
 
-otherwise, you must run
+otherwise, you must run in your sdk root folder.
 
 ```
 ./scripts/setup-systemd.sh

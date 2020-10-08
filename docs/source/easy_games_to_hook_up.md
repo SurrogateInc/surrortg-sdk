@@ -6,7 +6,7 @@ If you are more advanced user with coding background, you can also look into
 
 Current easy games:
 
-- [Sphero rover exploration game](#sphero-rover-exploration-game)
+-   [Sphero rover exploration game](#sphero-rover-exploration-game)
 
 ## Sphero rover exploration game
 
@@ -15,11 +15,11 @@ the your Raspberry Pi has [SurroRTG SDK installed](getting_started).
 
 **The Required hardware**
 
-- [Sphero RVR](https://sphero.com/products/rvr)
-- [Raspberry Pi 3b+ or 4](https://www.raspberrypi.org/products/)
-- Jumper cables
-- [a supported camera](camera_support)
-- Optionally: a mount for the camera
+-   [Sphero RVR](https://sphero.com/products/rvr)
+-   [Raspberry Pi 3b+ or 4](https://www.raspberrypi.org/products/)
+-   Jumper cables
+-   [a supported camera](camera_support)
+-   Optionally: a mount for the camera
 
 ### Hook everything up
 
@@ -70,7 +70,7 @@ sudo python3 -m games.rvr.game
 or by modifying the systemd file controller-rpi.service by changing the ExecStart command to use games.rvr.game and running at your folder root:
 
 ```
-./setup-systemd.sh
+./scripts/setup-systemd.sh
 ```
 
 Now you should be able to got to [www.surrogate.tv/game/YOUR_SHORT_ID](www.surrogate.tv/game/YOUR_SHORT_ID),
