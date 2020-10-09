@@ -6,6 +6,8 @@ echo "copying controller-rpi.service to /usr/lib/systemd/system/controller.servi
 sudo cp $SCRIPT_PATH/controller-rpi.service /usr/lib/systemd/system/controller.service
 echo "restarting systemd daemon"
 sudo systemctl daemon-reload
+echo "enabling controller unit to start after reboot"
+sudo systemctl enable controller
 echo "restarting controller unit"
 sudo systemctl restart controller
 echo "controller unit status"
