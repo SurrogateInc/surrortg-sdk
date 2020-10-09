@@ -19,10 +19,10 @@ You might need to jump betweens steps 5-7 in case you missed something so rememb
 To get started with installation and running a sample game, these are the hardware requirements:
 
 1. [Rasperry Pi](https://www.raspberrypi.org/) single board computer,
-   for example model 3B+ or 4
-2. A +16GB micro SD card
+   for example model 3B+, 3A, or 4B
+2. A 16GB+ micro SD card
 3. An official [Raspberry Pi Camera](https://www.raspberrypi.org/products/camera-module-v2/)
-   or some USB camera, check the [support list](camera_support)
+   or some USB camera (UVC compliant), check the [support list](camera_support)
 
 ## SDK installation
 
@@ -43,7 +43,7 @@ manual installation on top of an existing raspbian image
 #### Setting up Raspberry Pi
 
 First follow Raspberry Pi's [general setup](https://projects.raspberrypi.org/en/projects/raspberry-pi-setting-up). <strong>Note: Choose Raspberry Pi OS (other) -> Raspberry Pi OS Lite (32-bit) as the operating system </strong>
-to install official Raspian image. We recommend setting up your internet connection and enabling ssh-connection via sudo raspi-config by following [raspi-config](https://www.raspberrypi.org/documentation/configuration/raspi-config.md#) setup. Alternatively, you can do everything on your host computer after flashing the image to an sd card by following [headless-wifi-setup](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md#) and [headless-ssh-setup](https://www.raspberrypi.org/documentation/remote-access/ssh/README.md#) to modify the boot-partition of the sd card with ssh and wpa_supplicant.conf files.
+to install official Rasbpian image. We recommend setting up your internet connection and enabling ssh-connection via sudo raspi-config by following [raspi-config](https://www.raspberrypi.org/documentation/configuration/raspi-config.md#) setup. Alternatively, you can do everything on your host computer after flashing the image to an sd card by following [headless-wifi-setup](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md#) and [headless-ssh-setup](https://www.raspberrypi.org/documentation/remote-access/ssh/README.md#) to modify the boot-partition of the sd card with ssh and wpa_supplicant.conf files.
 
 If you are going to use ssh connection to control the raspberrypi, please get the ip-address of the raspberrypi by running on the raspberrypi terminal
 
@@ -61,23 +61,33 @@ sudo apt full-upgrade
 sudo reboot
 ```
 
-### Create a game instance
+While waiting for the upgrade. You can already move to the next step of creating a game on Surrogate.tv
 
-Your own game can be controlled from the game's Admin panel.
+### Create a game instance on Surrogate.tv
+
+Your own game can be controlled from the game's dashboard.
 
 To get one, you must first create a new game. Create a new game by going to
-[surrogate.tv's Admin page](https://www.surrogate.tv/admin/)
-and click `Create a new game`. <strong>Note: you must have an account and login to create the game</strong>
+[surrogate.tv's game creation page](https://www.surrogate.tv/admin/create-new-game)
+<strong>Note: you must have an account and login to create the game. If the page says Restricted Access, please, contact the Surrogate.tv team, and mention your creator account username.
+</strong>
 
-After that choose game name, title and short ID. Then choose the type of game.
-For now, choose a game type of `arcade`. All of these can be edited later.
+After that choose game name, title, short ID, and category. All of these can be edited later.
 
-This will create you a new Surrogate game, with Admin panel to
-`www.surrogate.tv/admin/game/<SHORT_ID_YOU_CHOSE>`. From the Admin panel,
-you can turn the game online from the switch on the top left corner.
-Now the game should be online on `www.surrogate.tv/game/<SHORT_ID_YOU_CHOSE>`
+ <img src='_static/images/CreateAGame.jpeg'>
 
-We will get back to the configurations and getting the streamer to work after we have installed the Surrogate Controller SDK.
+This will create you a new Surrogate game, and open up the game dashboard
+`www.surrogate.tv/game/<SHORT_ID_YOU_CHOSE>/dashboard`.
+
+The dashboard allows you to analyze the game state, and turn the game online for other players. See more on the Dashbaord and Settings page.
+
+Turn on the Game Engine for the game by pressing the "TURN IT ON" button.
+
+ <img src='_static/images/DashboardTurnOnGameEngine.png'>
+
+The game engine creation process will take around 3 minutes, but you can already move to the next step.
+
+We will get back to the game page configurations and getting the streamer to work after we have installed the SurroRTG SDK.
 
 <strong>You will need to continue the tutorial to get your streamer and controller connected to the game.</strong>
 
@@ -164,13 +174,19 @@ The reason we are installing the python packages as super-user (sudo) is that yo
 
 ## Configuration file
 
-When you installed the streamer, it added a configuration file to `/etc/srtg/srtg.toml`, you can edit it with the following commands, or with your favorite text editor.
+When you've installed the streamer, it added a configuration file to `/etc/srtg/srtg.toml`, you can edit it with the following commands, or with your favorite text editor.
 
 ```
 sudo nano /etc/srtg/srtg.toml
 ```
 
-Next you will need to copy your robot `token` from `the admin panel` to the congiraution file.
+In the srtg.toml file, give your device a device_id, for example robot-1. Save this id as you will need to use if for future configuration.
+
+Next you need to copy your robot `token` from `game settings page` to the configuration file. You can navigate the page by pressing the `Settings` button on your game dashboard, or by entering the following web address `www.surrogate.tv/game/<SHORT_ID_YOU_CHOSE>/settings`.
+
+Here's an example image to help you find the Robot Token on the game settings page:
+
+<img src='_static/images/SettingsToken.png'>
 
 The configuration file is used both by the streamer and the controller. You need sudo privilidges to edit the file. <strong>Note: you will need to restart all code using these configurations to activate the changes</strong>
 
@@ -181,7 +197,7 @@ sudo systemctl restart srtg
 sudo systemctl restart controller
 ```
 
-you can see how to start your controller code automatically on boot [here](#running-controller-automatically-on-boot)
+You can see how to start your controller code automatically on boot [here](#running-controller-automatically-on-boot)
 
 Here is how your config file should look like. If you are using USB camera the `[sources.videoparams] -> type` should be `"v4l2"` and if you are using raspi camera it should be `"rpi_csi"`.
 
@@ -224,12 +240,22 @@ If you want to know what resolutions and formats your `usb camera` supports use 
 v4l2-utils -d /dev/video<ID> --list-formats-ext
 ```
 
+## Adding your robot to the game
+
+Now that your robot has the correct configuration file, we can add the robot to the game page. Go to the Game Settings -> Game Engine section and add a new robot.
+
+Use the previously defined device_id for the ID and Streamer fields. For the Queue Id, Seat, and Set use "0" as a temporary input (you can edit these fields later) and set the robot as "Enabled."
+
+<img src='_static/images/AddingTheRobot.png'>
+
+To test that the robot is connected correctly and the streamer is working, go to the game dasbhoard page and scroll down. You should be able to see your robot in the "Sets" section of the page. If the streamer is shown is green, this means that the camera of your robot is working. You can press the preview button to see it in action.
+
 ## Running template game
 
 At this point we should have the `streamer` working if you have a camera connected and configured properly.
 
 Now that you have everything installed and a game
-with Admin panel configured correctly, we are ready to run the [simple-game-template](simple_game).
+with game settings configured correctly, we are ready to run the [simple-game-template](simple_game).
 
 For testing we can run the python code manually on the terminal.
 
@@ -239,12 +265,12 @@ sudo python3 -m game_templates.simple_game
 
 This game creates you a switch and joystick inputs that can be used to control a device. You should be able to test the inputs from the admin panel preview.
 
-<strong>Note: if you want that your code runs constantly and starts automatically after boots, you should setup a systemd unit [this way](#running-controller-automatically-on-boot). </strong>
+<strong>Note: if you want that your code runs constantly and starts automatically after on-boot, you should setup a systemd unit [this way](#running-controller-automatically-on-boot). </strong>
 Now you are ready to move to beginner friendly [easy games to hook up](easy_games_to_hook_up)
 section or to more advanced [custom game creation](custom_game_creation), where we explain in
 detail how the games work!
 
-## Running controller automatically on boot
+## Running the SurroRTG Python SDK (controller) on boot automatically on boot
 
 To make the python code automatically start after restarting the raspberry pi, you will need to follow the steps here to do so. Below is example contents of the existing "controller-rpi.service" file that is located in the sdk `scripts folder`. You will need to make sure that the following options are correct:
 `WorkingDirectory` has absolute path to your sdk root folder, `ExecStart` has the correct python path inside the sdk folder.
