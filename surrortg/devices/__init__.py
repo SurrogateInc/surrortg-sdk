@@ -4,5 +4,5 @@ try:
         CapComm,
         VideoCaptureProcess,
     )
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     pass
