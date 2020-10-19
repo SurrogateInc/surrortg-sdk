@@ -36,9 +36,10 @@ class VideoCaptureProcess:
     :type conn: multiprocessing.connection.Connection
     """
 
-    def __init__(self, source, conn):
+    def __init__(self, source, conn, apiPreference):
         self._source = source
         self._conn = conn
+        self._apiPreference = apiPreference
 
     def run(self):
         # initialize self._cap cv2.VideoCapture
@@ -59,7 +60,7 @@ class VideoCaptureProcess:
 
     def _init_cap(self, send):
         # Get cv2.VideoCapture without a buffer
-        self._cap = cv2.VideoCapture(self._source)
+        self._cap = cv2.VideoCapture(self._source, cv2.CAP_V4L2)
         self._cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         # Makes sure that camera was actually opened
         if not self._cap.isOpened():
@@ -107,6 +108,7 @@ class AsyncVideoCapture:
         read_timeout=2,
         release_timeout=2,
         process_class=VideoCaptureProcess,
+        apiPreference = cv2.CAP_V4L2
     ):
         """Factory method for AsyncVideoCapture, use this instead of __init__
 
@@ -125,6 +127,9 @@ class AsyncVideoCapture:
         :param process_class: Video capture process class implementation,
             option mainly for easier testing
         :type process_class: VideoCaptureProcess, optional
+        :param apiPreference: backend apiPreference for cv2.VideoCapture,
+            defaults to cv2.CAP_V4L2
+        :type apiPreference: cv2 VideoCaptureAPI, optional
         """
         self = cls()
 
@@ -134,6 +139,7 @@ class AsyncVideoCapture:
         self._read_timeout = read_timeout
         self._release_timeout = release_timeout
         self._process_class = process_class
+        self._apiPreference = apiPreference
         self._released = False
         self._start_time = None
 
@@ -146,7 +152,7 @@ class AsyncVideoCapture:
 
     async def _start_process(self):
         self._conn_main, self._conn_process = multiprocessing.Pipe()
-        cap_process = self._process_class(self._source, self._conn_process)
+        cap_process = self._process_class(self._source, self._conn_process, self._apiPreference)
         self._cap_process = multiprocessing.Process(
             target=cap_process.run, daemon=True,
         )
