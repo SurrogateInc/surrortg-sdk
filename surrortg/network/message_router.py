@@ -66,9 +66,9 @@ class MessageRouter:
         :type is_admin_msg: bool
         """
 
-        # We received a message from peer. Reset watchdog
+        # We received a message from peer. Kick watchdog
         if msg.src != SRC_GAME_ENGINE:
-            self._watchdog_reset(seat)
+            self._kick_watchdog(seat, 5)
 
         if msg.event == EVENT_PING:
             return
@@ -108,27 +108,41 @@ class MessageRouter:
         """
         self.inputs[dev_id] = InputBinding(dev, admin)
 
-    def _watchdog_reset(self, seat):
-        """Reset watchdog for the specified seat
+    def trigger_watchdog_reset(self, seat):
+        """Resets inputs and clears watchdog for given seat immediately
 
-        Creates a new reset task if none is previously defined for
-        the specified seat.
         :param seat: Robot seat
         :type seat: int
+        """
+        self._kick_watchdog(seat, 0)
+
+    def _kick_watchdog(self, seat, timeout):
+        """Kicks watchdog for the specified seat
+
+        Cancels the old reset task if one is defined,
+        replacing it with a new one.
+        :param seat: Robot seat
+        :type seat: int
+        :param timeout: time to wait before resetting inputs
+        :type timeout: int or float
         """
         if seat in self.reset_tasks:
             reset_task = self.reset_tasks[seat]
-            if reset_task is not None and not reset_task.cancelled():
+            if not reset_task.cancelled():
                 self.reset_tasks[seat].cancel()
-        self.reset_tasks[seat] = asyncio.create_task(self._reset_all(seat))
+        self.reset_tasks[seat] = asyncio.create_task(
+            self._reset_all_timeout(seat, timeout)
+        )
 
-    async def _reset_all(self, seat):
-        """Resets all inputs for the specified seat after the reset time
+    async def _reset_all_timeout(self, seat, timeout):
+        """Resets all inputs for the specified seat after the timeout
 
         :param seat: Robot seat
         :type seat: int
+        :param timeout: Time to sleep before resetting inputs
+        :type timeout: int or float
         """
-        await asyncio.sleep(5)
+        await asyncio.sleep(timeout)
         for route in self.inputs.values():
             await route.dev.reset(seat)
         logging.info(f"All inputs resetted for seat {seat}")
@@ -257,6 +271,7 @@ class MultiSeatMessageRouter:
                 seat = self.route_mappings[msg.payload["id"]]
                 del self.route_mappings[msg.payload["id"]]
                 logging.info(f"Removed route from {msg.payload['id']}")
+                self.router.trigger_watchdog_reset(seat)
             except KeyError:
                 logging.warning("Trying to remove non-existing route")
                 return True
@@ -297,6 +312,8 @@ class MultiSeatMessageRouter:
         :type enabled: bool
         """
         self.seat_statuses[seat].enabled = enabled
+        if not enabled:
+            self.router.trigger_watchdog_reset(seat)
 
     def get_all_seats(self):
         """Returns all the seats that have routings set
