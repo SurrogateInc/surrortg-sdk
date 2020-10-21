@@ -12,7 +12,7 @@ class Motor(LinearActuator):
         # TODO throttle implementation here
         pass
 
-    async def reset(self):
+    async def reset(self, seat=0):
         await self.drive_actuator(0)
 
 
@@ -21,7 +21,7 @@ class Steering(LinearActuator):
         # TODO steer implementation here
         pass
 
-    async def reset(self):
+    async def reset(self, seat=0):
         await self.drive_actuator(0)
 
 
