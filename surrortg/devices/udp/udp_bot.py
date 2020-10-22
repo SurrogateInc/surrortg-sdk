@@ -34,9 +34,9 @@ class UdpBot:
             logging.warning(f"Failed to parse robot configs")
             return (0, {})
 
-        if "currentSet" in bot_config:
+        if "currentSet" in config:
             try:
-                self.current_set = int(bot_config["currentSet"])
+                self.current_set = int(config["currentSet"])
                 set_reading_succeeded = True
             except ValueError:
                 logging.warning(f"Failed to cast current set number to int")
