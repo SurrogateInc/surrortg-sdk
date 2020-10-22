@@ -108,7 +108,7 @@ class AsyncVideoCapture:
         read_timeout=2,
         release_timeout=2,
         process_class=VideoCaptureProcess,
-        apiPreference = cv2.CAP_V4L2
+        apiPreference=cv2.CAP_V4L2,
     ):
         """Factory method for AsyncVideoCapture, use this instead of __init__
 
@@ -152,7 +152,9 @@ class AsyncVideoCapture:
 
     async def _start_process(self):
         self._conn_main, self._conn_process = multiprocessing.Pipe()
-        cap_process = self._process_class(self._source, self._conn_process, self._apiPreference)
+        cap_process = self._process_class(
+            self._source, self._conn_process, self._apiPreference
+        )
         self._cap_process = multiprocessing.Process(
             target=cap_process.run, daemon=True,
         )

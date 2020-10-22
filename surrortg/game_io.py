@@ -264,7 +264,14 @@ class GameIO:
         ), f"progress must be between 0-1, was {progress}"
         self._send_threadsafe("progress", seat=seat, payload={"val": progress})
 
-    def send_score(self, score=None, scores=None, seat=0, final_score=False, seat_final_score=False):
+    def send_score(
+        self,
+        score=None,
+        scores=None,
+        seat=0,
+        final_score=False,
+        seat_final_score=False,
+    ):
         """Send a score update to the game engine
 
         Send eiher a single score or multiple scores.
@@ -278,8 +285,8 @@ class GameIO:
         :param final_score: signal to GE that there will not be more scores
             coming, defaults to False
         :type final_score: bool, optional
-        :param seat_final_score: signal to GE that there will not be more scores
-            coming to the specified seats, defaults to False
+        :param seat_final_score: signal to GE that there will not be more
+            scores coming to the specified seats, defaults to False
         :type seat_final_score: bool, optional
         """
         assert isinstance(seat, int), "seat must be int"
@@ -304,7 +311,12 @@ class GameIO:
             scores = {seat: score for seat, score in enumerate(scores)}
 
         self._send_threadsafe(
-            "scoreUpdate", payload={"scores": scores, "endGame": final_score, "seatEndGame": seat_final_score}
+            "scoreUpdate",
+            payload={
+                "scores": scores,
+                "endGame": final_score,
+                "seatEndGame": seat_final_score,
+            },
         )
 
     def send_state_alive(self, seat=0):
