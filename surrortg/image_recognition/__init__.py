@@ -4,5 +4,6 @@ try:
         CapComm,
         VideoCaptureProcess,
     )
+    from .pixel_detect import get_pixel_detector
 except (ModuleNotFoundError, ImportError):
     pass
