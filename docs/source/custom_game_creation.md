@@ -186,6 +186,10 @@ This process can be extended to basically any Python program:
 find an appropriate template from game_templates, and extend/modify
 it into your use case.
 
+## Ninswitch
+
+Ninswitch tutorial is [here](modules/ninswitch)
+
 ## Further reading
 
 The `game_templates` directory contains also more complicated templates
