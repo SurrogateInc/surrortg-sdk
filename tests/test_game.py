@@ -5,6 +5,7 @@ import time
 from signal import SIGINT, SIGTERM, SIGUSR1
 from threading import Thread
 from surrortg import Game
+import logging
 
 
 class GameTest(unittest.TestCase):
@@ -26,7 +27,11 @@ class GameTest(unittest.TestCase):
                 raise RuntimeError
 
             def run(self):
-                self._pre_run("./tests/test_config.toml")
+                self._pre_run(
+                    "./tests/test_config.toml",
+                    socketio_logging_level=logging.WARNING,
+                    robot_type="robot",
+                )
                 self.io._socket_handler.run = self.raiseError
                 self._run()
                 self._post_run()
@@ -88,7 +93,11 @@ class GameTest(unittest.TestCase):
                     await asyncio.sleep(1)
 
             def run(self):
-                self._pre_run("./tests/test_config.toml")
+                self._pre_run(
+                    "./tests/test_config.toml",
+                    socketio_logging_level=logging.WARNING,
+                    robot_type="robot",
+                )
                 self.io._socket_handler.run = self.wait
                 self._run()
                 self._post_run()
@@ -142,7 +151,9 @@ class GameTest(unittest.TestCase):
         with self.assertLogs(level="INFO") as cm:
             g = Game()
             g._pre_run(
-                "./tests/test_config.toml"
+                "./tests/test_config.toml",
+                socketio_logging_level=logging.WARNING,
+                robot_type="robot",
             )  # this simulates run(), really only part of it
             self.assertEqual(
                 cm.output,
@@ -172,7 +183,9 @@ class GameTest(unittest.TestCase):
         with self.assertLogs(level="INFO") as cm:
             g = GameModSomeImplemented()
             g._pre_run(
-                "./tests/test_config.toml"
+                "./tests/test_config.toml",
+                socketio_logging_level=logging.WARNING,
+                robot_type="robot",
             )  # this simulates run(), really only part of it
             self.assertEqual(
                 cm.output,
@@ -198,7 +211,9 @@ class GameTest(unittest.TestCase):
         # test the correct use
         g = Game()
         g._pre_run(
-            "./tests/test_config.toml"
+            "./tests/test_config.toml",
+            socketio_logging_level=logging.WARNING,
+            robot_type="robot",
         )  # this simulates run(), really only part of it
         try:
             g.io.register_inputs({})
@@ -220,7 +235,9 @@ class GameTest(unittest.TestCase):
 
         # after run(), io should not raise RuntimeError
         g._pre_run(
-            "./tests/test_config.toml"
+            "./tests/test_config.toml",
+            socketio_logging_level=logging.WARNING,
+            robot_type="robot",
         )  # this simulates run(), really only part of it
         try:
             g.io

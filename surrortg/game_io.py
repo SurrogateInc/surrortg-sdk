@@ -23,6 +23,7 @@ class GameIO:
         robot_log_handler,
         config_path,
         socketio_logging_level,
+        robot_type,
     ):
         self._config = self._get_config(config_path)
 
@@ -45,7 +46,7 @@ class GameIO:
             self._config["game_engine"]["url"],
             query={
                 "clientType": "robot",
-                "robotType": "robot",
+                "robotType": robot_type,
                 "robotVersion": SURRORTG_VERSION,
                 "clientId": self._config["device_id"],
                 "gameId": self._config["game_engine"]["id"],
