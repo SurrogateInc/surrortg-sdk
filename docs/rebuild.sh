@@ -2,8 +2,15 @@
 SCRIPT_PATH=$(dirname `which $0`)
 
 cd $SCRIPT_PATH
+
+# remove old modules
 rm -rf source/modules
 mkdir source/modules
+
+# insert ninswitch README
+cp ../games/ninswitch/README.md source/modules/ninswitch.md
+
+# run apidoc
 sphinx-apidoc -o source/modules/ ../surrortg ../surrortg/lib ../surrortg/network --templatedir source/apidoc_templates/  --no-toc --no-headings --maxdepth 1
 
 # change the apidoc title with sed
