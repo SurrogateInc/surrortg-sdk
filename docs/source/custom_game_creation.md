@@ -21,11 +21,11 @@ from surrortg.inputs import Switch  # and our preferred input(s)
 
 # Create a custom switch, it really can do what ever you want.
 class MySwitch(Switch):
-    async def on(self):
+    async def on(self, seat=0):
         # FIRE!!! or jump or drive or whatever you want
         print("on")
 
-    async def off(self):
+    async def off(self, seat=0):
         # stop the thing you were doing
         print("off")
 
@@ -67,11 +67,11 @@ methods.
 ```python
 # Create a custom switch, it really can do what ever you want.
 class MySwitch(Switch):
-    async def on(self):
+    async def on(self, seat=0):
         # FIRE!!! or jump or drive or whatever you want
         print("on")
 
-    async def off(self):
+    async def off(self, seat=0):
         # stop the thing you were doing
         print("off")
 ```
@@ -166,11 +166,11 @@ class LEDSwitch(Switch):
     def __init__(self):
         self.led = LED(17)  # step 2.
 
-    async def on(self):
+    async def on(self, seat=0):
         print("LED on")
         self.led.on()  # step 3.
 
-    async def off(self):
+    async def off(self, seat=0):
         print("LED off")
         self.led.off()  # step 3.
 
