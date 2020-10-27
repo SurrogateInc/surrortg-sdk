@@ -128,6 +128,7 @@ class Game:
         logging_level=logging.INFO,
         socketio_logging_level=logging.WARNING,
         start_games_inputs_enabled=True,
+        robot_type="robot",
     ):
         """Connect to the game engine and start the Game loop
 
@@ -142,13 +143,17 @@ class Game:
             automatically enabled at the start of on_start method, defaults
             to True
         :type start_games_inputs_enabled: bool, optional
+        :param robot_type: Decides whether the python unit is a controllable
+        robot unit, or a logical unit. Defaults to "robot", for logical,
+        use "logical". Logical robot type is for advanced use only.
+        :type robot_type: string, optional
         """
         if logging_level is not None:
             logging.getLogger().setLevel(logging_level)
         self.start_games_inputs_enabled = start_games_inputs_enabled
 
         # this structure makes testing easier
-        self._pre_run(config_path, socketio_logging_level)
+        self._pre_run(config_path, socketio_logging_level, robot_type)
         self._run()
         self._post_run()
 
@@ -235,7 +240,7 @@ class Game:
     def _run_not_called(self):
         return not hasattr(self, "_io")
 
-    def _pre_run(self, config_path, socketio_logging_level=logging.WARNING):
+    def _pre_run(self, config_path, socketio_logging_level, robot_type):
         # log info if certain methods not implemented
         for method_name in CHECK_IMPLEMENTATION:
             if self._not_implemented(method_name):
@@ -247,6 +252,7 @@ class Game:
             self._handle_robot_log,
             config_path,
             socketio_logging_level,
+            robot_type,
         )
 
         # set flag for updates between games
