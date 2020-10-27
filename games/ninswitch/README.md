@@ -20,7 +20,7 @@ Hardware requirements:
 
 Following [NSGadget_Pi](https://github.com/gdsports/NSGadget_Pi)'s setup:  
 1. Setup Trinket M0:  
-    - Download the [firmaware](https://github.com/gdsports/NSGadget_Pi/blob/master/firmware/NSGadget.ino.f9e9ee2.trinket_m0.bin.uf2)  
+    - Download the [firmware](https://github.com/gdsports/NSGadget_Pi/blob/master/firmware/NSGadget.ino.f9e9ee2.trinket_m0.bin.uf2)  
     - Plug in the Trinket M0 to the computer  
     - Double tap the Trinket M0 reset button  
     - When the TRINKETBOOT USB drive appears, drop the UF2 file on to the drive  
@@ -28,8 +28,8 @@ Following [NSGadget_Pi](https://github.com/gdsports/NSGadget_Pi)'s setup:
 2. Do the wiring between Trinket M0 and Raspberry Pi:  
 **BAT** to **5V0**  
 **Gnd** to **Gnd**  
-**TX(4)** to **D14(RXD)**  
-**RX(3)** to **D15(TXD)**  
+**RX(3)** to **D14(TXD)**  
+**TX(4)** to **D15(RXD)**  
 3. Connect Trinket M0 to Switch dock with the Micro USB cable  
 4. Connect Raspberry Pi to Switch dock through HDMI Capture device and HDMI cable  
 
@@ -38,12 +38,18 @@ Following [NSGadget_Pi](https://github.com/gdsports/NSGadget_Pi)'s setup:
 Software requirements:
 - Surrortg installed
 - Knowledge on how to run different games inside `/games` directory
-- A loopback device set up to `/dev/video21`.
 - Audio setup done
+
+The image recognition needs a loopback device set up to `/dev/video21`:
+1. First install srtg-watcherstream with `sudo apt install srtg-watcherstream`
+2. Use `sudo nano /etc/modprobe.d/v4l2loopback.conf` to add another loopback device:
+    - Replace `video_nr=20` with `video_nr=20,21`
+    - Save and exit
+3. Run `sudo rmmod v4l2loopback && sudo modprobe v4l2loopback` to update configurations
 
 To install everything correctly on Raspberry Pi:  
 1. First change to the ninswitch directory with `cd games/ninswitch`  
-2. Install the Python requirements by running `pip install -r requiremets.txt`  
+2. Install the Python requirements by running `sudo pip3 install -r requiremets.txt`  
 3. Run the setup script with `sudo ./setup.sh`  
 4. Use `sudo nano /boot/config.txt` to add `dtoverlay=disable-bt` as the last line of config.txt. Then save and exit.  
 5. Change the raspi config with `sudo raspi-config`:  
