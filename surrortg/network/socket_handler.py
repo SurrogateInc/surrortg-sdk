@@ -1,4 +1,5 @@
 import asyncio
+import sys
 import socket
 import logging
 import json
@@ -163,6 +164,8 @@ class SocketioNamespace(socketio.AsyncClientNamespace):
                 def connect_error(msg):
                     logging.error(f"GE socketio connection error: {msg}")
                     self.connected = False
+                    if "Invalid token" in msg:
+                        sys.exit(2)
 
                 # register namespace
                 self.sio.register_namespace(self)
