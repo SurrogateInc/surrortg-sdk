@@ -3,7 +3,7 @@ from surrortg.inputs import Joystick, Directions
 
 
 class TestJoystick(Joystick):
-    async def reset(self):
+    async def reset(self, seat):
         pass
 
 

@@ -9,7 +9,7 @@ class MyJoystick(Joystick):
         logging.info(f"\tx:{x}, y:{y}")
         # handle player input here
 
-    async def reset(self):
+    async def reset(self, seat=0):
         logging.info(f"reset")
 
 

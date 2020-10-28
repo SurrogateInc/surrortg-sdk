@@ -13,14 +13,14 @@ class MyJoystick(Joystick):
         self.progress = 0.0  # initialize progress with 0.0
 
     # do things based on Joystick directions
-    async def handle_coordinates(self, x, y):
+    async def handle_coordinates(self, x, y, seat=0):
         direction = self.get_direction_4(x, y)
         if direction == Directions.TOP:
             self.progress += 0.01  # increase the progress with each TOP event
             self.io.send_progress(self.progress)  # and update the game engine
 
     # implement the required reset method
-    async def reset(self, amount):
+    async def reset(self, amount, seat=0):
         pass
 
 

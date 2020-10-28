@@ -8,20 +8,20 @@ from surrortg.devices import Car  # and Car
 
 # Create Motor and Steering classes, which handle Car's speed and direction
 class Motor(LinearActuator):
-    async def drive_actuator(self, value):
+    async def drive_actuator(self, val, seat=0):
         # TODO throttle implementation here
         pass
 
-    async def reset(self):
+    async def reset(self, seat=0):
         await self.drive_actuator(0)
 
 
 class Steering(LinearActuator):
-    async def drive_actuator(self, value):
+    async def drive_actuator(self, val, seat=0):
         # TODO steer implementation here
         pass
 
-    async def reset(self):
+    async def reset(self, seat=0):
         await self.drive_actuator(0)
 
 
