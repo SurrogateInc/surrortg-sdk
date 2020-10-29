@@ -302,7 +302,9 @@ class GameIO:
         assert scores is None or isinstance(
             scores, (dict, list)
         ), f"Unknown scores type: {type(scores)}, must be dict or list"
-        assert not (final_score and seat_final_score)
+        assert not (
+            final_score and seat_final_score
+        ), "Send either final_score or seat_final_score, not both"
 
         # get scores dict if needed
         if scores is None:
