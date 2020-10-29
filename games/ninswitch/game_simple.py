@@ -40,7 +40,7 @@ class NinSwitchSimpleGame(Game):
         )
 
     """
-    here you could do somethign with
+    here you could do something with
     on_config, on_prepare, on_pre_game, on_countdown, on_start...
     """
 

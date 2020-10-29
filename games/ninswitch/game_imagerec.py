@@ -73,7 +73,7 @@ class NinSwitchImageRecGame(Game):
             Path(SAVE_DIR_PATH).mkdir(parents=True, exist_ok=True)
 
     """
-    here you could do somethign with
+    here you could do something with
     on_config, on_prepare, on_pre_game, on_countdown, on_start...
     """
 
