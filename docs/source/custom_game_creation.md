@@ -2,7 +2,7 @@
 
 After you have finished the [installation](getting_started), you are ready
 to start experimenting with your own [custom game](#custom-game-based-on-templates)
-based on the templates.  
+based on the templates.
 
 ## Custom game based on templates
 
@@ -43,7 +43,7 @@ SimpleGame().run()
 ```
 
 The SimpleGame template does not do much by itself other than it provides
-a convinient basis for basically any simple game for the platform. 
+a convinient basis for basically any simple game for the platform.
 
 So at the top of the file, we import generic
 [Game](modules/surrortg.html#module-surrortg.game) class and
@@ -121,6 +121,7 @@ on
 off
 ...
 ```
+
 when you press the key down and up you have bound to a name `switch` from the
 Admin panel.
 
@@ -149,7 +150,8 @@ while True:
     sleep(1)
 ```
 
-Here we can see that for blinkig LEDs there are three steps:
+Here we can see that for blinking LEDs there are three steps:
+
 1. import LED from gpiozero with `from gpiozero import LED`
 2. initilize LED to the GPIO pin 17 with `led = LED(17)`
 3. Turn the LED on and off by calling `led.on()` and `led.off()`
@@ -217,5 +219,5 @@ Other major ones include
 [on_exit](modules/surrortg.html#surrortg.game.Game.on_exit).
 More explanations can be found from the [Game loop](game_loop) page.
 
-Especially for the more advanced games, you might need to also know more 
+Especially for the more advanced games, you might need to also know more
 [advanced Admin panel configuration](advanced_admin_panel).

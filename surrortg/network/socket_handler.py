@@ -286,8 +286,6 @@ class LocalSocketHandler:
 
     def _parse_data(self, data):
         try:
-            # TODO: remove this after successful integration of datachannels
-            logging.info(json.loads(data.decode("utf-8")))
             return json.loads(data.decode("utf-8"))
 
         except json.JSONDecodeError:
