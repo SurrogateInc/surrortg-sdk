@@ -1,6 +1,7 @@
 import logging
 import toml
 import os.path
+import socket
 from .network.socket_handler import SocketHandler
 from .network.message_router import MultiSeatMessageRouter
 
@@ -48,7 +49,7 @@ class GameIO:
                 "clientType": "robot",
                 "robotType": robot_type,
                 "robotVersion": SURRORTG_VERSION,
-                "clientId": self._config["device_id"],
+                "clientId": self._config["device_id"] if self._config["device_id"] else socket.gethostname().split('.', 1)[0],
                 "gameId": self._config["game_engine"]["id"],
                 "token": self._config["game_engine"]["token"],
             },
