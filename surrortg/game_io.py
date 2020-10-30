@@ -43,13 +43,18 @@ class GameIO:
                     "Trying to use new combined token with separate id"
                 )
 
+        device_id = self._config["device_id"]
+        if not device_id:
+            logging.info("Using hostname as device_id")
+            device_id = socket.gethostname().split(".", 1)[0]
+
         self._socket_handler = SocketHandler(
             self._config["game_engine"]["url"],
             query={
                 "clientType": "robot",
                 "robotType": robot_type,
                 "robotVersion": SURRORTG_VERSION,
-                "clientId": self._config["device_id"] if self._config["device_id"] else socket.gethostname().split('.', 1)[0],
+                "clientId": device_id,
                 "gameId": self._config["game_engine"]["id"],
                 "token": self._config["game_engine"]["token"],
             },
