@@ -4,6 +4,10 @@ from surrortg.inputs import Joystick, Directions  # and our preferred input(s)
 
 # Create a custom Joystick, it really can do what ever you want.
 class MyJoystick(Joystick):
+    """
+    Advanced game documentation
+    """
+
     def __init__(self, io):
         super().__init__()  # do the default Joystick initialization
         self.io = io  # save io for sending updates to the game engine
@@ -22,6 +26,10 @@ class MyJoystick(Joystick):
 
 
 class AdvancedGame(Game):
+    """
+    Advanced game documentation2
+    """
+
     async def on_init(self):
         # During the Game initialization callback register your joystick so
         # the Game Engine knows where to send the user input during the
@@ -61,7 +69,8 @@ class AdvancedGame(Game):
 
 
 # And now you are ready to play!
-AdvancedGame().run()
+if __name__ == "__main__":
+    AdvancedGame().run()
 
 
 # More info about:

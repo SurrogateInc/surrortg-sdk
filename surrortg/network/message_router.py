@@ -145,7 +145,7 @@ class MessageRouter:
         await asyncio.sleep(timeout)
         for route in self.inputs.values():
             await route.dev.reset(seat)
-        logging.info(f"All inputs resetted for seat {seat}")
+        logging.info(f"All inputs reset for seat {seat}")
 
 
 class MultiSeatMessageRouter:

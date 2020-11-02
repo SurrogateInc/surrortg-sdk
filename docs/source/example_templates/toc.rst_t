@@ -1,0 +1,19 @@
+{{ header | heading }}
+
+
+
+.. toctree::
+   :maxdepth: {{ maxdepth }}
+    
+    {% for docname in docnames %}
+    game_templates.{{ docname }}
+    {%- endfor %}
+
+
+{% for docname in docnames %}
+{{ docname }}
+-------
+.. automodule:: game_templates.{{docname}}
+    :members:
+    :show-inheritance:
+{%- endfor %}

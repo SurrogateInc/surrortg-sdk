@@ -74,6 +74,7 @@ html_css_files = [
 ]
 html_theme_options = {
     "logo_only": True,
+    "collapse_navigation": False,
 }
 html_logo = "_static/images/logo.png"
 

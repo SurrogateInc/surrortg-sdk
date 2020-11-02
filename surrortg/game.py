@@ -181,10 +181,13 @@ class Game:
     async def on_pre_game(self):
         """Do some preparations after the players connect
 
-        The game won't start before self.io.send_pre_game_ready() call,
-        if so is chosen from the admin panel. If the player inputs are needed
-        here, they can be enabled with self.io.enable_inputs() call. On
-        default all inputs are disabled here.
+        The game won't start before every robot has called
+        self.io.send_pre_game_ready(), or maximum pre game time is reached.
+        If the player inputs are needed here, they can be enabled with
+        self.io.enable_inputs() call. On default all inputs are disabled here.
+
+        The return value of this method will set as the self._current_seat
+        value (which is an integer).
         """
         pass
 
@@ -194,9 +197,12 @@ class Game:
         pass
 
     async def on_start(self):
-        """Inputs are now enabled. Scores, laps and progress are counted
+        """Inputs are now enabled. Scores, laps and progress are counted.
 
-        The game engine will choose the winner based on the rules set on
+        self._current_seat is set to 0 by default, if it has not been set in
+        on_pre_game().
+
+        The game engine will choose the winner based on the game type set on
         the admin panel. self.io.send_playing_ended() call can be used to
         signal the game engine that some seat has finished.
         """
@@ -457,6 +463,11 @@ class Game:
         await self.on_finish()
 
     async def _on_end_handler(self, message):
+        """Called when a 'gameEnded' message is received,
+        which happens after grace period ends.
+
+        This is where player inputs are disabled by default.
+        """
         self.io.disable_inputs()
         await self.io.reset_inputs()
         self._configs = None

@@ -15,11 +15,12 @@ Start your creation journey from :doc:`./getting_started`
 .. _surrogate.tv: http://www.surrogate.tv/
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
    getting_started
-   easy_games_to_hook_up
-   custom_games
+   admin_page
+   game_development
+   ready_games
    troubleshooting
    modules/surrortg
    contributing_to_the_project

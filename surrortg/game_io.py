@@ -192,7 +192,7 @@ class GameIO:
         """Reset registered inputs
 
         If seat is not defined, resets all registered inputs,
-        otherwise affects only the inputs with spesified seat.
+        otherwise affects only the inputs with specified seat.
 
         :param seat: seat number, defaults to None
         :type seat: Int, optional
@@ -200,7 +200,7 @@ class GameIO:
         # get router and all registered seats
         router = self._message_router.router
         registered_seats = self._message_router.get_all_seats()
-        # return if seat is not spesified or not found
+        # return if seat is not specified or not found
         if seat is not None and seat not in registered_seats:
             logging.warning(f"Cannot reset inputs for seat {seat}")
             return
@@ -217,7 +217,7 @@ class GameIO:
         """Shutdown registered inputs
 
         If seat is not defined, shuts down all registered inputs,
-        otherwise affects only the inputs with spesified seat.
+        otherwise affects only the inputs with specified seat.
 
         :param seat: seat number, defaults to None
         :type seat: Int, optional

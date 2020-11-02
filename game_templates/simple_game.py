@@ -2,17 +2,19 @@ from surrortg import Game  # First we need import the Game
 from surrortg.inputs import Switch  # and our preferred input(s)
 from surrortg.inputs import Joystick
 import logging
+import asyncio
+import time
 
 
 # Create a custom switch, it really can do what ever you want.
 class MySwitch(Switch):
     async def on(self, seat=0):
         # FIRE!!! or jump or drive or whatever you want
-        print("on")
+        logging.info(f"on for seat {seat}")
 
     async def off(self, seat=0):
         # stop the thing you were doing
-        print("off")
+        logging.info(f"off for seat {seat}")
 
 
 # Create a joystick, it can control anything with 4 or 8 directions
@@ -34,9 +36,41 @@ class SimpleGame(Game):
         self.io.register_inputs({"switch": MySwitch()})
         self.io.register_inputs({"joystick_main": MyJoystick()})
 
+    async def on_start(self):
+        """
+        Simple game simulates a 3 player game where timestamp scores
+        are sent for each seat and the game is ended with the final score
+        parameter in the third send score method.
+        """
+        start_time = time.time()
+        await asyncio.sleep(5)
+        score_temp = self.convert_to_ms(time.time() - start_time)
+        self.io.send_score(score=score_temp, seat=0)
+        await asyncio.sleep(5)
+        score_temp = self.convert_to_ms(time.time() - start_time)
+        self.io.send_score(score=score_temp, seat=1)
+        await asyncio.sleep(5)
+        score_temp = self.convert_to_ms(time.time() - start_time)
+        self.io.send_score(score=score_temp, seat=2, final_score=True)
+
+    def convert_to_ms(self, time):
+        """
+        When a game is using timestamp scores, the controller must provide the
+        scores as milliseconds. This is a simple conversion function that
+        converts seconds to milliseconds.
+
+        :param time: Time in seconds
+        :returns: Time in milliseconds
+        """
+        text = f"{time:.2}"
+        converted = float(text)
+        scaled = converted * 1000
+        return scaled
+
 
 # And now you are ready to play!
-SimpleGame().run()
+if __name__ == "__main__":
+    SimpleGame().run()
 # More info about:
 # Game: <url>
 # Switch: <url>

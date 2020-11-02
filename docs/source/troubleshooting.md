@@ -7,7 +7,7 @@ The streamer and controller modules share the same configuration file when used 
 ## Restarting controller and streamer
 
 ```
-sudo systemctl <command> srtg/controller
+sudo systemctl <command> <srtg or controller or srtg-watcherstream>
 ```
 
 -   enable - enables systemd module to be ran always after boot
@@ -22,19 +22,19 @@ sudo systemctl <command> srtg/controller
 to open the whole log file, starting from the beginning:
 
 ```
-sudo journalctl -u srtg/controller
+sudo journalctl -u <srtg or controller or srtg-watcherstream>
 ```
 
 to open the log file and follow logs at real-time run
 
 ```
-sudo journalctl -fu srtg/controller
+sudo journalctl -fu <srtg or controller or srtg-watcherstream>
 ```
 
 you can also use grep to print out only the specific lines you are interested in
 
 ```
-sudo journalctl -fu srtg/controller | grep "<string to find>"
+sudo journalctl -fu <srtg or controller or srtg-watcherstream> | grep "<string to find>"
 ```
 
 ## Most common issues
@@ -55,6 +55,6 @@ Insufficient GPU memory can cause issues with the streamer. To increase GPU memo
 
 `sudo raspi-config` -> `advanced options` -> `memory split` -> 256 (or 512 if you Pi has 1GB or more RAM available) or by editing `/boot/config.txt` -> `gpu_mem=256`. Reboot the system after.
 
-## Controller trouble shooting
+## Controller troubleshooting
 
 If you are running your controller code as both systemd unit and sometimes directly, it means you will have 2 instances running at the same time. This will cause an error of duplicate controller IDs on the server. If you are doing development and running the controller directly on your terminal, stop the controller systemd unit while doing that `sudo systemctl stop controller`, and remember to start it after you want to use it again.

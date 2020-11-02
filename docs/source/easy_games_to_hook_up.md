@@ -1,13 +1,3 @@
-# Easy games to hook up
-
-In this section we'll explain how to create games without coding with some spesific hardware.
-If you are more advanced user with coding background, you can also look into
-[custom game creation](custom_game_creation)
-
-Current easy games:
-
--   [Sphero rover exploration game](#sphero-rover-exploration-game)
-
 ## Sphero rover exploration game
 
 Before starting the tutorial, make sure that you have all of the required hardware and
@@ -51,7 +41,7 @@ Then give your wifi password to the robot to connect to surrogate.tv, and click 
 
 ### manual setup of the code
 
-You will need to enable serial communication on your raspberrypi by 'sudo raspi-config' to enable serial communication or just add line 'enable_uart=1' to the end of '/boot/config.txt' and reboot the raspberrypi.
+You will need to enable serial communication on your raspberry pi by 'sudo raspi-config' to enable serial communication or just add line 'enable_uart=1' to the end of '/boot/config.txt' and reboot the raspberry pi.
 
 Then you will need run the setup script to install the sphero-sdk and dependencies. Run the following commands in the <strong> games/rvr/ folder </strong>.
 
@@ -80,7 +70,7 @@ and play the game!
 
 Get the LED, wires and the 330 ohm resistor and connect them similarly to the
 image below. Make sure that the LED's short leg is on the same side as the
-GND. Optionally, some jumper cables and a breadboard can be used for easier contruction.
+GND. Optionally, some jumper cables and a breadboard can be used for easier construction.
 
 <p align="left">
   <img width="300" height="300" src="_static/images/led.png">
@@ -109,3 +99,19 @@ Then to exit the virtual environment, just call:
 ```
 exit
 ```
+
+## Rc-Car Game
+
+One of the easiest things to physically hook up to a raspberry pi is a RC-car.
+This guide shows to hook up and control RC-car that has a separate servo and electrical speed controller (ESC).
+
+Required connections
+
+1. Raspberry pi GND, servo GND and ESC GND together
+2. Servo signal and ESC signal cables to Raspberry pi GPIOs
+3. ESC power (+5V) to Servo power in
+
+You will most likely also want to protect your RPI GPIOs by adding resistors.
+
+The example code can be found in `game_templates/car_game.py`. The example code explanation can be
+found [here](modules/game_templates.html#car-game)

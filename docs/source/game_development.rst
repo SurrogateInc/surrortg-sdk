@@ -1,13 +1,14 @@
+
 .. _target_title:
 
 =====
-Custom Games
+Game Development
 =====
 
 .. toctree::
    :maxdepth: 4
 
 
+   game_loop
    custom_game_creation
-   modules/ninswitch
-  
+   modules/game_templates
