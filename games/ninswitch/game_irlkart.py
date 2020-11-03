@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import time
 import cv2
 from pathlib import Path
 from surrortg import Game
@@ -9,18 +8,18 @@ from games.ninswitch.ns_gamepad_serial import NSGamepadSerial, NSButton, NSDPad
 from games.ninswitch.ns_switch import NSSwitch
 from games.ninswitch.ns_dpad_switch import NSDPadSwitch
 from games.ninswitch.ns_joystick import NSJoystick
+from games.ninswitch.ocr import get_time_ms
 
 # limit the processor use
 cv2.setNumThreads(1)
 
 # image rec
 SAVE_FRAMES = False
-SAVE_FINISH_FRAMES = True
+SAVE_POS_FRAMES = True
 SAVE_DIR_PATH = "/opt/srtg-python/imgs"
-SAVE_FINISH_DIR_PATH = "/opt/srtg-python/finish_imgs"
-
-# settings
-START_TIME_DELAY = 8.8  # start timer only after "go" text
+SAVE_POS_DIR_PATH = "/opt/srtg-python/pos_imgs"
+MAX_FAILED_SCORE_READS = 3
+FAILED_SCORE_READ_SCORE = 10 * 60 * 1000  # 10 min
 
 # detectables
 # ((x, y), (r, g, b))
@@ -85,10 +84,61 @@ FLAG_PIXELS = [
     ((201, 650), (2, 2, 4)),
 ]
 
+POS_1_PIXELS = [
+    ((697, 23), (253, 255, 254)),
+    ((696, 70), (255, 254, 252)),
+    ((821, 21), (254, 253, 251)),
+    ((822, 71), (255, 255, 255)),
+    ((1008, 21), (254, 254, 254)),
+    ((1008, 71), (255, 254, 255)),
+    ((1273, 22), (255, 253, 254)),
+    ((1275, 72), (248, 250, 249)),
+    ((1150, 21), (254, 252, 253)),
+    ((1152, 72), (254, 254, 252)),
+]
+
+POS_2_PIXELS = [
+    ((696, 94), (254, 254, 254)),
+    ((696, 141), (251, 255, 254)),
+    ((819, 91), (253, 253, 255)),
+    ((817, 141), (255, 255, 255)),
+    ((974, 92), (254, 255, 255)),
+    ((973, 141), (255, 255, 255)),
+    ((1131, 92), (253, 254, 255)),
+    ((1132, 141), (255, 255, 255)),
+    ((1272, 92), (255, 252, 254)),
+    ((1273, 142), (255, 255, 255)),
+]
+
+POS_3_PIXELS = [
+    ((694, 165), (255, 255, 253)),
+    ((695, 212), (254, 253, 249)),
+    ((849, 165), (255, 255, 255)),
+    ((847, 213), (255, 255, 255)),
+    ((990, 164), (255, 252, 249)),
+    ((989, 211), (255, 255, 255)),
+    ((1146, 164), (251, 255, 255)),
+    ((1149, 212), (255, 255, 253)),
+    ((1269, 164), (252, 253, 248)),
+    ((1269, 212), (255, 255, 255)),
+]
+
+POS_4_PIXELS = [
+    ((694, 235), (254, 255, 250)),
+    ((694, 284), (244, 242, 247)),
+    ((832, 234), (255, 255, 255)),
+    ((831, 282), (254, 254, 255)),
+    ((1007, 234), (255, 255, 255)),
+    ((1006, 283), (255, 254, 255)),
+    ((1139, 233), (255, 255, 255)),
+    ((1142, 283), (255, 254, 250)),
+    ((1271, 234), (255, 255, 255)),
+    ((1272, 282), (251, 255, 254)),
+]
+
 
 class NinSwitchIRLKart(Game):
     async def on_init(self):
-        self.start_time = time.time()
         # init controls
         self.nsg = NSGamepadSerial()
         self.nsg.begin()
@@ -130,31 +180,27 @@ class NinSwitchIRLKart(Game):
         self.image_rec_task.add_done_callback(self.image_rec_done_cb)
         self.image_rec_task_cancelled = False
 
+        # frame saving
         if SAVE_FRAMES:
             logging.info(f"SAVING FRAMES TO {SAVE_DIR_PATH}")
             Path(SAVE_DIR_PATH).mkdir(parents=True, exist_ok=True)
 
-        if SAVE_FINISH_FRAMES:
-            logging.info(f"SAVING SCORE FRAMES TO {SAVE_FINISH_DIR_PATH}")
-            Path(SAVE_FINISH_DIR_PATH).mkdir(parents=True, exist_ok=True)
+        if SAVE_POS_FRAMES:
+            logging.info(f"SAVING POS FRAMES TO {SAVE_POS_DIR_PATH}")
+            Path(SAVE_POS_DIR_PATH).mkdir(parents=True, exist_ok=True)
 
+        # game state
         self.has_started = False
+        self.has_finished = False
+        self.failed_score_reads = 0
         self.pre_game_ready_sent = False
 
     async def on_prepare(self):
         logging.info("self.driving...")
-        self.nsg.press(NSButton.A)
-        self.nsg.release(NSButton.A)
-        await asyncio.sleep(4)
-        self.nsg.press(NSButton.A)
-        self.nsg.release(NSButton.A)
-        await asyncio.sleep(4)
-        self.nsg.press(NSButton.A)
-        self.nsg.release(NSButton.A)
-        await asyncio.sleep(4)
-        self.nsg.press(NSButton.A)
-        self.nsg.release(NSButton.A)
-        await asyncio.sleep(4)
+        for _ in range(4):
+            self.nsg.press(NSButton.A)
+            self.nsg.release(NSButton.A)
+            await asyncio.sleep(4)
         self.nsg.press(NSButton.B)
         await asyncio.sleep(2.5)
         self.nsg.release(NSButton.B)
@@ -168,13 +214,13 @@ class NinSwitchIRLKart(Game):
         return -1
 
     async def on_start(self):
-        await asyncio.sleep(START_TIME_DELAY)
         self.has_started = True
-        self.start_time = time.time()
+        self.has_finished = False
+        self.failed_score_reads = 0
 
     async def on_finish(self):
-        # this will trigger end_game even if image_rec_main fails
-        self.end_game()
+        # this will trigger stop_controls even if image_rec_main fails
+        self.stop_controls()
 
     async def on_exit(self, reason, exception):
         # end controls
@@ -184,16 +230,20 @@ class NinSwitchIRLKart(Game):
         await self.cap.release()
         self.image_rec_task.cancel()
 
-    async def image_rec_main(self):
+    async def image_rec_main(self):  # noqa:C901
         self.cap = await AsyncVideoCapture.create("/dev/video21")
 
         # get detectors
         has_4_ready_to_start = get_pixel_detector(HAS_4_READY_PIXELS)
         has_flag = get_pixel_detector(FLAG_PIXELS)
         has_finish_text = get_pixel_detector(FINISH_TEXT_PIXELS)
+        is_pos_1 = get_pixel_detector(POS_1_PIXELS)
+        is_pos_2 = get_pixel_detector(POS_2_PIXELS)
+        is_pos_3 = get_pixel_detector(POS_3_PIXELS)
+        is_pos_4 = get_pixel_detector(POS_4_PIXELS)
 
-        i = 0
-        finish_i = 0
+        frame_index = 0
+        pos_frame_index = 0
         async for frame in self.cap.frames():
             # on_pre_game
             if not self.has_started:
@@ -209,42 +259,94 @@ class NinSwitchIRLKart(Game):
                     self.pre_game_ready_sent = False
                     for seat in self.io._message_router.get_all_seats():
                         self.io.send_pre_game_not_ready(seat=seat)
+
             # on_start
             else:
-                if has_finish_text(frame):
-                    score = int((time.time() - self.start_time) * 1000)
-                    logging.info(
-                        "FINISHED TEXT READ, SENDING SCORE "
-                        f"{int(score/(1000*60))}:"
-                        f"{int((score/1000)%60)}:"
-                        f"{int((score/1000)%60%1*10)} SEAT {seat}"
-                    )
-                    for seat in self.io._message_router.get_all_seats():
-                        self.io.send_score(
-                            score=score, seat=seat, seat_final_score=True,
+                # stop controls only once
+                if not self.has_finished:
+                    if has_finish_text(frame):
+                        self.has_finished = True
+                        self.stop_controls()
+                        logging.info("FINISHED")
+                else:  # if finished, check for the score screen positions
+                    pos = None
+                    if is_pos_1(frame):
+                        pos = 1
+                    elif is_pos_2(frame):
+                        pos = 2
+                    elif is_pos_3(frame):
+                        pos = 3
+                    elif is_pos_4(frame):
+                        pos = 4
+
+                    if pos is not None:
+                        # if position found, try reading the time_ms
+                        time_ms, time_string = get_time_ms(frame, pos)
+                        cleaned_time = time_string.replace(":", "-").replace(
+                            ".", "-"
                         )
-                    self.end_game()
-                    if SAVE_FINISH_FRAMES:
-                        cv2.imwrite(
-                            f"{SAVE_FINISH_DIR_PATH}/{finish_i}.jpg", frame
-                        )
-                        logging.info(f"SAVED FINISH {finish_i}.jpg")
-                    if not SAVE_FRAMES:
-                        await asyncio.sleep(10)  # send results only once
-                    finish_i += 1
+
+                        # if time_ms reading failed
+                        if time_ms is None:
+                            self.failed_score_reads += 1
+                            logging.info(
+                                f"Score reading for pos {pos} failed "
+                                f"{self.failed_score_reads}. time: "
+                                f"{time_string}"
+                            )
+                            if (
+                                self.failed_score_reads
+                                == MAX_FAILED_SCORE_READS
+                            ):
+                                logging.info(f"FAILED SCORE SENT")
+                                self._send_score(FAILED_SCORE_READ_SCORE)
+                                if SAVE_POS_FRAMES:
+                                    cv2.imwrite(
+                                        f"{SAVE_POS_DIR_PATH}/"
+                                        f"FAILED_{cleaned_time}.jpg",
+                                        frame,
+                                    )
+                                    logging.info(
+                                        "SAVED FAILED POS FRAME: "
+                                        f"FAILED_{cleaned_time}.jpg"
+                                    )
+
+                        else:  # if time_ms reading succeeded
+                            self._send_score(time_ms)
+                            logging.info(f"SCORE {time_string} SENT")
+                            if SAVE_POS_FRAMES:
+                                cv2.imwrite(
+                                    f"{SAVE_POS_DIR_PATH}/{cleaned_time}"
+                                    f"_{pos_frame_index}.jpg",
+                                    frame,
+                                )
+                                logging.info(
+                                    f"SAVED POS FRAME: {cleaned_time}"
+                                    f"_{pos_frame_index}.jpg"
+                                )
+                                pos_frame_index += 1
+                            if not SAVE_FRAMES:
+                                # send proper results only once in normal use
+                                await asyncio.sleep(10)
 
             # generic
-            if i % 100 == 0:
+            if frame_index % 100 == 0:
                 logging.info("100 frames checked")
             if SAVE_FRAMES:
-                cv2.imwrite(f"{SAVE_DIR_PATH}/{i}.jpg", frame)
-                logging.info(f"SAVED {i}.jpg")
-            i += 1
+                cv2.imwrite(f"{SAVE_DIR_PATH}/{frame_index}.jpg", frame)
+                logging.info(f"SAVED {frame_index}.jpg")
+            frame_index += 1
 
         if self.image_rec_task_cancelled:
             logging.info("Image rec task finished.")
         else:
             raise RuntimeError("Image rec task finished by itself")
+
+    def _send_score(self, score):
+        for seat in self.io._message_router.get_all_seats():
+            self.io.send_score(
+                score=score, seat=seat, seat_final_score=True,
+            )
 
     def image_rec_done_cb(self, fut):
         # make program end if image_rec_task raises error
@@ -257,7 +359,7 @@ class NinSwitchIRLKart(Game):
             )
             sys.exit(1)
 
-    def end_game(self):
+    def stop_controls(self):
         self.io.disable_inputs()
         self.nsg.releaseAll()
 
