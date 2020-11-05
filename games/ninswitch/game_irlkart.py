@@ -19,7 +19,7 @@ SAVE_FRAMES = False
 SAVE_POS_FRAMES = True
 SAVE_DIR_PATH = "/opt/srtg-python/imgs"
 SAVE_POS_DIR_PATH = "/opt/srtg-python/pos_imgs"
-MAX_FAILED_SCORE_READS = 3
+MAX_FAILED_SCORE_READS = 10
 FAILED_SCORE_READ_SCORE = 10 * 60 * 1000  # 10 min
 
 # detectables
@@ -195,6 +195,7 @@ class NinSwitchIRLKart(Game):
         self.has_finished = False
         self.failed_score_reads = 0
         self.pre_game_ready_sent = False
+        self.score_sent = False
 
     async def on_prepare(self):
         logging.info("self.driving...")
@@ -218,6 +219,7 @@ class NinSwitchIRLKart(Game):
         self.has_started = True
         self.has_finished = False
         self.failed_score_reads = 0
+        self.score_sent = False
 
     async def on_finish(self):
         # this will trigger stop_controls even if image_rec_main fails
@@ -262,32 +264,48 @@ class NinSwitchIRLKart(Game):
 
             # on_start
             else:
-                # stop controls only once
+                # check for the finish text
+                # stop the controls if found
                 if not self.has_finished:
                     if has_finish_text(frame):
                         self.has_finished = True
                         self.stop_controls()
                         logging.info("FINISHED")
-                else:  # if finished, check for the score screen positions
-                    pos = None
-                    if is_pos_1(frame):
-                        pos = 1
-                    elif is_pos_2(frame):
-                        pos = 2
-                    elif is_pos_3(frame):
-                        pos = 3
-                    elif is_pos_4(frame):
-                        pos = 4
 
-                    if pos is not None:
-                        # if position found, try reading the time_ms
-                        time_ms, time_string = get_time_ms(frame, pos)
-                        cleaned_time = time_string.replace(":", "-").replace(
-                            ".", "-"
-                        )
+                # try to read pos every time
+                pos = None
+                if is_pos_1(frame):
+                    pos = 1
+                elif is_pos_2(frame):
+                    pos = 2
+                elif is_pos_3(frame):
+                    pos = 3
+                elif is_pos_4(frame):
+                    pos = 4
 
-                        # if time_ms reading failed
-                        if time_ms is None:
+                if pos is not None:
+                    # if position found, try reading the time
+                    time_ms, time_string = get_time_ms(frame, pos)
+                    cleaned_time = time_string.replace(":", "-").replace(
+                        ".", "-"
+                    )
+
+                    # if time_ms reading failed
+                    if time_ms is None:
+                        if SAVE_POS_FRAMES:
+                            timestamp = int(time() * 1000.0)
+                            cv2.imwrite(
+                                f"{SAVE_POS_DIR_PATH}/"
+                                f"FAILED_{cleaned_time}_"
+                                f"_{pos}_{timestamp}.jpg",
+                                frame,
+                            )
+                            logging.info(
+                                "SAVED FAILED POS FRAME: "
+                                f"FAILED_{cleaned_time}_"
+                                f"_{pos}_{timestamp}.jpg"
+                            )
+                        if self.has_finished and not self.score_sent:
                             self.failed_score_reads += 1
                             logging.info(
                                 f"Score reading for pos {pos} failed "
@@ -300,37 +318,29 @@ class NinSwitchIRLKart(Game):
                             ):
                                 logging.info(f"FAILED SCORE SENT")
                                 self._send_score(FAILED_SCORE_READ_SCORE)
-                                if SAVE_POS_FRAMES:
-                                    timestamp = int(time() * 1000.0)
-                                    cv2.imwrite(
-                                        f"{SAVE_POS_DIR_PATH}/"
-                                        f"FAILED_{cleaned_time}_"
-                                        f"_{pos}_{timestamp}.jpg",
-                                        frame,
-                                    )
-                                    logging.info(
-                                        "SAVED FAILED POS FRAME: "
-                                        f"FAILED_{cleaned_time}_"
-                                        f"_{pos}_{timestamp}.jpg"
-                                    )
-
-                        else:  # if time_ms reading succeeded
-                            self._send_score(time_ms)
-                            logging.info(f"SCORE {time_string} SENT")
-                            if SAVE_POS_FRAMES:
-                                timestamp = int(time() * 1000.0)
-                                cv2.imwrite(
-                                    f"{SAVE_POS_DIR_PATH}/{cleaned_time}"
-                                    f"_{pos}_{timestamp}.jpg",
-                                    frame,
-                                )
-                                logging.info(
-                                    f"SAVED POS FRAME: {cleaned_time}"
-                                    f"_{pos}_{timestamp}.jpg"
-                                )
-                            if not SAVE_FRAMES:
-                                # send proper results only once in normal use
-                                await asyncio.sleep(10)
+                    else:  # if time reading succeeded
+                        if not self.has_finished:
+                            self.stop_controls()
+                            logging.info(
+                                "STOPPED CONTROLS, FINISH WAS NOT READ"
+                            )
+                        self.score_sent = True
+                        self._send_score(time_ms)
+                        logging.info(f"SCORE {time_string} SENT")
+                        if SAVE_POS_FRAMES:
+                            timestamp = int(time() * 1000.0)
+                            cv2.imwrite(
+                                f"{SAVE_POS_DIR_PATH}/{cleaned_time}"
+                                f"_{pos}_{timestamp}.jpg",
+                                frame,
+                            )
+                            logging.info(
+                                f"SAVED POS FRAME: {cleaned_time}"
+                                f"_{pos}_{timestamp}.jpg"
+                            )
+                        if not SAVE_FRAMES:
+                            # send proper results only once in normal use
+                            await asyncio.sleep(10)
 
             # generic
             if frame_index % 100 == 0:
