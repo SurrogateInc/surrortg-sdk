@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import cv2
+from time import time
 from pathlib import Path
 from surrortg import Game
 from surrortg.image_recognition import AsyncVideoCapture, get_pixel_detector
@@ -243,7 +244,6 @@ class NinSwitchIRLKart(Game):
         is_pos_4 = get_pixel_detector(POS_4_PIXELS)
 
         frame_index = 0
-        pos_frame_index = 0
         async for frame in self.cap.frames():
             # on_pre_game
             if not self.has_started:
@@ -301,30 +301,33 @@ class NinSwitchIRLKart(Game):
                                 logging.info(f"FAILED SCORE SENT")
                                 self._send_score(FAILED_SCORE_READ_SCORE)
                                 if SAVE_POS_FRAMES:
+                                    timestamp = int(time() * 1000.0)
                                     cv2.imwrite(
                                         f"{SAVE_POS_DIR_PATH}/"
-                                        f"FAILED_{cleaned_time}.jpg",
+                                        f"FAILED_{cleaned_time}_"
+                                        f"_{pos}_{timestamp}.jpg",
                                         frame,
                                     )
                                     logging.info(
                                         "SAVED FAILED POS FRAME: "
-                                        f"FAILED_{cleaned_time}.jpg"
+                                        f"FAILED_{cleaned_time}_"
+                                        f"_{pos}_{timestamp}.jpg"
                                     )
 
                         else:  # if time_ms reading succeeded
                             self._send_score(time_ms)
                             logging.info(f"SCORE {time_string} SENT")
                             if SAVE_POS_FRAMES:
+                                timestamp = int(time() * 1000.0)
                                 cv2.imwrite(
                                     f"{SAVE_POS_DIR_PATH}/{cleaned_time}"
-                                    f"_{pos_frame_index}.jpg",
+                                    f"_{pos}_{timestamp}.jpg",
                                     frame,
                                 )
                                 logging.info(
                                     f"SAVED POS FRAME: {cleaned_time}"
-                                    f"_{pos_frame_index}.jpg"
+                                    f"_{pos}_{timestamp}.jpg"
                                 )
-                                pos_frame_index += 1
                             if not SAVE_FRAMES:
                                 # send proper results only once in normal use
                                 await asyncio.sleep(10)
