@@ -120,3 +120,147 @@ def get_time_ms(frame, position):
         * 1000
     )
     return time_ms, time_string
+
+
+if __name__ == "__main__":  # noqa:C901
+    import sys
+
+    if len(sys.argv) != 2:
+        print(
+            "Usage: python -m games.ninswitch.ocr <path_to_saved_frames>\n"
+            "Runs 3 tests to check that the detections are consistent\n\n"
+            "The successfull frames should be named like this:\n"
+            "2-35-679_1_1604693129851.jpg (time_position_timestamp),\n"
+            "and the failed frames should start with 'FAILED_' prefix.\n"
+            "This is the default namning when using SAVE_POS_FRAMES\n\n"
+            "The tests make sure that\n"
+            "1. previously successful frames still output the same time\n"
+            "2. previously failed frames still fail\n"
+            "3. shows one digit on each position for manual checking\n"
+        )
+        sys.exit(0)
+
+    import cv2
+    import pathlib
+    from surrortg.image_recognition import get_pixel_detector
+    from games.ninswitch.game_irlkart import (
+        POS_1_PIXELS,
+        POS_2_PIXELS,
+        POS_3_PIXELS,
+        POS_4_PIXELS,
+    )
+
+    detectors = {
+        1: get_pixel_detector(POS_1_PIXELS),
+        2: get_pixel_detector(POS_2_PIXELS),
+        3: get_pixel_detector(POS_3_PIXELS),
+        4: get_pixel_detector(POS_4_PIXELS),
+    }
+
+    path = sys.argv[1]
+
+    def succesfull_frames():
+        for f in pathlib.Path(path).iterdir():
+            if not f.is_file():
+                continue
+            if not f.name.startswith("FAILED_"):
+                yield cv2.imread(str(f.absolute())), f.name
+
+    def failed_frames():
+        for f in pathlib.Path(path).iterdir():
+            if not f.is_file():
+                continue
+            if f.name.startswith("FAILED_"):
+                yield cv2.imread(str(f.absolute())), f.name
+
+    def check_successfull():
+        for i, (frame, name) in enumerate(succesfull_frames()):
+            try:
+                prev_pos = int(name[-19])
+
+                # try all positions
+                position = None
+                for pos in [1, 2, 3, 4]:
+                    if detectors[pos](frame):
+                        position = pos
+                        break
+
+                if prev_pos != position:
+                    print(
+                        f"Different position found for {name}, "
+                        f"was {prev_pos} is now {position})"
+                    )
+                else:
+                    time_ms, time_string = get_time_ms(frame, prev_pos)
+                    cleaned_time = time_string.replace(":", "-").replace(
+                        ".", "-"
+                    )
+                    time = f"{cleaned_time}_{prev_pos}"
+                    if time_ms is None:
+                        print(f"Time not found for {name}")
+                    elif time != name[0:10]:
+                        print(
+                            f"Different time found for {name}, "
+                            f"was {name[0:10]} is now {time}"
+                        )
+            except Exception as e:
+                print(f"Error for {name}: {e}")
+        print(f"{i} successfull checked")
+
+    def check_failed():
+        for i, (frame, name) in enumerate(failed_frames()):
+            try:
+                # try all positions
+                position = None
+                for pos in [1, 2, 3, 4]:
+                    if detectors[pos](frame):
+                        position = pos
+                        break
+
+                # if found, check can find time
+                if position is not None:
+                    print(f"pos {position} found for failed {name})")
+                    time_ms, time_string = get_time_ms(frame, position)
+                    if time_ms is not None:
+                        print(f"time {time_string} found for failed {name})")
+            except Exception as e:
+                print(f"Error for {name}: {e}")
+        print(f"{i} failed checked")
+
+    def show_one(pos, index, value):
+        print(
+            f"Finding pos: {pos}, index: {index}, value: {value}... ",
+            end="",
+            flush=True,
+        )
+        for frame, name in succesfull_frames():
+            position = int(name[-19])
+            if position == pos and name[index] == value:
+                print(f"\t\tFound!. Press any key to continue.")
+                cv2.imshow("frame", frame)
+                cv2.waitKey(0)
+                return True
+        print("\t\tNot found")
+        return False
+
+    def show_one_each():
+        total = 0
+        found = 0
+        for pos in [1, 2, 3, 4]:
+            for index in [0, 2, 3, 5, 6, 7]:
+                for value in range(10):
+                    if index == 2 and value > 5:
+                        continue  # seconds cannot be >= 60
+                    total += 1
+                    if show_one(pos, index, str(value)):
+                        found += 1
+        print(f"{found}/{total} showed")
+
+    print(f"Using frames from: {path} for tests:")
+    print("\n1. Checking that previously successfull frames still succeed")
+    check_successfull()
+    print("\n2. Checking that previously failed frames still fail")
+    check_failed()
+    print("\n3. Showing one of each digit on each position")
+    show_one_each()
+    print("\nTests finished")
