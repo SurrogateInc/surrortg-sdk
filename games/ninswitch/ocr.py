@@ -127,16 +127,20 @@ if __name__ == "__main__":  # noqa:C901
 
     if len(sys.argv) != 2:
         print(
-            "Usage: python -m games.ninswitch.ocr <path_to_saved_frames>\n"
-            "Runs 3 tests to check that the detections are consistent\n\n"
-            "The successfull frames should be named like this:\n"
-            "2-35-679_1_1604693129851.jpg (time_position_timestamp),\n"
-            "and the failed frames should start with 'FAILED_' prefix.\n"
-            "This is the default namning when using SAVE_POS_FRAMES\n\n"
-            "The tests make sure that\n"
-            "1. previously successful frames still output the same time\n"
-            "2. previously failed frames still fail\n"
-            "3. shows one digit on each position for manual checking\n"
+            """
+Runs 3 tests to check that the detections are consistent
+Usage: python -m games.ninswitch.ocr <path_to_saved_frames>
+
+The successfull frames should be named like this:
+2-35-679_1_1604693129851.jpg (time_position_timestamp),
+and the failed frames should start with 'FAILED_' prefix.
+This is the default naming when SAVE_POS_FRAMES is used
+
+The tests make sure that
+    1. previously successful frames still output the same time
+    2. previously failed frames still fail
+    3. shows one digit on each position for manual checking
+            """
         )
         sys.exit(0)
 
@@ -150,12 +154,20 @@ if __name__ == "__main__":  # noqa:C901
         POS_4_PIXELS,
     )
 
-    detectors = {
+    position_detectors = {
         1: get_pixel_detector(POS_1_PIXELS),
         2: get_pixel_detector(POS_2_PIXELS),
         3: get_pixel_detector(POS_3_PIXELS),
         4: get_pixel_detector(POS_4_PIXELS),
     }
+
+    def get_position(frame):
+        detected = None
+        for position in position_detectors.keys():
+            if position_detectors[position](frame):
+                detected = position
+                break
+        return detected
 
     path = sys.argv[1]
 
@@ -177,14 +189,7 @@ if __name__ == "__main__":  # noqa:C901
         for i, (frame, name) in enumerate(succesfull_frames()):
             try:
                 prev_pos = int(name[-19])
-
-                # try all positions
-                position = None
-                for pos in [1, 2, 3, 4]:
-                    if detectors[pos](frame):
-                        position = pos
-                        break
-
+                position = get_position(frame)
                 if prev_pos != position:
                     print(
                         f"Different position found for {name}, "
@@ -210,13 +215,8 @@ if __name__ == "__main__":  # noqa:C901
     def check_failed():
         for i, (frame, name) in enumerate(failed_frames()):
             try:
-                # try all positions
-                position = None
-                for pos in [1, 2, 3, 4]:
-                    if detectors[pos](frame):
-                        position = pos
-                        break
-
+                # try get position
+                position = get_position(frame)
                 # if found, check can find time
                 if position is not None:
                     print(f"pos {position} found for failed {name})")

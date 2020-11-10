@@ -195,6 +195,18 @@ class NinSwitchIRLKart(Game):
             },
             admin=True,
         )
+
+        # get detectors
+        self.has_4_ready_to_start = get_pixel_detector(HAS_4_READY_PIXELS)
+        self.has_flag = get_pixel_detector(FLAG_PIXELS)
+        self.has_finish_text = get_pixel_detector(FINISH_TEXT_PIXELS)
+        self.position_detectors = {
+            1: get_pixel_detector(POS_1_PIXELS),
+            2: get_pixel_detector(POS_2_PIXELS),
+            3: get_pixel_detector(POS_3_PIXELS),
+            4: get_pixel_detector(POS_4_PIXELS),
+        }
+
         # init image rec
         self.image_rec_task = asyncio.create_task(self.image_rec_main())
         self.image_rec_task.add_done_callback(self.image_rec_done_cb)
@@ -252,118 +264,30 @@ class NinSwitchIRLKart(Game):
         await self.cap.release()
         self.image_rec_task.cancel()
 
-    async def image_rec_main(self):  # noqa:C901
+    async def image_rec_main(self):
         self.cap = await AsyncVideoCapture.create("/dev/video21")
-
-        # get detectors
-        has_4_ready_to_start = get_pixel_detector(HAS_4_READY_PIXELS)
-        has_flag = get_pixel_detector(FLAG_PIXELS)
-        has_finish_text = get_pixel_detector(FINISH_TEXT_PIXELS)
-        is_pos_1 = get_pixel_detector(POS_1_PIXELS)
-        is_pos_2 = get_pixel_detector(POS_2_PIXELS)
-        is_pos_3 = get_pixel_detector(POS_3_PIXELS)
-        is_pos_4 = get_pixel_detector(POS_4_PIXELS)
 
         frame_index = 0
         async for frame in self.cap.frames():
             # on_pre_game
             if not self.has_started:
-                if (
-                    has_4_ready_to_start(frame) or has_flag(frame)
-                ) and not self.pre_game_ready_sent:
-                    logging.info("PRE_GAME READY")
-                    self.pre_game_ready_sent = True
-                    for seat in self.io._message_router.get_all_seats():
-                        self.io.send_pre_game_ready(seat=seat)
-                elif self.pre_game_ready_sent:
-                    logging.info("PRE_GAME NOT READY")
-                    self.pre_game_ready_sent = False
-                    for seat in self.io._message_router.get_all_seats():
-                        self.io.send_pre_game_not_ready(seat=seat)
+                # send pre_game ready/not_ready based on frame
+                self._handle_pre_game(frame)
 
             # on_start
-            else:
-                # check for the finish text
+            if self.has_started:
+                # check for the finish text if not found already
                 # stop the controls if found
                 if not self.has_finished:
-                    if has_finish_text(frame):
-                        self.has_finished = True
-                        self.stop_controls()
-                        logging.info("FINISHED")
+                    self._check_for_finish_text(frame)
 
-                # try to read pos every time
-                pos = None
-                if is_pos_1(frame):
-                    pos = 1
-                elif is_pos_2(frame):
-                    pos = 2
-                elif is_pos_3(frame):
-                    pos = 3
-                elif is_pos_4(frame):
-                    pos = 4
-
-                if pos is not None:
-                    # if position found, try reading the time
-                    time_ms, time_string = get_time_ms(frame, pos)
-                    cleaned_time = time_string.replace(":", "-").replace(
-                        ".", "-"
-                    )
-
-                    # if time_ms reading failed
-                    if time_ms is None:
-                        if SAVE_POS_FRAMES:
-                            timestamp = int(time() * 1000.0)
-                            cv2.imwrite(
-                                f"{SAVE_POS_DIR_PATH}/"
-                                f"FAILED_{cleaned_time}_"
-                                f"_{pos}_{timestamp}.jpg",
-                                frame,
-                            )
-                            logging.info(
-                                "SAVED FAILED POS FRAME: "
-                                f"FAILED_{cleaned_time}_"
-                                f"_{pos}_{timestamp}.jpg"
-                            )
-                        if self.has_finished and not self.score_sent:
-                            self.failed_score_reads += 1
-                            logging.info(
-                                f"Score reading for pos {pos} failed "
-                                f"{self.failed_score_reads}. time: "
-                                f"{time_string}"
-                            )
-                            if (
-                                self.failed_score_reads
-                                == MAX_FAILED_SCORE_READS
-                            ):
-                                logging.info(f"FAILED SCORE SENT")
-                                self._send_score(FAILED_SCORE_READ_SCORE)
-                    else:  # if time reading succeeded
-                        if not self.has_finished:
-                            self.stop_controls()
-                            logging.info(
-                                "STOPPED CONTROLS, FINISH WAS NOT READ"
-                            )
-                        self.score_sent = True
-                        self._send_score(time_ms)
-                        logging.info(f"SCORE {time_string} SENT")
-                        if SAVE_POS_FRAMES:
-                            timestamp = int(time() * 1000.0)
-                            cv2.imwrite(
-                                f"{SAVE_POS_DIR_PATH}/{cleaned_time}"
-                                f"_{pos}_{timestamp}.jpg",
-                                frame,
-                            )
-                            logging.info(
-                                f"SAVED POS FRAME: {cleaned_time}"
-                                f"_{pos}_{timestamp}.jpg"
-                            )
-                        if not SAVE_FRAMES:
-                            # send proper results only once in normal use
-                            await asyncio.sleep(10)
+                # try to read and send score if not already sent
+                if not self.score_sent:
+                    self._try_reading_score(frame)
 
             # generic
-            if frame_index % 100 == 0:
-                logging.info("100 frames checked")
+            if frame_index % 1000 == 0:
+                logging.info("1000 frames checked")
             if SAVE_FRAMES:
                 cv2.imwrite(f"{SAVE_DIR_PATH}/{frame_index}.jpg", frame)
                 logging.info(f"SAVED {frame_index}.jpg")
@@ -373,6 +297,74 @@ class NinSwitchIRLKart(Game):
             logging.info("Image rec task finished.")
         else:
             raise RuntimeError("Image rec task finished by itself")
+
+    def _handle_pre_game(self, frame):
+        if (
+            self.has_4_ready_to_start(frame) or self.has_flag(frame)
+        ) and not self.pre_game_ready_sent:
+            logging.info("PRE_GAME READY")
+            self.pre_game_ready_sent = True
+            for seat in self.io._message_router.get_all_seats():
+                self.io.send_pre_game_ready(seat=seat)
+        elif self.pre_game_ready_sent:
+            logging.info("PRE_GAME NOT READY")
+            self.pre_game_ready_sent = False
+            for seat in self.io._message_router.get_all_seats():
+                self.io.send_pre_game_not_ready(seat=seat)
+
+    def _check_for_finish_text(self, frame):
+        if self.has_finish_text(frame):
+            self.has_finished = True
+            self.stop_controls()
+            logging.info("FINISHED")
+
+    def _get_position(self, frame):
+        detected = None
+        for position in self.position_detectors.keys():
+            if self.position_detectors[position](frame):
+                detected = position
+                break
+        return detected
+
+    def _try_reading_score(self, frame):
+        pos = self._get_position(frame)
+        if pos is not None:
+            # if position found, try reading the time
+            time_ms, time_string = get_time_ms(frame, pos)
+            cleaned_time = time_string.replace(":", "-").replace(".", "-")
+
+            # if time_ms reading failed
+            if time_ms is None:
+                if SAVE_POS_FRAMES:
+                    self._save_pos_frame(frame, pos, cleaned_time, failed=True)
+                if self.has_finished and not self.score_sent:
+                    self.failed_score_reads += 1
+                    logging.info(
+                        f"Score reading for pos {pos} failed "
+                        f"{self.failed_score_reads}. time: "
+                        f"{time_string}"
+                    )
+                    if self.failed_score_reads == MAX_FAILED_SCORE_READS:
+                        logging.info(f"FAILED SCORE SENT")
+                        self._send_score(FAILED_SCORE_READ_SCORE)
+            else:  # if time reading succeeded
+                if not self.has_finished:
+                    self.stop_controls()
+                    logging.info("STOPPED CONTROLS, FINISH WAS NOT READ")
+                self.score_sent = True
+                self._send_score(time_ms)
+                logging.info(f"SCORE {time_string} SENT")
+                if SAVE_POS_FRAMES:
+                    self._save_pos_frame(frame, pos, cleaned_time)
+
+    def _save_pos_frame(self, frame, pos, cleaned_time, failed=False):
+        prefix = "FAILED_" if failed else ""
+        timestamp = int(time() * 1000.0)
+        filename = f"{prefix}{cleaned_time}_{pos}_{timestamp}.jpg"
+        cv2.imwrite(
+            f"{SAVE_POS_DIR_PATH}/{filename}", frame,
+        )
+        logging.info(f"SAVED {prefix}POS FRAME: {filename}")
 
     def _send_score(self, score):
         for seat in self.io._message_router.get_all_seats():
