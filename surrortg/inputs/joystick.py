@@ -198,7 +198,7 @@ class Joystick(Input):
         :param seat: Robot seat
         :type seat: int
         """
-        self.handle_coordinates(0, 0, seat)
+        await self.handle_coordinates(0, 0, seat)
 
     def get_name(self):
         """Returns the name of the input
