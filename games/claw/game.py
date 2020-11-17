@@ -16,6 +16,7 @@ from games.claw.config import (
     AUTOMATIC_MOVE_TIME,
     WAIT_TIME_AFTER_SENSOR_BLOCKED,
     BLOCKED_SENSOR_PING_TIME,
+    BLOCK_GAME_LOOP_IF_SENSOR_STUCK,
 )
 
 
@@ -55,19 +56,25 @@ class ClawGame(Game):
         await self.joystick.reset()
         # make sure the prize sensor is not blocked
         if self.toy_sensor.get_sensor_state():
-            logging.warning(
-                "TOY SENSOR BLOCKED, PLEASE REMOVE BLOCKING OBJECTS"
-            )
-            # only continue game after the blocking objects have been removed
-            while True:
-                await asyncio.sleep(BLOCKED_SENSOR_PING_TIME)
-                if not self.toy_sensor.get_sensor_state():
-                    logging.info(
-                        f"Toy sensor not stuck anymore, will continue "
-                        f"game in {WAIT_TIME_AFTER_SENSOR_BLOCKED} seconds"
-                    )
-                    await asyncio.sleep(WAIT_TIME_AFTER_SENSOR_BLOCKED)
-                    break
+            if BLOCK_GAME_LOOP_IF_SENSOR_STUCK:
+                logging.warning(
+                    "TOY SENSOR BLOCKED, PLEASE REMOVE BLOCKING OBJECTS"
+                )
+                # continue game after the blocking objects have been removed
+                while True:
+                    await asyncio.sleep(BLOCKED_SENSOR_PING_TIME)
+                    if not self.toy_sensor.get_sensor_state():
+                        logging.info(
+                            f"Toy sensor not stuck anymore, will continue "
+                            f"game in {WAIT_TIME_AFTER_SENSOR_BLOCKED} seconds"
+                        )
+                        await asyncio.sleep(WAIT_TIME_AFTER_SENSOR_BLOCKED)
+                        break
+            else:
+                logging.warning(
+                    "TOY SENSOR BLOCKED, BUT PROCEEDING ANYWAY "
+                    "(configured not to block game loop while stuck)"
+                )
         # make sure the state is correct before approving game start
         if not self.ready_for_next_game:
             logging.info("Forcing the ClawMachine ready state, please wait...")
