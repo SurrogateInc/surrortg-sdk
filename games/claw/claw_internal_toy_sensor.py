@@ -1,7 +1,10 @@
 import logging
 import asyncio
 import pigpio
-from games.claw.config import IR_SENSOR_PIN
+from games.claw.config import (
+    IR_SENSOR_PIN,
+    TOYSENSOR_STATE_ON,
+)
 
 
 class ClawInternalToySensor:
@@ -12,7 +15,7 @@ class ClawInternalToySensor:
 
     def get_sensor_state(self):
         sensor_value = self.pi.read(IR_SENSOR_PIN)
-        return sensor_value
+        return sensor_value == TOYSENSOR_STATE_ON
 
     async def wait_for_toy(self, toy_wait_time):
         logging.info("Waiting for toys using internal IR sensor")

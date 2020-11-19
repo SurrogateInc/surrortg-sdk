@@ -16,6 +16,7 @@ BLOCK_GAME_LOOP_IF_SENSOR_STUCK = True
 
 """ClawInternalToySensor"""
 IR_SENSOR_PIN = 23
+TOYSENSOR_STATE_ON = 1
 
 """ClawToySensor"""
 ARDUINO_PATH = "/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0"
@@ -31,6 +32,8 @@ LEFT_PIN = 8
 BOTTOM_PIN = 7
 RIGHT_PIN = 25
 MIN_AMOUNT = 0.2
+JOYSTICK_STATE_ON = 0
+JOYSTICK_STATE_OFF = 1
 
 # Override values in this file with those found in config_local.py
 try:
