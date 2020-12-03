@@ -75,7 +75,9 @@ class Joystick(Input):
     async def _on_input(self, command, seat):
         """Joystick input functionality
 
-        Parses x- and y-coordinates and calls handle_coordinates
+        Parses x- and y-coordinates and calls handle_coordinates and
+        handle_coordinates_and_mouse.
+
         :param command: Command from game engine
         :type command: dict
         :param seat: Robot seat
@@ -83,8 +85,18 @@ class Joystick(Input):
         """
         x = self._parse_coordinate(command, "x")
         y = self._parse_coordinate(command, "y")
+        dx = command.get("dx")
+        dy = command.get("dy")
+        try:
+            dx = int(dx)
+            dy = int(dy)
+        except TypeError:
+            dx = None
+            dy = None
+
         if x is not None and y is not None:
             await self.handle_coordinates(x, y, seat)
+            await self.handle_coordinates_and_mouse(x, y, dx, dy, seat)
 
     def _parse_coordinate(self, command, key):
         """Parse the coordinate given as key from the command
@@ -114,6 +126,26 @@ class Joystick(Input):
             return None
 
         return val
+
+    async def handle_coordinates_and_mouse(self, x, y, dx, dy, seat):
+        """Delta based mouse control
+
+        Optional method to allow more intuitive mouse control.
+        'dx' and 'dy' values are provided if mouse is used instead of joystick.
+        Those values describe mouse movement relative to previous position.
+
+        :param x: x-coordinate, between -1.0 and 1.0
+        :type x: float
+        :param y: y-coordinate, between -1.0 and 1.0
+        :type y: float
+        :param dx: x-movement in pixels relative to previous state
+        :type dx: int
+        :param dy: y-movement in pixels relative to previous state
+        :type dy: int
+        :param seat: Robot seat
+        :type seat: int
+        """
+        pass
 
     async def handle_coordinates(self, x, y, seat):
         """Coordinate based Joystick control
