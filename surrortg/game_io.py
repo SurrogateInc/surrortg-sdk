@@ -1,12 +1,9 @@
 import logging
-import toml
-import os.path
 import socket
 from .network.socket_handler import SocketHandler
 from .network.message_router import MultiSeatMessageRouter
+from .config_parser import get_config
 
-REQUIRED_CONFIG_KEYS = ["device_id", "game_engine"]
-REQUIRED_CONFIG_GE_KEYS = ["url", "token"]
 SURRORTG_VERSION = "0.2.0"
 LOCAL_SOCKET_NAME = "/tmp/.srtg-sock"
 DATACHANNEL_CONFIG_KEY = "datachannel"
@@ -26,22 +23,7 @@ class GameIO:
         socketio_logging_level,
         robot_type,
     ):
-        self._config = self._get_config(config_path)
-
-        if "id" not in self._config["game_engine"]:
-            raw_token = self._config["game_engine"]["token"]
-            if "/" not in raw_token:
-                raise RuntimeError(
-                    "Malformed token: are you using old token format?"
-                )
-            tokens = raw_token.split("/")
-            self._config["game_engine"]["id"] = tokens[0]
-            self._config["game_engine"]["token"] = tokens[1]
-        else:
-            if "/" in self._config["game_engine"]["token"]:
-                raise RuntimeError(
-                    "Trying to use new combined token with separate id"
-                )
+        self._config = get_config(config_path)
 
         device_id = self._config["device_id"]
         if not device_id:
@@ -73,66 +55,6 @@ class GameIO:
         )
         self._socket_handler.register_on_connect_cb(self.provide_inputs)
         self.input_bindings = {}
-
-    def _get_config(
-        self, config_path, default_config_path="/etc/srtg/srtg.toml"
-    ):
-        """A separate static method makes testing easier"""
-        if config_path is None:
-            config_path = default_config_path
-
-        # make sure that the main config file exists
-        if not os.path.isfile(config_path):
-            raise RuntimeError(f"Config file '{config_path}' does not exist")
-
-        # get configs
-        config = toml.load(config_path)
-        # add ["game_engine"] if did not exist already
-        if "game_engine" not in config:
-            config["game_engine"] = toml.load(
-                self._get_current_ge_config_path(default_config_path)
-            )["game_engine"]
-
-        # validate config
-        self._validate_config(config, config_path)
-
-        return config
-
-    @staticmethod
-    def _get_current_ge_config_path(
-        default_config_path,
-        current_ge_name_file="/var/lib/srtg/current_game_engine",
-    ):
-        """A separate static method makes testing easier"""
-
-        # get the current game engine name, and return the path to it
-        config_file_parent_dir = os.path.dirname(default_config_path)
-        try:
-            with open(current_ge_name_file) as f:
-                return (
-                    f"{config_file_parent_dir}/game_engines/"
-                    f"{f.readline().rstrip()}.toml"
-                )
-        except Exception:
-            logging.warning(
-                "Could not read the current game engine name from "
-                f"'{current_ge_name_file}'\nAdd correct name there "
-                "or add [game_engine] section to config"
-            )
-            raise
-
-    @staticmethod
-    def _validate_config(config, config_path):
-        """A separate static method makes testing easier"""
-        for key in REQUIRED_CONFIG_KEYS:
-            assert (
-                key in config
-            ), f"Required '{key}' not found from config: '{config_path}'"
-        for key in REQUIRED_CONFIG_GE_KEYS:
-            assert key in config["game_engine"], (
-                f"Required '{key}' not found from config['game_engine']: "
-                f"'{config_path}'"
-            )
 
     def _is_config_message(self, message):
         return message.src == "gameEngine" and message.event == "config"
