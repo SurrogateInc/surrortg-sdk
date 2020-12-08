@@ -39,6 +39,7 @@ class ArcadeMultiButton(Switch):
             self._reset_timer(True)
         else:
             logging.info(f"Too much spam for {self.name}")
+            await self.off()
 
     async def off(self, seat=0):
         logging.debug(f"{self.name} off")
