@@ -1,4 +1,5 @@
 import os
+import socket
 import toml
 import logging
 
@@ -25,6 +26,11 @@ def get_config(config_path, default_config_path="/etc/srtg/srtg.toml"):
 
     # validate config
     _validate_config(config, config_path)
+
+    device_id = config["device_id"]
+    if not device_id:
+        logging.info("Using hostname as device_id")
+        config["device_id"] = socket.gethostname().split(".", 1)[0]
 
     if "id" not in config["game_engine"]:
         raw_token = config["game_engine"]["token"]

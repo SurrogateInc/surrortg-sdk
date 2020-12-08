@@ -1,5 +1,4 @@
 import logging
-import socket
 from .network.socket_handler import SocketHandler
 from .network.message_router import MultiSeatMessageRouter
 from .config_parser import get_config
@@ -25,18 +24,13 @@ class GameIO:
     ):
         self._config = get_config(config_path)
 
-        device_id = self._config["device_id"]
-        if not device_id:
-            logging.info("Using hostname as device_id")
-            device_id = socket.gethostname().split(".", 1)[0]
-
         self._socket_handler = SocketHandler(
             self._config["game_engine"]["url"],
             query={
                 "clientType": "robot",
                 "robotType": robot_type,
                 "robotVersion": SURRORTG_VERSION,
-                "clientId": device_id,
+                "clientId": self._config["device_id"],
                 "gameId": self._config["game_engine"]["id"],
                 "token": self._config["game_engine"]["token"],
             },
