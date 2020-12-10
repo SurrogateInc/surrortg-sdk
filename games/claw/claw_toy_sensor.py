@@ -1,19 +1,23 @@
 import logging
 import asyncio
-import serial
-from games.claw.config import ARDUINO_PATH, BLOCKED_THRESHOLD
+import pigpio
+from games.claw.config import (
+    TOYSENSOR_PIN,
+    TOYSENSOR_STATE_BLOCKED,
+)
 
 
 class ClawToySensor:
-    def __init__(self, io):
+    def __init__(self, io, pi):
         self.io = io
+        self.pi = pi
+        self.pi.set_mode(TOYSENSOR_PIN, pigpio.INPUT)
 
-    def get_sensor_state(self):
-        """This function only exists for compatibility reasons."""
-        return 0
+    def is_blocked(self):
+        return self.pi.read(TOYSENSOR_PIN) == TOYSENSOR_STATE_BLOCKED
 
     async def wait_for_toy(self, toy_wait_time):
-        logging.info("Waiting for toys")
+        logging.info("Waiting for toys using internal IR sensor")
 
         try:
             await asyncio.wait_for(self.detect_toy(), timeout=toy_wait_time)
@@ -26,58 +30,34 @@ class ClawToySensor:
 
     async def detect_toy(self):
         try:
-            with serial.Serial(ARDUINO_PATH) as ser:
-                # log the smallest sensor setup value
-                ser.timeout = 2
-                try:
-                    smallest_measurement = int(self._get_line(ser))
-                    logging.info(
-                        f"Smallest setup measurement: {smallest_measurement}"
-                    )
-                    if smallest_measurement < BLOCKED_THRESHOLD:
-                        logging.warning(
-                            "Toy sensor seems to be blocked! "
-                            "No toy result available"
-                        )
-                        while True:
-                            await asyncio.sleep(1)
-                except asyncio.CancelledError:
-                    raise  # toy detection cancelled
-                except Exception as e:
-                    logging.info(
-                        f"smallest_measurement parsing failed: {e}, "
-                        "maybe just missed first line or timeouted"
-                    )
-
-                # wait for the toy
-                ser.timeout = 0.1
+            if self.is_blocked():
+                logging.warning(
+                    "Toy sensor seems to be blocked! "
+                    "No toy result available "
+                )
                 while True:
-                    if self._get_line(ser) == "D":
-                        break
-                    # give time for wait_for to update
-                    await asyncio.sleep(0.1)
-
-        except serial.SerialException as e:
-            logging.warning(
-                f"Serial connection failed: {e},\n\nNo toy result available"
-            )
+                    await asyncio.sleep(1)
+            # wait for the toy
             while True:
-                await asyncio.sleep(1)
+                # toy found if sensor is blocked here
+                if self.is_blocked():
+                    break
+                # give time for wait_for to update
+                await asyncio.sleep(0)
+        except asyncio.CancelledError:
+            raise  # toy detection cancelled
+        except Exception as e:
+            logging.info(f"Toy detection failed: {e}")
 
         logging.info(f"Toy found!")
-
-    @staticmethod
-    def _get_line(ser):
-        # read_until does only block for ser.timeout unlike ser.readline
-        return ser.read_until(b"\n").decode("ascii", errors="ignore").rstrip()
 
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 
     class DummySocket:
-        async def send(self, *args):
+        async def send_score(self, *args, **kwargs):
             pass
 
     toy_sensor = ClawToySensor(DummySocket())
-    asyncio.get_event_loop().run_until_complete(toy_sensor.wait_for_toy(5))
+    asyncio.get_event_loop().run_until_complete(toy_sensor.wait_for_toy(10))
