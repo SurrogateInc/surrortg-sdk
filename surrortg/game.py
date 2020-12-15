@@ -108,6 +108,12 @@ class Game:
         The players are available only during on_pre_game, on_countdown,
         on_start and on_finish.
 
+        NOTE: because of the current implementation limitations, game.players
+        could raise RuntimeError if preGame phase length is 0 seconds. The
+        workaround is to set it for example to 2 seconds (the default is 0
+        seconds). This can be changed from the game's Dashboard at
+        www.surrogate.tv/game/<SHORT_ID>/settings > Settings > Game Engine.
+
         :raises RuntimeError: when accessed before run() or if not available
         :rtype: list[dict]
         """
