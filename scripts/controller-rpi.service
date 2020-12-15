@@ -7,7 +7,8 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=10
+Environment=GAME_MODULE=game_templates.simple_game
 WorkingDirectory=/home/pi/surrortg-sdk
-ExecStart=/usr/bin/python3 -m game_templates.simple_game
+ExecStart=/usr/bin/python3 -m $GAME_MODULE
 [Install]
 WantedBy=multi-user.target
