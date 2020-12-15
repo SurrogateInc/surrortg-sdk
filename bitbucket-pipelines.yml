@@ -24,7 +24,7 @@ pipelines:
           image: ruby:2.7.2 # override default image
           script:
             - gem install mdl -v 0.11.0 # if version changed, change also on .pre-commit-config.yaml!
-            - mdl --style all .
+            - mdl --style '.mdl-style.rb' .
   branches:
     main:
       - step:

@@ -11,4 +11,4 @@ repos:
     rev: v0.11.0 # if version changed, change also on bitbucket-pipelines.yml!
     hooks:
       - id: markdownlint
-        entry: mdl --style all
+        entry: mdl --style '.mdl-style.rb'
