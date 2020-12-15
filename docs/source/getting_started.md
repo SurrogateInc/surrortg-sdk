@@ -350,7 +350,7 @@ detail how the games work!
 ## Running the SurroRTG Python SDK (controller) automatically on boot
 
 To make the python code automatically start after restarting the raspberry pi, you will need to follow the steps here to do so. Below are the example contents of the existing "controller-rpi.service" file that is located in the sdk `scripts folder`. You will need to make sure that the following options are correct:
-`WorkingDirectory` has absolute path to your sdk root folder, and `ExecStart` has the correct python path inside the sdk folder.
+`WorkingDirectory` has absolute path to your sdk root folder, and `Environment=GAME_MODULE=` has the correct python path inside the sdk folder.
 
 ```
 [Unit]
@@ -362,13 +362,14 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=10
+Environment=GAME_MODULE=game_templates.simple_game
 WorkingDirectory=/home/pi/surrortg-sdk
-ExecStart=/usr/bin/python3 -m game_templates.simple_game
+ExecStart=/usr/bin/python3 -m $GAME_MODULE 
 [Install]
 WantedBy=multi-user.target
 ```
 
-Then run the setup-system.sh script to update and reload your new systemd module. If you have already created the systemd unit and you have not changed the file you are running (ExecStart), you can just reload the systemd unit with
+Then run the setup-system.sh script to update and reload your new systemd module. If you have already created the systemd unit and you have not changed the file you are running (GAME_MODULE), you can just reload the systemd unit with
 
 ```
 sudo systemctl restart controller

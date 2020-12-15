@@ -57,7 +57,7 @@ You can test the game by running in your folder root:
 sudo python3 -m games.rvr.game
 ```
 
-or by modifying the systemd file controller-rpi.service by changing the ExecStart command to use games.rvr.game and running at your folder root:
+or by modifying the systemd file controller-rpi.service by changing the game module path in the line starting with "Environment=GAME_MODULE=" to use games.rvr.game and running at your folder root:
 
 ```
 ./scripts/setup-systemd.sh
