@@ -256,7 +256,7 @@ class Game:
         # log info if certain methods not implemented
         for method_name in CHECK_IMPLEMENTATION:
             if self._not_implemented(method_name):
-                logging.info(self._get_not_implemented_message(method_name))
+                logging.debug(self._get_not_implemented_message(method_name))
 
         # GameIO should only be accessed through property self.io
         self._io = GameIO(
