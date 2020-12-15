@@ -1,15 +1,15 @@
 ## Sphero rover exploration game
 
-Before starting the tutorial, make sure that you have all of the required hardware and
-the your Raspberry Pi has [SurroRTG SDK installed](getting_started).
+Before starting the tutorial, make sure that you have all of the required hardware
+and the your Raspberry Pi has [SurroRTG SDK installed](getting_started).
 
 **The Required hardware**
 
--   [Sphero RVR](https://sphero.com/products/rvr)
--   [Raspberry Pi 3b+ or 4](https://www.raspberrypi.org/products/)
--   Jumper cables
--   [a supported camera](camera_support)
--   Optionally: a mount for the camera
+- [Sphero RVR](https://sphero.com/products/rvr)
+- [Raspberry Pi 3b+ or 4](https://www.raspberrypi.org/products/)
+- Jumper cables
+- [a supported camera](camera_support)
+- Optionally: a mount for the camera
 
 ### Hook everything up
 
@@ -19,31 +19,36 @@ Raspberry Pi's GND to RVR's GND
 Raspberry Pi's TX to RVR's RX  
 Raspberry Pi's RX to RVR's TX
 
-Mount and connect the camera to Raspberry Pi. Then connect the USB cable from the RVR to power up
-Raspberry Pi, press the button on the RVR's side to turn it on.
+Mount and connect the camera to Raspberry Pi. Then connect the USB cable from the
+RVR to power up Raspberry Pi, press the button on the RVR's side to turn it on.
 
 ### Create the game on Surrogate.tv
 
 Go to [www.surrogate.tv/admin](www.surrogate.tv/admin) and click `Create a new game`.
 
-Then choose your custom title, description, and short ID, and then choose type of the game to be `RVR`.
-This will create a Admin panel with the correct settings for you. Optionally you can customize the looks
-by changing the default image assets.
+Then choose your custom title, description, and short ID, and then choose type
+of the game to be `RVR`. This will create a Admin panel with the correct settings
+for you. Optionally you can customize the looks by changing the default image assets.
 
 ### SurroRTG SDK's setup page
 
-<strong>Not supported yet. Use the [manual-setup-guide](#manual-setup-of-the-code) </strong>
+**Not supported yet. Use the [manual-setup-guide](#manual-setup-of-the-code)**
 
-Connect to the hotspot created by the Raspberry Pi, and you'll get to the Setup Page. From the setup page
-copy and paste the `Robot token` from the Admin Panel, and choose the Gametype `RVR`.
+Connect to the hotspot created by the Raspberry Pi, and you'll get to the
+Setup Page. From the setup page copy and paste the `Robot token` from the
+Admin Panel, and choose the Gametype `RVR`.
 
-Then give your wifi password to the robot to connect to surrogate.tv, and click next.
+Then give your wifi password to the robot to connect to surrogate.tv, and
+click next.
 
-### manual setup of the code
+### Manual setup of the code
 
-You will need to enable serial communication on your raspberry pi by 'sudo raspi-config' to enable serial communication or just add line 'enable_uart=1' to the end of '/boot/config.txt' and reboot the raspberry pi.
+You will need to enable serial communication on your raspberry pi by `sudo raspi-config`
+to enable serial communication or just add line `enable_uart=1` to the end of
+`/boot/config.txt` and reboot the raspberry pi.
 
-Then you will need run the setup script to install the sphero-sdk and dependencies. Run the following commands in the <strong> games/rvr/ folder </strong>.
+Then you will need run the setup script to install the sphero-sdk and dependencies.
+Run the following commands in the **games/rvr/ folder**.
 
 ```
 sudo pip3 install -r requirements.txt
@@ -57,7 +62,9 @@ You can test the game by running in your folder root:
 sudo python3 -m games.rvr.game
 ```
 
-or by modifying the systemd file controller-rpi.service by changing the game module path in the line starting with "Environment=GAME_MODULE=" to use games.rvr.game and running at your folder root:
+or by modifying the systemd file controller-rpi.service by changing the game module
+path in the line starting with `Environment=GAME_MODULE=` to use games.rvr.game
+and running at your folder root:
 
 ```
 ./scripts/setup-systemd.sh
@@ -72,9 +79,7 @@ Get the LED, wires and the 330 ohm resistor and connect them similarly to the
 image below. Make sure that the LED's short leg is on the same side as the
 GND. Optionally, some jumper cables and a breadboard can be used for easier construction.
 
-<p align="left">
-  <img width="300" height="300" src="_static/images/led.png">
-</p>
+![Led wiring](_static/images/led.png)
 
 (image from a beginner friendly
 [Lighting an LED tutorial](https://projects.raspberrypi.org/en/projects/physical-computing/2))
@@ -89,10 +94,9 @@ cd ~/surrortg-sdk/getting_started
 python led_test_game.py
 ```
 
-This should now allow you to queue to the game at
-`www.surrogate.tv/game/<SHORT_ID_YOU_CHOSE>`, and while on the game you can
-blink the lights with the space bar. After 10 blinks, the game should end with
-a score of 10.
+This should now allow you to queue to the game at `www.surrogate.tv/game/<SHORT_ID_YOU_CHOSE>`,
+and while on the game you can blink the lights with the space bar. After 10 blinks,
+the game should end with a score of 10.
 
 Then to exit the virtual environment, just call:
 
@@ -103,7 +107,8 @@ exit
 ## Rc-Car Game
 
 One of the easiest things to physically hook up to a raspberry pi is a RC-car.
-This guide shows to hook up and control RC-car that has a separate servo and electrical speed controller (ESC).
+This guide shows to hook up and control RC-car that has a separate servo and electrical
+speed controller (ESC).
 
 Required connections
 
@@ -113,5 +118,5 @@ Required connections
 
 You will most likely also want to protect your RPI GPIOs by adding resistors.
 
-The example code can be found in `game_templates/car_game.py`. The example code explanation can be
-found [here](modules/game_templates.html#car-game)
+The example code can be found in `game_templates/car_game.py`. The example code
+explanation can be found [here](modules/game_templates.html#car-game)

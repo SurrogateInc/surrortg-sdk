@@ -160,7 +160,8 @@ off
 when you press the key down and up you have bound to a name `switch` from the
 Admin panel.
 
-The game will stop after 15 seconds, after the controller sends final scores from the on_start method.
+The game will stop after 15 seconds, after the controller sends final scores from
+the on_start method.
 
 ### Custom game example: LEDTestGame
 
@@ -227,7 +228,8 @@ it into your use case.
 
 ## Further reading
 
-You can find other templates in the `game_templates` and `game` folders. You should also take a look at [game_development](game_development) and [ready examples](ready_games).
+You can find other templates in the `game_templates` and `game` folders. You should
+also take a look at [game_development](game_development) and [ready examples](ready_games).
 
 The [inputs](modules/surrortg.inputs.html#surrortg-inputs) subpackage contains also
 many other types of inputs, such as
@@ -241,8 +243,8 @@ such as sending
 [laps](modules/surrortg.html#surrortg.game_io.GameIO.send_lap),
 [scores](modules/surrortg.html#surrortg.game_io.GameIO.send_score),
 [enabling](modules/surrortg.html#surrortg.game_io.GameIO.enable_inputs) and
-[disabling](modules/surrortg.html#surrortg.game_io.GameIO.disable_inputs) inputs or
-[resetting all registered inputs](modules/surrortg.html#surrortg.game_io.GameIO.reset_inputs).
+[disabling](modules/surrortg.html#surrortg.game_io.GameIO.disable_inputs) inputs
+or [resetting all registered inputs](modules/surrortg.html#surrortg.game_io.GameIO.reset_inputs).
 
 [on_init](modules/surrortg.html#surrortg.game.Game.on_init) is just one of
 the many methods, that can be used to control the [Game](modules/surrortg.html#module-surrortg.game).
