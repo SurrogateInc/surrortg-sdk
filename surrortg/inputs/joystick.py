@@ -134,7 +134,7 @@ class Joystick(Input):
         """Get the current direction from 8 main directions + middle
 
         Result Directions.MIDDLE means that Joystick distance from the center
-        point is less than self._min_amount.
+        point is less than 0.1 or some other threshold set with set_min_amount.
 
         Other possible results: Directions.TOP, BOTTOM, LEFT, RIGHT, TOP_LEFT,
         TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT.
@@ -159,7 +159,7 @@ class Joystick(Input):
         """Get the current direction from 4 main directions + middle
 
         Result Directions.MIDDLE means that Joystick distance from the center
-        point is less than self._min_amount.
+        point is less than 0.1 or some other threshold set with set_min_amount.
 
         Other possible results: Directions.TOP, BOTTOM, LEFT, RIGHT.
 

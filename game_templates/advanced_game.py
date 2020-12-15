@@ -9,7 +9,6 @@ class MyJoystick(Joystick):
     """
 
     def __init__(self, io):
-        super().__init__()  # do the default Joystick initialization
         self.io = io  # save io for sending updates to the game engine
         self.progress = 0.0  # initialize progress with 0.0
 
