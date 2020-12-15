@@ -57,13 +57,15 @@ class Joystick(Input):
     """Joystick input class
 
     Implement custom logic based on directions and amounts or x/y coordinates.
-
-    :param min_amount: if input amount is less than this middle() is
-        called, defaults to 0.1
-    :type min_amount: float, optional
     """
 
-    def __init__(self, min_amount=0.1):
+    def set_min_amount(self, min_amount):
+        """Set joystick min_amount parameter
+
+        :param min_amount: if the input amount is less than this middle () is
+            called
+        :type min_amount: float
+        """
         assert isinstance(
             min_amount, (float, int)
         ), "min_amount must be float or int"
@@ -132,7 +134,7 @@ class Joystick(Input):
         """Get the current direction from 8 main directions + middle
 
         Result Directions.MIDDLE means that Joystick distance from the center
-        point is less than self.min_amount.
+        point is less than self._min_amount.
 
         Other possible results: Directions.TOP, BOTTOM, LEFT, RIGHT, TOP_LEFT,
         TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT.
@@ -144,6 +146,8 @@ class Joystick(Input):
         :return: Current direction
         :rtype: Directions
         """
+        if not hasattr(self, "_min_amount"):
+            self._min_amount = 0.1
         direction, amount = self.get_direction_and_amount(x, y)
         if amount < self._min_amount:
             return Directions.MIDDLE
@@ -155,7 +159,7 @@ class Joystick(Input):
         """Get the current direction from 4 main directions + middle
 
         Result Directions.MIDDLE means that Joystick distance from the center
-        point is less than self.min_amount.
+        point is less than self._min_amount.
 
         Other possible results: Directions.TOP, BOTTOM, LEFT, RIGHT.
 
@@ -166,6 +170,8 @@ class Joystick(Input):
         :return: Current direction
         :rtype: Directions
         """
+        if not hasattr(self, "_min_amount"):
+            self._min_amount = 0.1
         direction, amount = self.get_direction_and_amount(x, y)
         if amount < self._min_amount:
             return Directions.MIDDLE
