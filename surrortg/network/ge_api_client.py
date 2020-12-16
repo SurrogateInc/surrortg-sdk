@@ -73,7 +73,7 @@ class ApiClient(socketio.AsyncClientNamespace):
             if self.connected_future is not None:
                 self.connected_future.set_exception(Exception(msg))
                 self.connected_future = None
-            if "Invalid token" in msg:
+            if "Invalid robot token" in msg:
                 sys.exit(2)
 
         self.sio.register_namespace(self)
