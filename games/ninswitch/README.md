@@ -2,9 +2,10 @@
 
 Ninswitch directory contains three games:
 
--   **game_simple.py** which contains code only for the Switch controls
--   **game_imagerec.py** which the same as game_simple.py, but it also has a image recognition sample code
--   **game_irlkart.py** which contains the full code for the irlkart game
+- **game_simple.py** which contains code only for the Switch controls
+- **game_imagerec.py** which the same as game_simple.py, but it also has an image
+    recognition sample code
+- **game_irlkart.py** which contains the full code for the irlkart game
 
 They games are made possible by [gdsports](https://github.com/gdsports)'s [NSGadget_Pi](https://github.com/gdsports/NSGadget_Pi)
 library, which forwards the contorls from Rapberry Pi to Switch.
@@ -13,12 +14,12 @@ library, which forwards the contorls from Rapberry Pi to Switch.
 
 Hardware requirements:
 
--   Switch console
--   Adafruit Trinket M0
--   HDMI capture device
--   HDMI cable
--   Micro USB cable
--   jumber cables
+- Switch console
+- Adafruit Trinket M0
+- HDMI capture device
+- HDMI cable
+- Micro USB cable
+- jumber cables
 
 Following [NSGadget_Pi](https://github.com/gdsports/NSGadget_Pi)'s setup:
 
@@ -40,9 +41,9 @@ Following [NSGadget_Pi](https://github.com/gdsports/NSGadget_Pi)'s setup:
 
 Software requirements:
 
--   Surrortg installed
--   Knowledge on how to run different games inside `/games` directory
--   Audio setup done
+- Surrortg installed
+- Knowledge on how to run different games inside `/games` directory
+- Audio setup done
 
 The image recognition needs a loopback device set up to `/dev/video21`:
 
@@ -57,7 +58,8 @@ To install everything correctly on Raspberry Pi:
 1. First change to the ninswitch directory with `cd games/ninswitch`
 2. Install the Python requirements by running `sudo pip3 install -r requiremets.txt`
 3. Run the setup script with `sudo ./setup.sh`
-4. Use `sudo nano /boot/config.txt` to add `dtoverlay=disable-bt` as the last line of config.txt. Then save and exit.
+4. Use `sudo nano /boot/config.txt` to add `dtoverlay=disable-bt` as the last line
+    of config.txt. Then save and exit.
 5. Change the raspi config with `sudo raspi-config`:
     - Select `Interfacing Options`
     - Select `P6 Serial`
@@ -68,10 +70,12 @@ To install everything correctly on Raspberry Pi:
 
 ## Image recognition
 
-**game_imagerec.py** has a sample code how to detect a flag from the loopback device stream.
+**game_imagerec.py** has a sample code how to detect a flag from the loopback
+device stream.
 
-This is possible through `surrortg/image_recognition`'s AsyncVideoCapture, which reads individual
-frames from the loopback device stream in a separate `image_rec_main`-task:
+This is possible through `surrortg/image_recognition`'s AsyncVideoCapture,
+which reads individual frames from the loopback device stream in a separate
+`image_rec_main`-task:
 
 ```python
 from surrortg.image_recognition import AsyncVideoCapture, get_pixel_detector
@@ -92,11 +96,12 @@ from surrortg.image_recognition import AsyncVideoCapture, get_pixel_detector
 
 The flag is detected with the help of `get_pixel_detector`-function.
 
-It receives a list of spesific pixels from the flag, as pixel coordinates and colors,  
-and outputs a function that returns `True/False` based on whether the input frame has similar pixels.
+It receives a list of spesific pixels from the flag, as pixel coordinates and colors,
+and outputs a function that returns `True/False` based on whether the input frame
+has similar pixels.
 
-The color match sensitivity can be modified with `close=` -parameter, which defaults to 25, smaller value
-requires closer match for each pixel to return True.
+The color match sensitivity can be modified with `close=` -parameter, which defaults
+to 25, smaller value requires closer match for each pixel to return `True`.
 
 ```python
 # sample detectable
@@ -137,20 +142,23 @@ First, you need to have a sample frame from the loopback device.
 This can be done by changing `SAVE_FRAMES`variable from `False` to `True` from `game_imagerec.py`.
 Then run the game until the point your detectable object is seen and stop the game.
 
-You should then revert `SAVE_FRAMES` back to `False` to increase the frame processing rate and prevent
-filling up the SD-card.
+You should then revert `SAVE_FRAMES` back to `False` to increase the frame processing
+rate and prevent filling up the SD-card.
 
-Assuming you have a working ssh connction, these images can be copied from the raspi to current directory on your PC with scp:  
+Assuming you have a working ssh connction, these images can be copied from the
+raspi to current directory on your PC with scp:  
 `scp -r <USER>@<RASPI_ADDRESS>:/opt/srtg-python/imgs/ .`
 
 #### Generate pixel values
 
 On your PC Python, install OpenCV by running `pip install opencv-contrib-python`
 
-Then, you are able to create custom image recognition code by running pixel_detect -program:  
+Then, you are able to create custom image recognition code by running pixel_detect
+-program:  
 `python surrortg/image_recognition/pixel_detect.py <PATH_TO_FRAME> <DETECTABLE_NAME>`
 
-You can now click the interesting pixels that are included inside the detectable. Press `Q` to exit.
+You can now click the interesting pixels that are included inside the detectable.
+Press `Q` to exit.
 
 This process should print a sample code to the terminal, an example output:
 
