@@ -24,6 +24,11 @@ definitions:
         script:
           - gem install mdl -v 0.11.0 # if version changed, change also on .pre-commit-config.yaml!
           - mdl --style '.mdl-style.rb' .
+    - step: &codespell
+        name: codespell
+        script:
+          - pip install codespell==v2.0.0 # if version changed, change also on .pre-commit-config.yaml!
+          - codespell --ignore-words=.codespell-ignore .
     - step: &docs
         name: docs
         script:
@@ -44,6 +49,7 @@ pipelines:
       - step: *black
       - step: *flake8
       - step: *markdownlint
+      - step: *codespell
 
   branches:
     main: # If tests/formatting fails, does not build docs.
@@ -52,4 +58,5 @@ pipelines:
         - step: *black
         - step: *flake8
         - step: *markdownlint
+        - step: *codespell
       - step: *docs
