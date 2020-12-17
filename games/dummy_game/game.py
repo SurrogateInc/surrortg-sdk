@@ -27,7 +27,7 @@ parser.add_argument(
     "-c",
     "--conf",
     metavar="",
-    help="path to cofiguration .toml file",
+    help="path to configuration .toml file",
     required=False,
 )
 args = parser.parse_args()

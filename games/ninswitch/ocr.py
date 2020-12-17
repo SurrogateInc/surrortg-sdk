@@ -131,7 +131,7 @@ if __name__ == "__main__":  # noqa:C901
 Runs 3 tests to check that the detections are consistent
 Usage: python -m games.ninswitch.ocr <path_to_saved_frames>
 
-The successfull frames should be named like this:
+The successful frames should be named like this:
 2-35-679_1_1604693129851.jpg (time_position_timestamp),
 and the failed frames should start with 'FAILED_' prefix.
 This is the default naming when SAVE_POS_FRAMES is used
@@ -210,7 +210,7 @@ The tests make sure that
                         )
             except Exception as e:
                 print(f"Error for {name}: {e}")
-        print(f"{i} successfull checked")
+        print(f"{i} successful checked")
 
     def check_failed():
         for i, (frame, name) in enumerate(failed_frames()):
@@ -257,7 +257,7 @@ The tests make sure that
         print(f"{found}/{total} showed")
 
     print(f"Using frames from: {path} for tests:")
-    print("\n1. Checking that previously successfull frames still succeed")
+    print("\n1. Checking that previously successful frames still succeed")
     check_successfull()
     print("\n2. Checking that previously failed frames still fail")
     check_failed()

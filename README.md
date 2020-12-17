@@ -2,7 +2,7 @@
 
 ## Python version
 
-For enabling reproducable dependency installations, this project uses `pipenv`.
+For enabling reproducible dependency installations, this project uses `pipenv`.
 Pipenv in this projects requires Python version 3.7 or higher, which can be
 installed for example with `pyenv`, <https://github.com/pyenv/pyenv>.
 You can check your current version with `python --version`.
@@ -126,7 +126,7 @@ Commands from player are sent as JSON with following template:
 
 Refer to device classes for message format definitions for specific types
 
-## Runnning Python unit tests
+## Running Python unit tests
 
 Then go through the unittests the tests by running `pipenv run tests`
 

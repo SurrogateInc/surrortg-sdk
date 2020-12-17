@@ -47,7 +47,7 @@ Most common issues are fairly simple and can usually be seen from the logs quick
 
 - Wrong or missing token
 - Controller/streamer not restarted after changes to the configuration file
-- Mismatching controller/streamer IDs between admin settings and configration file
+- Mismatching controller/streamer IDs between admin settings and configuration file
 
 ## Streamer troubleshooting
 

@@ -91,7 +91,7 @@ if __name__ == "__main__":
 ```
 
 The SimpleGame template does not do much by itself other than it provides
-a convinient basis for basically any simple game for the platform.
+a convenient basis for basically any simple game for the platform.
 
 So at the top of the file, we import generic
 [Game](modules/surrortg.html#module-surrortg.game) class and
@@ -171,7 +171,7 @@ detail, and how would you create that by yourself.
 
 From the official Raspberry Pi
 [Lighting an LED tutorial](https://projects.raspberrypi.org/en/projects/physical-computing/2)
-, you will learn that to be able to blink a LED indefinately you can use
+, you will learn that to be able to blink a LED indefinitely you can use
 the following
 [code](https://projects.raspberrypi.org/en/projects/physical-computing/4):
 
@@ -190,8 +190,8 @@ while True:
 
 Here we can see that for blinking LEDs there are three steps:
 
-1. import LED from gpiozero with `from gpiozero import LED`
-2. initilize LED to the GPIO pin 17 with `led = LED(17)`
+1. Import LED from gpiozero with `from gpiozero import LED`
+2. Initialize LED to the GPIO pin 17 with `led = LED(17)`
 3. Turn the LED on and off by calling `led.on()` and `led.off()`
 
 Let's now use this knowledge to modify the SimpleGame into the LEDTestGame:

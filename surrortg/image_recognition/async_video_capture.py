@@ -26,7 +26,7 @@ class VideoCaptureProcess:
     """Separated cv2.VideoCapture process class
 
     Should be started with multiprocessing.Process(... daemon=True), so it
-    wont block exit if the main process fails.
+    won't block exit if the main process fails.
 
     Before usage: `pip install numpy opencv-contrib-python`
 
@@ -70,7 +70,7 @@ class VideoCaptureProcess:
         self._conn.send(CapComm.INIT_SUCCESS)
 
     def _read(self):
-        # Returns only after a successfull frame read
+        # Returns only after a successful frame read
         # Re-initializes VideoCapture every MAX_READ_FAILURES_PER_INIT
         # read failures
         success = False
@@ -274,7 +274,7 @@ class AsyncVideoCapture:
 
         if response == CapComm.RELEASED:
             logging.info(f"Camera '{self._source}' released")
-            self._cap_process.join()  # should join immediatly
+            self._cap_process.join()  # should join immediately
         else:  # None
             logging.warning(
                 f"VideoCapture did not release in {self._release_timeout} "
