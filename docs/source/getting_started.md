@@ -5,15 +5,15 @@ This document guides you in [installing the SurroRTG SDK](#sdk-installation), [c
 To get everything running smoothly you should follow the steps in the order given here
 
 1. [Create a game on surrogate.tv](#create-a-game-instance-on-surrogate-tv)
-2. [Setup Raspberry Pi](#sdk-installation)
-3. [Install controller SDK](#installing-surrogate-controller)
-4. [Install streamer](#installing-surrogate-streamer)
-5. [Configure your streamer and controller](#configuration-file)
-6. [Test simple game](#running-a-template-game)
-7. [Create systemd unit from controller](#running-the-surrortg-python-sdk-controller-automatically-on-boot)
-8. [Install watcher stream](#installing-surrogate-watcher-stream)
+2. [Install controller SDK](#sdk-installation)
+    1. [Setup Raspberry Pi](#setting-up-raspberry-pi)
+    2. [Install streamer](#installing-surrogate-streamer)
+    3. [Configure your streamer and controller](#configuration-file)
+    4. [Test simple game](#running-a-template-game)
+    5. [Create systemd unit from controller](#running-the-surrortg-python-sdk-controller-automatically-on-boot)
+    6. [Install watcher stream](#installing-surrogate-watcher-stream)
 
-You might need to jump between steps 3-6 in case you missed something so remember to look around if you run into trouble. Also take a look at the [troubleshooting page](troubleshooting). There can also find out how to read logs and restart the code modules.
+You might need to jump between steps 3-6 in case you missed something so remember to look around if you run into trouble. Also take a look at the [troubleshooting page](troubleshooting). There you can also find out how to read logs and restart the code modules.
 
 ## Requirements
 
@@ -172,7 +172,7 @@ The streamer will not work yet as it hasn't been [configured](#configuration-fil
 
 `sudo raspi-config` -> `advanced options` -> `memory split` -> 256 (or 512 if you Pi has 1GB or more RAM available) or by editing `/boot/config.txt` -> `gpu_mem=256`. Reboot the system after.
 
-## Configuration file
+#### Configuration file
 
 When you installed the streamer, it added a configuration file to `/etc/srtg/srtg.toml`. You can edit it with the following commands, or with your favorite text editor.
 
@@ -180,11 +180,11 @@ When you installed the streamer, it added a configuration file to `/etc/srtg/srt
 sudo nano /etc/srtg/srtg.toml
 ```
 
-In the srtg.toml file, give your device a device_id, for example robot-1. Save this id as you will need to use if for future configuration.
+In the srtg.toml file, give your device a device_id, for example controller-1. Save this id as you will need to use if for future configuration.
 
-Next you need to copy your robot `token` from `game settings page` to the configuration file. You can navigate the page by pressing the `Settings` button on your game dashboard, or by entering the following web address `www.surrogate.tv/game/<SHORT_ID_YOU_CHOSE>/settings`.
+Next you need to copy your controller `token` from `game settings page` to the configuration file. You can navigate the page by pressing the `Settings` button on your game dashboard, or by entering the following web address `www.surrogate.tv/game/<SHORT_ID_YOU_CHOSE>/settings`.
 
-Here's an example image to help you find the Robot Token on the game settings page:
+Here's an example image to help you find the Controller Token on the game settings page:
 
 <img src='_static/images/SettingsToken.png'>
 
@@ -199,12 +199,12 @@ sudo systemctl restart srtg
 Here is how your config file should look like. If you are using USB camera the `[sources.videoparams] -> type` should be `"v4l2"` and if you are using raspi camera it should be `"rpi_csi"`.
 
 ```toml
-device_id = "<INSERT ROBOT NAME HERE>"
+device_id = "<INSERT CONTROLLER NAME HERE>"
 
 [game_engine]
 url = ""https://ge.surrogate.tv/signaling""
 
-token = "<INSERT TOKEN HERE>"
+token = "<INSERT CONTROLLER TOKEN HERE>"
 
 [rtc_config]
 [[rtc_config.ice_servers]]
@@ -296,19 +296,19 @@ audio_capture_dev_idx = 1
 </details>
 <br/>
 
-## Adding your robot to the game
+#### Adding your controller to the game
 
-Now that your robot has the correct configuration file, we can add the robot to the game page. Go to the Game Settings -> Game Engine section to add a new robot.
+Now that your controller has the correct configuration file, we can add the controller to the game page. Go to the Game Settings -> Game Engine section to add a new controller.
 
-The streamer tries to automatically add the correct robot information to the Game Settings once it's started, so you might already see a robot with the device_id specified in [configuration file](#configuration-file). If this is the case, just set the robot to "Enabled".
+The streamer tries to automatically add the correct controller information to the Game Settings once it's started, so you might already see a controller with the device_id specified in [configuration file](#configuration-file). If this is the case, just set the controller to "Enabled".
 
-If, however, no robot is found on the Game Settings page, use the previously defined device_id for the ID and Streamer fields. For the Queue Id, Seat, and Set use "0" as a temporary input (you can edit these fields later) and set the robot as "Enabled."
+If, however, no controller is found on the Game Settings page, use the previously defined device_id for the ID and Streamer fields. For the Queue Id, Seat, and Set use "0" as a temporary input (you can edit these fields later) and set the controller as "Enabled."
 
 <img src='_static/images/AddingTheRobot.png'>
 
-To test that the robot is connected correctly and the streamer is working, go to the game dashboard page and scroll down. You should be able to see your robot in the "Sets" section of the page. If the streamer is shown is green, this means that the camera of your robot is working. You can press the preview button to see it in action.
+To test that the controller is connected correctly and the streamer is working, go to the game dashboard page and scroll down. You should be able to see your controller in the "Sets" section of the page. If the streamer is shown is green, this means that the camera of your controller is working. You can press the preview button to see it in action.
 
-## Running a template game
+#### Running a template game
 
 At this point we should have the `streamer` working if you have a camera connected and configured properly.
 
@@ -328,9 +328,9 @@ Now you are ready to move to beginner friendly [ready to run examples](ready_gam
 or to more advanced [game development](game_development), where we explain in
 detail how the games work!
 
-## Running the SurroRTG Python SDK (controller) automatically on boot
+#### Running the SurroRTG Python SDK (controller) automatically on boot
 
-To make the python code automatically start after restarting the raspberry pi, you will need to follow the steps here to do so. Below are the example contents of the existing "controller-rpi.service" file that is located in the sdk `scripts` folder. You will need to make sure that the following options are correct:
+To make the python code automatically start after restarting the raspberry pi, you will need to follow the steps here to do so. Below are the example contents of the existing `controller-rpi.service` file that is located in the sdk `scripts` folder. You will need to make sure that the following options are correct:
 `WorkingDirectory` has absolute path to your sdk root folder, and `Environment=GAME_MODULE=` has the correct python path inside the sdk folder.
 
 ```
@@ -350,7 +350,7 @@ ExecStart=/usr/bin/python3 -m $GAME_MODULE
 WantedBy=multi-user.target
 ```
 
-Then run the `setup-system.sh` script to update and reload your new systemd module. If you have already created the systemd unit and you have not changed the file you are running (GAME_MODULE), you can just reload the systemd unit with
+Then run the `setup-systemd.sh` script (located in `scripts` folder) to update and reload your new systemd module. If you have already created the systemd unit and you have not changed the file you are running (GAME_MODULE), you can just reload the systemd unit with
 
 ```
 sudo systemctl restart controller
@@ -358,7 +358,7 @@ sudo systemctl restart controller
 
 For instructions on how to control systemd units, see [troubleshooting page](troubleshooting)
 
-## Installing Surrogate Watcher Stream
+#### Installing Surrogate Watcher Stream
 
 Wacther stream is a stream that is visible to the viewers when the game is online. The stream is a copy of the game stream, and requires that you have
 finished [installing the streamer](#installing-surrogate-streamer) before following these steps.
