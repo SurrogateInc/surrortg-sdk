@@ -5,7 +5,6 @@ from .config_parser import get_config
 
 SURRORTG_VERSION = "0.2.0"
 LOCAL_SOCKET_NAME = "/tmp/.srtg-sock"
-DATACHANNEL_CONFIG_KEY = "datachannel"
 
 
 class GameIO:
@@ -34,9 +33,7 @@ class GameIO:
                 "gameId": self._config["game_engine"]["id"],
                 "token": self._config["game_engine"]["token"],
             },
-            local_socket_name=LOCAL_SOCKET_NAME
-            if self._config.get(DATACHANNEL_CONFIG_KEY, False)
-            else None,
+            local_socket_name=LOCAL_SOCKET_NAME,
             socketio_logging_level=socketio_logging_level,
         )
         self._socket_handler.register_on_message_cb(ge_message_handler)
