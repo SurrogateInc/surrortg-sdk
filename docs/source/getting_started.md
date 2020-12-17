@@ -9,12 +9,20 @@ here
 
 1. [Create a game on surrogate.tv](#create-a-game-instance-on-surrogate-tv)
 2. [Install controller SDK](#sdk-installation)
-    1. [Setup Raspberry Pi](#setting-up-raspberry-pi)
-    2. [Install streamer](#installing-surrogate-streamer)
-    3. [Configure your streamer and controller](#configuration-file)
-    4. [Test simple game](#running-a-template-game)
-    5. [Create systemd unit from controller](#running-the-surrortg-python-sdk-controller-automatically-on-boot)
-    6. [Install watcher stream](#installing-surrogate-watcher-stream)
+    1. [Method 1: Premade image](#method-1-installing-a-pre-made-image)
+        1. [Downloading and installing the image](#downloading-and-installing-the-image)
+        2. [Finding the controller setup page](#finding-the-controller-setup-page)
+        3. [Setting up the controller](#setting-up-the-controller)
+        4. [Connect to Internet with an Ethernet cable](#connect-to-internet-with-an-ethernet-cable)
+        5. [Connect to Internet with wifi](#connect-to-internet-with-wifi)
+        6. [After connecting to Internet](#after-connecting-to-internet)
+    2. [Method 2: Manual installation](#method-2-manual-installation)
+        1. [Setup Raspberry Pi](#setting-up-raspberry-pi)
+        2. [Install streamer](#installing-surrogate-streamer)
+        3. [Configure your streamer and controller](#configuration-file)
+        4. [Test simple game](#running-a-template-game)
+        5. [Create systemd unit from controller](#running-the-surrortg-python-sdk-controller-automatically-on-boot)
+        6. [Install watcher stream](#installing-surrogate-watcher-stream)
 
 You might need to jump between steps 3-6 in case you missed something so remember
 to look around if you run into trouble. Also take a look at the
@@ -29,8 +37,9 @@ requirements:
 1. [Rasperry Pi](https://www.raspberrypi.org/) single board computer,
   for example model 3B+, 3A, or 4B
 2. A 16GB+ micro SD card
-3. An official [Raspberry Pi Camera](https://www.raspberrypi.org/products/camera-module-v2/)
-  or some USB camera (UVC compliant), check the [support list](camera_support)
+3. An SD card reader, either built in to your computer or as an adapter.
+4. An official [Raspberry Pi Camera](https://www.raspberrypi.org/products/camera-module-v2/)
+   or some USB camera (UVC compliant), check the [support list](camera_support)
 
 ## Create a game instance on Surrogate.tv
 
@@ -61,17 +70,25 @@ Turn on the Game Engine for the game by pressing the "TURN IT ON" button.
 The game engine creation process will take around 3 minutes, but you can already
 move to the next step.
 
-We will get back to the game page configurations and getting the streamer to work
-after we have installed the SurroRTG SDK.
+At this point, navigate to the Settings page from the bottom left corner
+of the web page.
 
-**You will need to continue the tutorial to get your streamer and controller connected
-to the game.**
+In the settings page, click the "Show access token" text and copy the token
+to your clipboard.
+
+<img src='_static/images/TokenInstructions.jpeg'>
+
+We will get back to the game page configurations and getting the streamer to
+work after we have installed the SurroRTG SDK.
+
+**You will need to continue the tutorial to get your streamer and
+controller connected to the game.**
 
 ## SDK installation
 
 The SDK installation can be done in two different ways:
 [Method 1:](#method-1-installing-a-pre-made-image)
-flashing a premade image file to a SD card
+flashing a premade image file to an SD card
 (recommended)  
 [Method 2:](#method-2-manual-installation)
 manual installation on top of an existing raspbian image
@@ -79,7 +96,125 @@ manual installation on top of an existing raspbian image
 
 ### Method 1: installing a pre made image
 
-**Not yet supported, please follow manual installation**
+#### Downloading and installing the image
+
+Download the Surrogate custom [image](image-builds/surrogate-raspbian-latest.img).
+Note that the image file is large and the download can take a long time,
+especially with slow Internet connection.
+Once the download is complete, take note of the file name and location.
+You might also need to extract the image file from the zip file separately,
+but Raspberry Pi Imager should do this automatically for you. We will get back
+to this in the next steps.
+Next plug an SD card to a slot in your computer or to your card reader in order to
+flash the SD card with the image, for which there are several free tools available.
+If your operation system is Windows, MacOS or Ubuntu,
+you can use [Raspberry Pi Imager](https://www.raspberrypi.org/software/).
+Another alternative that supports other Linux distributions is
+[BalenaEtcher](https://www.balena.io/etcher/).
+Once the flashing is complete, remove the SD card from your
+computer and plug it in to the Raspberry Pi.
+
+#### Finding the controller setup page
+
+After plugging the SD card in, you should be able to see a hotspot with ssid
+surrogate-rpi in a minute. Connect to the hotspot with the password "surrogatetv".
+Note that once you connect to the hotspot you will lose your Internet
+connection, unless you're connected to Internet with an Ethernet cable.
+Go to the [Controller configuration page](http://192.168.0.1).
+If you are using an operating system that supports mDNS, such as Linux or MacOS,
+you can also go to [http://surrogate-rpi.local](http://surrogate-rpi.local).
+It might also work on some Windows computers.
+
+#### Setting up the controller
+
+Now paste the token you copied previously to the field and click continue.
+If the field is outlined with a red color, something has gone wrong
+when copying the token.
+
+<img src='_static/images/TokenPage.png'>
+
+Next, if you want, you can give the controller a unique name.
+If you are setting up more than one controller, this step is mandatory,
+as all controllers connecting to the game engine must have unique names.
+Changing the controller name will also change the hostname of the Raspberry Pi.
+If you previously used the mDNS address <http://surrogate-rpi.local>, your
+address will change to `http://[controller name].local`, where [controller name]
+is the name you chose. We'll go into connecting the controller to a network in the
+next steps.
+
+<img src='_static/images/NetworkPage.png'>
+
+Next, choose the type of game you want the controller to run. You can see a list
+of templates that you can choose from. If you want to use your own template,
+you'll have to ssh to the Raspberry Pi and do a bit of coding yourself. These
+are covered in [Method 2:](#method-2-manual-installation).
+
+Now, you'll have to connect the controller to Internet. There are two ways
+to do this: with an Ethernet cable or wifi credentials.
+
+##### Connect to Internet with an Ethernet cable
+
+If you have an Ethernet cable and a port, plug the cable in the Raspberry Pi,
+wait for a while and refresh the page. This is what you should see.
+
+<img src='_static/images/NetworkPageEthernet.png'>
+
+If you don't see this immediately, give it some time and refresh the page
+a couple of times.
+
+If you want, you can copy the Ethernet IP address visible in the page
+and go to `http://[ip address]` where [ip address] needs to be replaced. This
+allows using the page without being connected to the hotspot.
+
+##### Connect to Internet with wifi
+
+If you don't have an Ethernet cable, however, you can type your wifi credentials
+(ssid and password) in the "Internet connection" section in the web page, then
+press "Connect" and you should see this popup.
+
+<img src='_static/images/NetworkPagePopup.png'>
+
+If your controller does not soon appear in the controller list, most likely
+something has gone wrong. Another indicator for something going wrong with
+connecting to wifi is if the hotspot does not disappear after a while from
+your network list. If this is the case, connect to the hotspot again and go
+back to the controller setup page. Most likely your wifi is unreachable for
+the controller or the credentials were typed incorrectly.
+
+When your controller does appear in the list, you should be able to click the
+controller name, which will lead you to the controller setup page again with the
+new IP address. If you were using an mDNS address, you don't have to click the
+link. The mDNS address will be eventually resolved to the new IP address.
+
+Here's how the dashboard should look like after connecting with wifi.
+
+<img src='_static/images/DashboardControllerDisabled.png'>
+
+Remember to press the "Enabled" slider. After doing that and if everything
+goes well, you should see this.
+
+<img src='_static/images/DashboardControllerConnected.png'>
+
+If either controller or streamer shows a red cross, they've been unable to
+connect to game engine. In this case, you should also be able to see errors
+described in the next section. Usually the problem is that you've forgotten
+to plug in some peripherals to the Raspberry Pi.
+
+##### After connecting to Internet
+
+In the network page, press Continue.
+
+At this point, if everything goes well, you should see this page.
+
+<img src='_static/images/GameEnginePageHappy.png'>
+
+If you have forgotten to connect a camera or some other peripherals required
+by the type of game chosen, you will see an error such as this.
+
+<img src='_static/images/GameEnginePageUnhappy.png'>
+
+If that is the case, check that all required peripherals are connected and
+that the chosen game type is correct.
 
 ### Method 2: manual installation
 
