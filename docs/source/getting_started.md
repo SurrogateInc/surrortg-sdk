@@ -16,6 +16,7 @@ here
         4. [Connect to Internet with an Ethernet cable](#connect-to-internet-with-an-ethernet-cable)
         5. [Connect to Internet with wifi](#connect-to-internet-with-wifi)
         6. [After connecting to Internet](#after-connecting-to-internet)
+        7. [SSH Connection to the Raspberry Pi](#ssh-connection-to-the-raspberry-pi)
     2. [Method 2: Manual installation](#method-2-manual-installation)
         1. [Setup Raspberry Pi](#setting-up-raspberry-pi)
         2. [Install streamer](#installing-surrogate-streamer)
@@ -215,6 +216,31 @@ by the type of game chosen, you will see an error such as this.
 
 If that is the case, check that all required peripherals are connected and
 that the chosen game type is correct.
+
+##### SSH connection to the Raspberry Pi
+
+If you've decided to use the premade image but still need to ssh to your
+Raspberry Pi, you need to do the following:
+
+1. Connect the Raspberry Pi to a monitor, keyboard and a power cable
+2. Log in with the default username 'pi' and password 'creator1337'
+3. <strong>IMPORTANT:</strong> change the default password to something else
+    by typing
+
+    ```
+    sudo passwd pi
+    ```
+
+    in the terminal and then give a secure password of your choice when
+    prompted  
+4. Enable and start ssh with
+
+    ```
+    sudo systemctl enable ssh
+    sudo systemctl start ssh
+    ```  
+
+5. Now you should be able to ssh to the Raspberry Pi with username and password
 
 ### Method 2: manual installation
 
