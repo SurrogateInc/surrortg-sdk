@@ -49,6 +49,7 @@ class GameIO:
         )
         self._socket_handler.register_on_connect_cb(self.provide_inputs)
         self.input_bindings = {}
+        self._can_register_inputs = False
 
     def _is_config_message(self, message):
         return message.src == "gameEngine" and message.event == "config"
@@ -65,6 +66,8 @@ class GameIO:
         Input names must be unique.
         If the same input name already exists, error is risen.
 
+        The inputs can be registered only during on_init.
+
         :param inputs: A dictionary of input device names and objects.
         :type inputs: dict{String: Input}
         :raises RuntimeError if input names are not unique
@@ -73,7 +76,11 @@ class GameIO:
         :type admin: bool, optional
         :param bindable: Describes if the input can be bound to user
         input. Defaults to True.
+        :raises RuntimeError: if called outside on_init
         """
+        if not self._can_register_inputs:
+            raise RuntimeError("register_inputs called outside on_init")
+
         for input_id, handler_obj in inputs.items():
             if input_id in self.input_bindings:
                 raise RuntimeError(f"Duplicate input_ids: {input_id}")

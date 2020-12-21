@@ -93,7 +93,7 @@ class MessageRouter:
                 f"source: '{input_id}'.\nSeat {seat}'s current "
                 f"registered inputs: {list(self.inputs.keys())}.\n"
                 f"self.io.register_inputs({{'{input_id}':<INPUT>}}) "
-                f"can be used to register this input."
+                f"can be used to register this input during on_init."
             )
 
     def register_input(self, dev_id, dev, admin):
