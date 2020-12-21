@@ -15,7 +15,7 @@ class MyJoystick(Joystick):
 
 class DummyGame(Game):
     async def on_init(self):
-        self.io.register_inputs({"joystick_main": MyJoystick(0)})
+        self.io.register_inputs({"joystick_main": MyJoystick()})
 
     async def on_start(self):
         pass

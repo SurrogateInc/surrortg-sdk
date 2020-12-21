@@ -53,7 +53,7 @@ DIRECTION_CMD_MAP = {
 
 class ClawJoystick(Joystick):
     def __init__(self, pi):
-        super().__init__(min_amount=MIN_AMOUNT)
+        self.set_min_amount(MIN_AMOUNT)
         self.pi = pi
         # set out pins
         for dir_pin in DIR_PINS:
