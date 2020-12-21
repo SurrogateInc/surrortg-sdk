@@ -46,9 +46,10 @@ pipelines:
       - step: *markdownlint
 
   branches:
-    main: # not done in parallel. If tests/formatting fails, does not build docs.
-      - step: *unittests
-      - step: *black
-      - step: *flake8
-      - step: *markdownlint
+    main: # If tests/formatting fails, does not build docs.
+      - parallel:
+        - step: *unittests
+        - step: *black
+        - step: *flake8
+        - step: *markdownlint
       - step: *docs
