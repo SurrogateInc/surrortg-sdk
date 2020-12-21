@@ -166,7 +166,7 @@ class Game:
     async def on_init(self):
         """Initialize the game before connecting to the game engine
 
-        Typically the input devices are registered here with
+        The input devices are registered here with
         a self.io.register_inputs({...}) call.
         """
         pass
@@ -309,8 +309,11 @@ class Game:
         # get ready to handle GE messages
         self._handler_lock = asyncio.Lock()
 
-        # initialize the game
+        # Allow self.io.register_inputs usage and initialize the game.
+        # Then forbit all later self.io.register_inputs calls.
+        self.io._can_register_inputs = True
         await self.on_init()
+        self.io._can_register_inputs = False
 
         # play the game until interrupted, terminated or crashed
         self._main_task = asyncio.create_task(self.io._socket_handler.run())

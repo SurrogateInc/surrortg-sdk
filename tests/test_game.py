@@ -203,8 +203,19 @@ class GameTest(unittest.TestCase):
         """self.io should raise RuntimeError if called before run(),
         but not if called afterwards"""
 
-        # test premature calling
+        # test premature calling (run not called)
         g = Game()
+        with self.assertRaises(RuntimeError):
+            g.io.register_inputs({})
+
+        # test premature calling
+        # (run called, but io._can_register_inputs is not set)
+        g = Game()
+        g._pre_run(
+            "./tests/test_config.toml",
+            socketio_logging_level=logging.WARNING,
+            robot_type="robot",
+        )  # this simulates run(), really only part of it
         with self.assertRaises(RuntimeError):
             g.io.register_inputs({})
 
@@ -215,6 +226,7 @@ class GameTest(unittest.TestCase):
             socketio_logging_level=logging.WARNING,
             robot_type="robot",
         )  # this simulates run(), really only part of it
+        g.io._can_register_inputs = True
         try:
             g.io.register_inputs({})
         except RuntimeError:
