@@ -254,7 +254,7 @@ camera it should be `"rpi_csi"`.
 device_id = "<INSERT CONTROLLER NAME HERE>"
 
 [game_engine]
-url = ""https://ge.surrogate.tv/signaling""
+url = "https://ge.surrogate.tv/signaling"
 
 token = "<INSERT CONTROLLER TOKEN HERE>"
 
