@@ -50,6 +50,8 @@ We're following PEP8, and have the formatter `black` and linter `flake8` setup.
 These tools are run in Bitbucket to ensure properly formatted code, but
 use of pre-commit hooks is highly recommended.
 
+#### Installing pre-commit hooks
+
 For this purpose, there are settings for pre-commit tool in the project. To
 use it, run `pipenv sync --dev`.
 
@@ -76,6 +78,15 @@ rvm use 2.7.0 --default
 ```
 
 Then run `pre-commit install` in the project root to install the pre-commit hooks.
+
+#### Configuration of codespell
+
+The project uses `codespell` to check for spelling mistakes. It runs both as a
+pre-commit hook and in the pipelines. It searches for spelling mistakes and suggests
+alternatives for the mistakes. Sometimes words that have meaningful purpose in
+our context are not recognized by the codespell and might end up failing the pre-commits
+and pipelines because of that. In that case, you can add the word to be ignored
+by codespell into the file `.codespell-ignore`, on its own line.
 
 ### Running
 
