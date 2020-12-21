@@ -1,0 +1,20 @@
+device_id = "<INSERT CONTROLLER NAME HERE>"
+
+[game_engine]
+url = "https://ge.surrogate.tv/signaling"
+
+token = "<INSERT CONTROLLER TOKEN HERE>"
+
+[rtc_config]
+[[rtc_config.ice_servers]]
+urls = "stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302,stun:stun2.l.google.com:19302,stun:stun3.l.google.com:19302,stun:stun4.l.google.com:19302"
+
+[[sources]]
+kind = "video"
+label = "main"
+
+[sources.video_params]
+type = "v4l2"
+width = 1280
+height = 720
+framerate = 30
