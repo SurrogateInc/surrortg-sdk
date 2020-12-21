@@ -12,7 +12,7 @@ where you will need to connect to setup the raspberrypi.
 2. After you are connected to the hotspot, open website [here](raspberrypi.local:3000)
     or by typing `hostname.local:3000`. (in this case `raspberrypi.local:3000`)
 
-3. Now you should see the configration website
+3. Now you should see the configuration website
 
 ## Using the configuration tool
 

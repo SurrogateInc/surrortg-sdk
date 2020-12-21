@@ -51,7 +51,7 @@ This will create a new Surrogate game, and open up the game dashboard
 `www.surrogate.tv/game/<SHORT_ID_YOU_CHOSE>/dashboard`.
 
 The dashboard allows you to analyze the game state, and turn the game online for
-other players. See more on the Dashbaord and Settings page (link to settings can
+other players. See more on the Dashboard and Settings page (link to settings can
 be found at the bottom left of the dashboard).
 
 Turn on the Game Engine for the game by pressing the "TURN IT ON" button.

@@ -20,12 +20,28 @@ class BlackFlake8VersionsTest(unittest.TestCase):
         bitbucket_ver = self.get_bitbucket_ver("flake8")
         self.assertEqual(precommit_ver, bitbucket_ver)
 
-    def get_precommit_ver(self, repo_url):
+    def test_codespell_version_consistency(self):
+        precommit_ver = self.get_precommit_ver(
+            "https://github.com/codespell-project/codespell"
+        )
+        bitbucket_ver = self.get_bitbucket_ver("codespell")
+        self.assertEqual(precommit_ver, bitbucket_ver)
+
+    def test_markdownlint_version_consistency(self):
+        precommit_ver = self.get_precommit_ver(
+            "https://github.com/markdownlint/markdownlint", ignore_prefix="v"
+        )
+        bitbucket_ver = self.get_bitbucket_ver("markdownlint", separator="-v")
+        self.assertEqual(precommit_ver, bitbucket_ver)
+
+    def get_precommit_ver(self, repo_url, ignore_prefix=""):
         ver = None
         with open(".pre-commit-config.yaml", "r") as stream:
             for repo in yaml.safe_load(stream)["repos"]:
                 if repo["repo"] == repo_url:
                     ver = repo["rev"]
+                    if ignore_prefix:
+                        ver = ver.split(ignore_prefix)[1]
                     break
         if ver is None:
             self.fail(
@@ -33,14 +49,14 @@ class BlackFlake8VersionsTest(unittest.TestCase):
             )
         return ver
 
-    def get_bitbucket_ver(self, step_name):
+    def get_bitbucket_ver(self, step_name, separator="=="):
         ver = None
         with open("bitbucket-pipelines.yml", "r") as stream:
             for step in yaml.safe_load(stream)["pipelines"]["default"][0][
                 "parallel"
             ]:
                 if step["step"]["name"] == step_name:
-                    ver = step["step"]["script"][0].split("==")[1]
+                    ver = step["step"]["script"][0].split(separator)[1].strip()
                     break
         if ver is None:
             self.fail(

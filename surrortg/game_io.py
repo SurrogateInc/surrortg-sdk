@@ -154,7 +154,7 @@ class GameIO:
         # get router and all registered seats
         router = self._message_router.router
         registered_seats = self._message_router.get_all_seats()
-        # return if seat is not spesified or not found
+        # return if seat is not specified or not found
         if seat is not None and seat not in registered_seats:
             logging.warning(f"Cannot shutdown inputs for seat {seat}")
             return
@@ -209,7 +209,7 @@ class GameIO:
         :type score: int/float, optional
         :param scores: scores dictionary or list, defaults to None
         :type scores: dict/list, optional
-        :param seat: seat number, used only with a singe score, defaults to 0
+        :param seat: seat number, used only with a single score, defaults to 0
         :type seat: int, optional
         :param final_score: signal to GE that there will not be more scores
             coming, defaults to False
@@ -345,7 +345,7 @@ class GameIO:
         )
 
     async def _send(self, event, src=None, seat=0, payload={}, callback=None):
-        """Send message to GE asyncronously, not to be used directly
+        """Send message to GE asynchronously, not to be used directly
 
         :param event: Event name
         :type event: String

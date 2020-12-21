@@ -12,7 +12,7 @@ MAX_ALLOWED_PLUNGE_TIME = 2 * PLUNGER_PRESS_TIME
 if __name__ == "__main__":
     # setup initial end, define callback function
     end = None
-    end_lock = RLock()  # should be reduntant, but let's be sure about that
+    end_lock = RLock()  # should be redundant, but let's be sure about that
 
     def end_timer(*args):
         with end_lock:

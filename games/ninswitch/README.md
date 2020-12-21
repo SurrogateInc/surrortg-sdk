@@ -8,7 +8,7 @@ Ninswitch directory contains three games:
 - **game_irlkart.py** which contains the full code for the irlkart game
 
 They games are made possible by [gdsports](https://github.com/gdsports)'s [NSGadget_Pi](https://github.com/gdsports/NSGadget_Pi)
-library, which forwards the contorls from Rapberry Pi to Switch.
+library, which forwards the controls from Rapberry Pi to Switch.
 
 ## Hardware setup
 
@@ -145,7 +145,7 @@ Then run the game until the point your detectable object is seen and stop the ga
 You should then revert `SAVE_FRAMES` back to `False` to increase the frame processing
 rate and prevent filling up the SD-card.
 
-Assuming you have a working ssh connction, these images can be copied from the
+Assuming you have a working ssh connection, these images can be copied from the
 raspi to current directory on your PC with scp:  
 `scp -r <USER>@<RASPI_ADDRESS>:/opt/srtg-python/imgs/ .`
 

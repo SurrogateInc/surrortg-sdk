@@ -45,7 +45,7 @@ class GameTest(unittest.TestCase):
     def test_run_signaling(self):
         """
         Make sure that _exit_reason and _exception are correct when run()
-        is interrupted or teminated
+        is interrupted or terminated
 
         EXIT_REASONS = {
             1: "Interrupted (SIGINT)",

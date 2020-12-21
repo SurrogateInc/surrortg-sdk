@@ -310,7 +310,7 @@ class Game:
         self._handler_lock = asyncio.Lock()
 
         # Allow self.io.register_inputs usage and initialize the game.
-        # Then forbit all later self.io.register_inputs calls.
+        # Then forbid all later self.io.register_inputs calls.
         self.io._can_register_inputs = True
         await self.on_init()
         self.io._can_register_inputs = False
@@ -338,7 +338,7 @@ class Game:
             self._exit_reason = 0
             self._exception = e
             await self._exit_correctly()
-            raise  # after exiting correclty, raise the original exception
+            raise  # after exiting correctly, raise the original exception
 
     def _request_update(self):
         logging.info("Update request received")
