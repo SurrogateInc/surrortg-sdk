@@ -52,7 +52,30 @@ use of pre-commit hooks is highly recommended.
 
 For this purpose, there are settings for pre-commit tool in the project. To
 use it, run `pipenv sync --dev`.
-Then run `pre-commit install` in the project root.
+
+One of the pre-commit hooks, markdownlint, uses and requires Ruby with a version
+above 2.6. In Ubuntu 20.04, this can be installed with `sudo apt-get install ruby-full`.
+In older Ubuntu distributions, the version in the distribution's repositories
+is too old, and the correct version can be installed with ruby version manager,
+rvm by running the command below.
+
+```
+sudo apt-get update
+
+sudo apt-get install gcc autoconf curl g++  gnupg automake bison libc6-dev libffi-dev libgdbm-dev libncurses5-dev libsqlite3-dev pkg-config sqlite3 zlib1g-dev libtool libyaml-dev make libgmp-dev libreadline-dev libssl-dev
+
+gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+
+curl -sSL https://get.rvm.io | bash -s stable
+
+source ~/.rvm/scripts/rvm
+
+rvm install 2.7.0
+
+rvm use 2.7.0 --default
+```
+
+Then run `pre-commit install` in the project root to install the pre-commit hooks.
 
 ### Running
 
