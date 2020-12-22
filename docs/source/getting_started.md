@@ -2,7 +2,7 @@
 
 This document guides you in [installing the SurroRTG SDK](#sdk-installation),
 [creating a game instance](#create-a-game-instance-on-surrogate-tv) and running
-a [template code](#running-template-game).
+a [template code](#running-a-template-game).
 
 To get everything running smoothly you should follow the steps in the order given
 here
@@ -77,7 +77,7 @@ of the web page.
 In the settings page, click the "Show access token" text and copy the token
 to your clipboard.
 
-<img src='_static/images/TokenInstructions.jpeg'>
+![Token instructions](_static/images/TokenInstructions.jpeg)
 
 We will get back to the game page configurations and getting the streamer to
 work after we have installed the SurroRTG SDK.
@@ -99,7 +99,7 @@ manual installation on top of an existing raspbian image
 
 #### Downloading and installing the image
 
-Download the Surrogate custom [image](image-builds/surrogate-raspbian-latest.img).
+Download the Surrogate custom [image](image-builds/surrogate-raspbian-latest.img.gz).
 Note that the image file is large and the download can take a long time,
 especially with slow Internet connection.
 Once the download is complete, take note of the file name and location.
@@ -132,23 +132,23 @@ Now paste the token you copied previously to the field and click continue.
 If the field is outlined with a red color, something has gone wrong
 when copying the token.
 
-<img src='_static/images/TokenPage.png'>
+![Token page](_static/images/TokenPage.png)
 
 Next, if you want, you can give the controller a unique name.
 If you are setting up more than one controller, this step is mandatory,
 as all controllers connecting to the game engine must have unique names.
 Changing the controller name will also change the hostname of the Raspberry Pi.
 If you previously used the mDNS address <http://surrogate-rpi.local>, your
-address will change to `http://[controller name].local`, where [controller name]
+address will change to `http://[controller name].local`, where `[controller name]`
 is the name you chose. We'll go into connecting the controller to a network in the
 next steps.
 
-<img src='_static/images/NetworkPage.png'>
+![Network page](_static/images/NetworkPage.png)
 
 Next, choose the type of game you want the controller to run. You can see a list
 of templates that you can choose from. If you want to use your own template,
 you'll have to ssh to the Raspberry Pi and do a bit of coding yourself. These
-are covered in [Method 2:](#method-2-manual-installation).
+are covered in [Method 2](#method-2-manual-installation).
 
 Now, you'll have to connect the controller to Internet. There are two ways
 to do this: with an Ethernet cable or wifi credentials.
@@ -158,13 +158,13 @@ to do this: with an Ethernet cable or wifi credentials.
 If you have an Ethernet cable and a port, plug the cable in the Raspberry Pi,
 wait for a while and refresh the page. This is what you should see.
 
-<img src='_static/images/NetworkPageEthernet.png'>
+![Network page](_static/images/NetworkPageEthernet.png)
 
 If you don't see this immediately, give it some time and refresh the page
 a couple of times.
 
 If you want, you can copy the Ethernet IP address visible in the page
-and go to `http://[ip address]` where [ip address] needs to be replaced. This
+and go to `http://[ip address]` where `[ip address]` needs to be replaced. This
 allows using the page without being connected to the hotspot.
 
 ##### Connect to Internet with wifi
@@ -173,7 +173,7 @@ If you don't have an Ethernet cable, however, you can type your wifi credentials
 (ssid and password) in the "Internet connection" section in the web page, then
 press "Connect" and you should see this popup.
 
-<img src='_static/images/NetworkPagePopup.png'>
+![Network page popup](_static/images/NetworkPagePopup.png)
 
 If your controller does not soon appear in the controller list, most likely
 something has gone wrong. Another indicator for something going wrong with
@@ -189,12 +189,12 @@ link. The mDNS address will be eventually resolved to the new IP address.
 
 Here's how the dashboard should look like after connecting with wifi.
 
-<img src='_static/images/DashboardControllerDisabled.png'>
+![Controller disabled](_static/images/DashboardControllerDisabled.png)
 
 Remember to press the "Enabled" slider. After doing that and if everything
 goes well, you should see this.
 
-<img src='_static/images/DashboardControllerConnected.png'>
+![Controller connected](_static/images/DashboardControllerConnected.png)
 
 If either controller or streamer shows a red cross, they've been unable to
 connect to game engine. In this case, you should also be able to see errors
@@ -207,12 +207,12 @@ In the network page, press Continue.
 
 At this point, if everything goes well, you should see this page.
 
-<img src='_static/images/GameEnginePageHappy.png'>
+![Happy game engine](_static/images/GameEnginePageHappy.png)
 
 If you have forgotten to connect a camera or some other peripherals required
 by the type of game chosen, you will see an error such as this.
 
-<img src='_static/images/GameEnginePageUnhappy.png'>
+![Unhappy game engine](_static/images/GameEnginePageUnhappy.png)
 
 If that is the case, check that all required peripherals are connected and
 that the chosen game type is correct.
@@ -223,8 +223,8 @@ If you've decided to use the premade image but still need to ssh to your
 Raspberry Pi, you need to do the following:
 
 1. Connect the Raspberry Pi to a monitor, keyboard and a power cable
-2. Log in with the default username 'pi' and password 'creator1337'
-3. <strong>IMPORTANT:</strong> change the default password to something else
+2. Log in with the default username `pi` and password `creator1337`
+3. **IMPORTANT:** change the default password to something else
     by typing
 
     ```
