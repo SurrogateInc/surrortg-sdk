@@ -81,12 +81,12 @@ class Joystick(Input):
         :param seat: Robot seat
         :type seat: int
         """
-        x = self._parse_coordinate(command, "x")
-        y = self._parse_coordinate(command, "y")
+        x = self._parse_joystick_position(command, "x")
+        y = self._parse_joystick_position(command, "y")
         if x is not None and y is not None:
             await self.handle_coordinates(x, y, seat)
 
-    def _parse_coordinate(self, command, key):
+    def _parse_joystick_position(self, command, key):
         """Parse the coordinate given as key from the command
 
         Returns the parsed coordinate or None if command is invalid
@@ -228,17 +228,17 @@ class MouseJoystick(Joystick):
         :param seat: Robot seat
         :type seat: int
         """
-        x = self._parse_coordinate(command, "x")
-        y = self._parse_coordinate(command, "y")
-        dx = self._parse_delta(command, "dx")
-        dy = self._parse_delta(command, "dy")
+        x = self._parse_joystick_position(command, "x")
+        y = self._parse_joystick_position(command, "y")
+        dx = self._parse_mouse_delta(command, "dx")
+        dy = self._parse_mouse_delta(command, "dy")
 
         if None not in [x, y, dx, dy]:
             await self.handle_coordinates(self, x, y, seat, dx=dx, dy=dy)
         elif None not in [x, y]:
             await self.handle_coordinates(self, x, y, seat)
 
-    def _parse_delta(self, command, key):
+    def _parse_mouse_delta(self, command, key):
         """Parse the delta given as key from the command
 
         Returns the parsed delta or None if command is invalid
