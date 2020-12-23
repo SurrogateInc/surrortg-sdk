@@ -100,6 +100,24 @@ manual installation on top of an existing raspbian image
 
 ### Method 1: installing a pre made image
 
+**BETA RELEASE**
+Please be aware that the pre made image is in beta phase and might have issues.
+
+**Known issues**
+
+- Changing the hostname does not affect the name of your streamer
+    and controller. "default-robot" is used from the configuration file
+- Additional "default-" robot might appear in the settings/dashboard
+    controller listings
+- Token paste button on the hotspot server is not working,
+    paste the token with ctrl+v or by other means
+- Link to the new IP address of your hotspot server does not
+    always update properly to the settings/dashboard controller listings
+- Only tested with Raspberry Pi 4, 3B+ and 3A+ might have other issues
+    or might not work at all
+- If the Raspberry Pi is in hotspot mode while sshing to it,
+    sudo commands are executing very slow
+
 #### Downloading and installing the image
 
 Download the Surrogate custom [image](image-builds/surrogate-raspbian-latest.img.gz).
@@ -235,13 +253,13 @@ Raspberry Pi, you need to do the following:
     ```
 
     in the terminal and then give a secure password of your choice when
-    prompted  
-4. Enable and start ssh with
+    prompted
+4. Use raspi-config utility to enable ssh. Inside the utility tool
+   `Interfaces -> SSH -> enable`.
 
     ```
-    sudo systemctl enable ssh
-    sudo systemctl start ssh
-    ```  
+    sudo raspi-config
+    ```
 
 5. Now you should be able to ssh to the Raspberry Pi with username and password
 
