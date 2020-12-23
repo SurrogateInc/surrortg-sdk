@@ -63,6 +63,10 @@ Insufficient GPU memory can cause issues with the streamer. To increase GPU memo
 Pi has 1GB or more RAM available) or by editing `/boot/config.txt` -> `gpu_mem=256`.
 Reboot the system after.
 
+## Audio troubleshooting
+
+See [the troubleshooting section on the audio page](audio.html#troubleshooting).
+
 ## Controller troubleshooting
 
 If you are running your controller code as both systemd unit and sometimes directly,

@@ -541,51 +541,16 @@ If you want to know what resolutions and formats your `usb camera` supports, run
 v4l2-utils -d /dev/video<ID> --list-formats-ext
 ```
 
-<details>
-  <summary>**Choosing audio capture device (advanced)**</summary>
-
-**WARNING:** this will overwrite your `/etc/asound.conf` file.
-A backup will be saved, however.
-
-If you have multiple audio capture devices (aka "cards" in alsa parlance) and
-wish to specify which one is used, you can find a list of available devices with
-the following command:
+To enable audio, make sure you have the following in your srtg.toml file:
 
 ```
-sudo arecord --list-devices
+[[sources]]
+kind = "audio"
+label = "main"
 ```
-
-The output will look something like this:
-
-```
-**** List of CAPTURE Hardware Devices ****
-card 1: webcam [Full HD webcam], device 0: USB Audio [USB Audio]
-  Subdevices: 1/1
-  Subdevice #0: subdevice #0
-card 2: C925e [Logitech Webcam C925e], device 0: USB Audio [USB Audio]
-  Subdevices: 1/1
-  Subdevice #0: subdevice #0
-```
-
-To choose the second device on the list, you must add the string after `card 2:`
-to the config file:
-
-```
-[sources.audio_params]
-audio_capture_dev_name = "C925e"
-```
-
-**Beta feature:** If you have an audio capture card with multiple devices, you
-can specify which device to use by also adding the device number to the config
-file:
-
-```
-[sources.audio_params]
-audio_capture_dev_name = "C925e"
-audio_capture_dev_idx = 1
-```
-
-</details>
+For more information about audio, see [the audio page](audio). There you
+can find out how to choose the audio capture device to use, some additional
+audio parameters, troubleshooting tips, and how to add custom features if you are an advanced user.
 
 #### Adding your controller to the game
 
