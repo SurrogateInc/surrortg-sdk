@@ -1,35 +1,62 @@
 image: python:3.7.3
 
+definitions: 
+  steps:
+    - step: &unittests
+        name: unittests
+        script:
+          - pip install pipenv
+          - pipenv sync
+          - pipenv run tests
+    - step: &black
+        name: black
+        script:
+          - pip install black==19.10b0 # if version changed, change also on .pre-commit-config.yaml!
+          - black --check --diff --config=pyproject.toml .
+    - step: &flake8
+        name: flake8
+        script:
+          - pip install flake8==3.7.9 # if version changed, change also on .pre-commit-config.yaml!
+          - flake8 --config=.flake8
+    - step: &markdownlint
+        name: markdownlint
+        image: ruby:2.7.2 # override default image
+        script:
+          - gem install mdl -v 0.11.0 # if version changed, change also on .pre-commit-config.yaml!
+          - mdl --style '.mdl-style.rb' .
+    - step: &codespell
+        name: codespell
+        script:
+          - pip install codespell==v2.0.0 # if version changed, change also on .pre-commit-config.yaml!
+          - codespell --ignore-words=.codespell-ignore .
+    - step: &docs
+        name: docs
+        script:
+          - pip install pipenv
+          - pipenv sync --dev
+          - pipenv run docs
+          - pipe: atlassian/aws-s3-deploy:0.4.4
+            variables:
+              AWS_DEFAULT_REGION: 'us-east-1'
+              S3_BUCKET: 'surrortg-sdk-docs'
+              LOCAL_PATH: 'docs/build/html'
+              DELETE_FLAG: 'false'
+
 pipelines:
   default:
     - parallel:
-      - step:
-          name: unittests
-          script:
-            - pip install pipenv
-            - pipenv sync
-            - pipenv run tests
-      - step:
-          name: black
-          script:
-            - pip install black==19.10b0 # if version changed, change also on .pre-commit-config.yaml!
-            - black --check --diff --config=pyproject.toml .
-      - step:
-          name: flake8
-          script:
-            - pip install flake8==3.7.9 # if version changed, change also on .pre-commit-config.yaml!
-            - flake8 --config=.flake8
+      - step: *unittests
+      - step: *black
+      - step: *flake8
+      - step: *markdownlint
+      - step: *codespell
+
   branches:
-    main:
-      - step:
-          name: docs
-          script:
-            - pip install pipenv
-            - pipenv sync --dev
-            - pipenv run docs
-            - pipe: atlassian/aws-s3-deploy:0.4.4
-              variables:
-                AWS_DEFAULT_REGION: 'us-east-1'
-                S3_BUCKET: 'surrortg-sdk-docs'
-                LOCAL_PATH: 'docs/build/html'
-                DELETE_FLAG: 'true'
+    main: # If tests/formatting fails, does not build docs.
+      - parallel:
+        - step: *unittests
+        - step: *black
+        - step: *flake8
+        - step: *markdownlint
+        - step: *codespell
+      - step: *docs

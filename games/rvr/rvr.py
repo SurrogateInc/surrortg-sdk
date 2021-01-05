@@ -47,9 +47,6 @@ DRIVE_OPTIONS = {
 
 
 class RVR(Joystick):
-    def __init__(self):
-        super().__init__(min_amount=0.1)
-
     async def init_sphero(self):
         # init the rvr
         # TODO fix asyncio problems and use the asyncio version

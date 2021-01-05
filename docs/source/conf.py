@@ -54,7 +54,7 @@ exclude_patterns = []
 # remove full module paths
 add_module_names = False
 
-# disable default alpabetical method order
+# disable default alphabetical method order
 autodoc_member_order = "bysource"
 
 # -- Options for HTML output -------------------------------------------------

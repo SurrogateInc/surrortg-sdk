@@ -1,12 +1,8 @@
 import logging
-import toml
-import os.path
-import socket
 from .network.socket_handler import SocketHandler
 from .network.message_router import MultiSeatMessageRouter
+from .config_parser import get_config
 
-REQUIRED_CONFIG_KEYS = ["device_id", "game_engine"]
-REQUIRED_CONFIG_GE_KEYS = ["url", "token"]
 SURRORTG_VERSION = "0.2.0"
 LOCAL_SOCKET_NAME = "/tmp/.srtg-sock"
 DATACHANNEL_CONFIG_KEY = "datachannel"
@@ -26,27 +22,7 @@ class GameIO:
         socketio_logging_level,
         robot_type,
     ):
-        self._config = self._get_config(config_path)
-
-        if "id" not in self._config["game_engine"]:
-            raw_token = self._config["game_engine"]["token"]
-            if "/" not in raw_token:
-                raise RuntimeError(
-                    "Malformed token: are you using old token format?"
-                )
-            tokens = raw_token.split("/")
-            self._config["game_engine"]["id"] = tokens[0]
-            self._config["game_engine"]["token"] = tokens[1]
-        else:
-            if "/" in self._config["game_engine"]["token"]:
-                raise RuntimeError(
-                    "Trying to use new combined token with separate id"
-                )
-
-        device_id = self._config["device_id"]
-        if not device_id:
-            logging.info("Using hostname as device_id")
-            device_id = socket.gethostname().split(".", 1)[0]
+        self._config = get_config(config_path)
 
         self._socket_handler = SocketHandler(
             self._config["game_engine"]["url"],
@@ -54,7 +30,7 @@ class GameIO:
                 "clientType": "robot",
                 "robotType": robot_type,
                 "robotVersion": SURRORTG_VERSION,
-                "clientId": device_id,
+                "clientId": self._config["device_id"],
                 "gameId": self._config["game_engine"]["id"],
                 "token": self._config["game_engine"]["token"],
             },
@@ -73,66 +49,7 @@ class GameIO:
         )
         self._socket_handler.register_on_connect_cb(self.provide_inputs)
         self.input_bindings = {}
-
-    def _get_config(
-        self, config_path, default_config_path="/etc/srtg/srtg.toml"
-    ):
-        """A separate static method makes testing easier"""
-        if config_path is None:
-            config_path = default_config_path
-
-        # make sure that the main config file exists
-        if not os.path.isfile(config_path):
-            raise RuntimeError(f"Config file '{config_path}' does not exist")
-
-        # get configs
-        config = toml.load(config_path)
-        # add ["game_engine"] if did not exist already
-        if "game_engine" not in config:
-            config["game_engine"] = toml.load(
-                self._get_current_ge_config_path(default_config_path)
-            )["game_engine"]
-
-        # validate config
-        self._validate_config(config, config_path)
-
-        return config
-
-    @staticmethod
-    def _get_current_ge_config_path(
-        default_config_path,
-        current_ge_name_file="/var/lib/srtg/current_game_engine",
-    ):
-        """A separate static method makes testing easier"""
-
-        # get the current game engine name, and return the path to it
-        config_file_parent_dir = os.path.dirname(default_config_path)
-        try:
-            with open(current_ge_name_file) as f:
-                return (
-                    f"{config_file_parent_dir}/game_engines/"
-                    f"{f.readline().rstrip()}.toml"
-                )
-        except Exception:
-            logging.warning(
-                "Could not read the current game engine name from "
-                f"'{current_ge_name_file}'\nAdd correct name there "
-                "or add [game_engine] section to config"
-            )
-            raise
-
-    @staticmethod
-    def _validate_config(config, config_path):
-        """A separate static method makes testing easier"""
-        for key in REQUIRED_CONFIG_KEYS:
-            assert (
-                key in config
-            ), f"Required '{key}' not found from config: '{config_path}'"
-        for key in REQUIRED_CONFIG_GE_KEYS:
-            assert key in config["game_engine"], (
-                f"Required '{key}' not found from config['game_engine']: "
-                f"'{config_path}'"
-            )
+        self._can_register_inputs = False
 
     def _is_config_message(self, message):
         return message.src == "gameEngine" and message.event == "config"
@@ -149,6 +66,8 @@ class GameIO:
         Input names must be unique.
         If the same input name already exists, error is risen.
 
+        The inputs can be registered only during on_init.
+
         :param inputs: A dictionary of input device names and objects.
         :type inputs: dict{String: Input}
         :raises RuntimeError if input names are not unique
@@ -157,7 +76,11 @@ class GameIO:
         :type admin: bool, optional
         :param bindable: Describes if the input can be bound to user
         input. Defaults to True.
+        :raises RuntimeError: if called outside on_init
         """
+        if not self._can_register_inputs:
+            raise RuntimeError("register_inputs called outside on_init")
+
         for input_id, handler_obj in inputs.items():
             if input_id in self.input_bindings:
                 raise RuntimeError(f"Duplicate input_ids: {input_id}")
@@ -231,7 +154,7 @@ class GameIO:
         # get router and all registered seats
         router = self._message_router.router
         registered_seats = self._message_router.get_all_seats()
-        # return if seat is not spesified or not found
+        # return if seat is not specified or not found
         if seat is not None and seat not in registered_seats:
             logging.warning(f"Cannot shutdown inputs for seat {seat}")
             return
@@ -286,7 +209,7 @@ class GameIO:
         :type score: int/float, optional
         :param scores: scores dictionary or list, defaults to None
         :type scores: dict/list, optional
-        :param seat: seat number, used only with a singe score, defaults to 0
+        :param seat: seat number, used only with a single score, defaults to 0
         :type seat: int, optional
         :param final_score: signal to GE that there will not be more scores
             coming, defaults to False
@@ -422,7 +345,7 @@ class GameIO:
         )
 
     async def _send(self, event, src=None, seat=0, payload={}, callback=None):
-        """Send message to GE asyncronously, not to be used directly
+        """Send message to GE asynchronously, not to be used directly
 
         :param event: Event name
         :type event: String

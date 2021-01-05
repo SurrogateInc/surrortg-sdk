@@ -2,10 +2,10 @@ import unittest
 import asyncio
 import os
 import time
+import logging
 from signal import SIGINT, SIGTERM, SIGUSR1
 from threading import Thread
 from surrortg import Game
-import logging
 
 
 class GameTest(unittest.TestCase):
@@ -45,7 +45,7 @@ class GameTest(unittest.TestCase):
     def test_run_signaling(self):
         """
         Make sure that _exit_reason and _exception are correct when run()
-        is interrupted or teminated
+        is interrupted or terminated
 
         EXIT_REASONS = {
             1: "Interrupted (SIGINT)",
@@ -148,7 +148,7 @@ class GameTest(unittest.TestCase):
         is present"""
 
         # test that everything is logged when nothing is implemented
-        with self.assertLogs(level="INFO") as cm:
+        with self.assertLogs(level="DEBUG") as cm:
             g = Game()
             g._pre_run(
                 "./tests/test_config.toml",
@@ -158,14 +158,14 @@ class GameTest(unittest.TestCase):
             self.assertEqual(
                 cm.output,
                 [
-                    "INFO:root:on_init not implemented. No inputs/outputs were registered.",  # noqa: E501
-                    "INFO:root:on_config not implemented. Using the current set.",  # noqa: E501
-                    "INFO:root:on_prepare not implemented.",
-                    "INFO:root:on_pre_game not implemented.",
-                    "INFO:root:on_countdown not implemented.",
-                    "INFO:root:on_start not implemented.",
-                    "INFO:root:on_finish not implemented.",
-                    "INFO:root:on_exit not implemented.",
+                    "DEBUG:root:on_init not implemented. No inputs/outputs were registered.",  # noqa: E501
+                    "DEBUG:root:on_config not implemented. Using the current set.",  # noqa: E501
+                    "DEBUG:root:on_prepare not implemented.",
+                    "DEBUG:root:on_pre_game not implemented.",
+                    "DEBUG:root:on_countdown not implemented.",
+                    "DEBUG:root:on_start not implemented.",
+                    "DEBUG:root:on_finish not implemented.",
+                    "DEBUG:root:on_exit not implemented.",
                 ],
             )
 
@@ -180,7 +180,7 @@ class GameTest(unittest.TestCase):
             async def on_start(self, configs, players):
                 pass
 
-        with self.assertLogs(level="INFO") as cm:
+        with self.assertLogs(level="DEBUG") as cm:
             g = GameModSomeImplemented()
             g._pre_run(
                 "./tests/test_config.toml",
@@ -190,12 +190,12 @@ class GameTest(unittest.TestCase):
             self.assertEqual(
                 cm.output,
                 [
-                    "INFO:root:on_init not implemented. No inputs/outputs were registered.",  # noqa: E501
-                    "INFO:root:on_prepare not implemented.",
-                    "INFO:root:on_pre_game not implemented.",
-                    "INFO:root:on_countdown not implemented.",
-                    "INFO:root:on_finish not implemented.",
-                    "INFO:root:on_exit not implemented.",
+                    "DEBUG:root:on_init not implemented. No inputs/outputs were registered.",  # noqa: E501
+                    "DEBUG:root:on_prepare not implemented.",
+                    "DEBUG:root:on_pre_game not implemented.",
+                    "DEBUG:root:on_countdown not implemented.",
+                    "DEBUG:root:on_finish not implemented.",
+                    "DEBUG:root:on_exit not implemented.",
                 ],
             )
 
@@ -203,8 +203,19 @@ class GameTest(unittest.TestCase):
         """self.io should raise RuntimeError if called before run(),
         but not if called afterwards"""
 
-        # test premature calling
+        # test premature calling (run not called)
         g = Game()
+        with self.assertRaises(RuntimeError):
+            g.io.register_inputs({})
+
+        # test premature calling
+        # (run called, but io._can_register_inputs is not set)
+        g = Game()
+        g._pre_run(
+            "./tests/test_config.toml",
+            socketio_logging_level=logging.WARNING,
+            robot_type="robot",
+        )  # this simulates run(), really only part of it
         with self.assertRaises(RuntimeError):
             g.io.register_inputs({})
 
@@ -215,6 +226,7 @@ class GameTest(unittest.TestCase):
             socketio_logging_level=logging.WARNING,
             robot_type="robot",
         )  # this simulates run(), really only part of it
+        g.io._can_register_inputs = True
         try:
             g.io.register_inputs({})
         except RuntimeError:

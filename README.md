@@ -2,9 +2,10 @@
 
 ## Python version
 
-For enabling reproducable dependency installations, this project uses `pipenv`.
-Pipenv in this projects requires Python version 3.7 or higher, which can be installed for example with `pyenv`, https://github.com/pyenv/pyenv.
-You can check your current version with `python --version`
+For enabling reproducible dependency installations, this project uses `pipenv`.
+Pipenv in this projects requires Python version 3.7 or higher, which can be
+installed for example with `pyenv`, <https://github.com/pyenv/pyenv>.
+You can check your current version with `python --version`.
 Follow the steps below to install the correct Python version if not already found.
 
 ### Installing Python 3.7 with pyenv
@@ -16,25 +17,30 @@ sudo apt-get update && sudo apt-get upgrade && sudo apt-get install -y build-ess
 ```
 
 To install pyenv with the official installer, run `curl https://pyenv.run | bash`.
-Then, to add pyenv to your path, add these three lines to the end of your `~/.bashrc` file using your preferred text editor.
+Then, to add pyenv to your path, add these three lines to the end of your `~/.bashrc`
+file using your preferred text editor.
 
 ```
-export PATH="/home/ubuntu/.pyenv/bin:$PATH"
+export PATH="/home/$USER/.pyenv/bin:$PATH"
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 ```
 
 Then run `source ~/.bashrc`.
 
-Next, install the correct Python version with `pyenv`, by running `pyenv install 3.7.8`.
-Then, to enable the correct Python version to be used for SurroRTG SDK, navigate to the root of your cloned `surrortg-sdk` repository in your terminal, and run `pyenv local 3.7.8`.
+Next, install the correct Python version with `pyenv`, by running
+`pyenv install 3.7.8`. Then, to enable the correct Python version to be used
+for SurroRTG SDK, navigate to the root of your cloned `surrortg-sdk` repository
+in your terminal, and run `pyenv local 3.7.8`.
 
 ## Installing dependencies
 
-To install all of the dependencies, run first `pip install pipenv` and then `pipenv sync`.
+To install all of the dependencies, run first `pip install pipenv` and then
+`pipenv sync`.
 
 Then you can enter the virtual environment with `pipenv shell` (and exit with
-`exit`). There are also scrotps such as `pipenv run arcade` for starting test games, check Pipfile for more scripts.
+`exit`). There are also scrotps such as `pipenv run arcade` for starting test
+games, check Pipfile for more scripts.
 
 ## Development
 
@@ -44,9 +50,43 @@ We're following PEP8, and have the formatter `black` and linter `flake8` setup.
 These tools are run in Bitbucket to ensure properly formatted code, but
 use of pre-commit hooks is highly recommended.
 
+#### Installing pre-commit hooks
+
 For this purpose, there are settings for pre-commit tool in the project. To
 use it, run `pipenv sync --dev`.
-Then run `pre-commit install` in the project root.
+
+One of the pre-commit hooks, markdownlint, uses and requires Ruby with a version
+above 2.6. In Ubuntu 20.04, this can be installed with `sudo apt-get install ruby-full`.
+In older Ubuntu distributions, the version in the distribution's repositories
+is too old, and the correct version can be installed with ruby version manager,
+rvm by running the command below.
+
+```
+sudo apt-get update
+
+sudo apt-get install gcc autoconf curl g++  gnupg automake bison libc6-dev libffi-dev libgdbm-dev libncurses5-dev libsqlite3-dev pkg-config sqlite3 zlib1g-dev libtool libyaml-dev make libgmp-dev libreadline-dev libssl-dev
+
+gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+
+curl -sSL https://get.rvm.io | bash -s stable
+
+source ~/.rvm/scripts/rvm
+
+rvm install 2.7.0
+
+rvm use 2.7.0 --default
+```
+
+Then run `pre-commit install` in the project root to install the pre-commit hooks.
+
+#### Configuration of codespell
+
+The project uses `codespell` to check for spelling mistakes. It runs both as a
+pre-commit hook and in the pipelines. It searches for spelling mistakes and suggests
+alternatives for the mistakes. Sometimes words that have meaningful purpose in
+our context are not recognized by the codespell and might end up failing the pre-commits
+and pipelines because of that. In that case, you can add the word to be ignored
+by codespell into the file `.codespell-ignore`, on its own line.
 
 ### Running
 
@@ -57,8 +97,8 @@ To exit the shell simply run `exit`.
 
 ### Running the Dummy game
 
-Create a new game at `dev.surrogate.tv/admin`. Then start the GE, and submit options for
-single player.
+Create a new game at `dev.surrogate.tv/admin`. Then start the GE, and submit
+options for single player.
 
 Next, copy `games/dummy_game/config_sample.toml` file to your preferred location,
 and add the game's `device_id`, `token` and `id` to it. Then save `surrortg`
@@ -86,7 +126,7 @@ Commands from player are sent as JSON with following template:
 
 Refer to device classes for message format definitions for specific types
 
-## Runnning Python unit tests
+## Running Python unit tests
 
 Then go through the unittests the tests by running `pipenv run tests`
 
@@ -101,7 +141,7 @@ To also open the docs page or pdf, you can add `--` before the command
 and `-f` to open on Firefox or `-c` to open in Chromium.
 For example: `pipenv run -- docs -f`
 
-Also to serve the docs page in http://localhost:8000 you can use
+Also to serve the docs page in <http://localhost:8000> you can use
 `pipenv run -- docs -s`
 
 After building, the documentation can be found in

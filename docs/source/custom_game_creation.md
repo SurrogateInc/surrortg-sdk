@@ -91,7 +91,7 @@ if __name__ == "__main__":
 ```
 
 The SimpleGame template does not do much by itself other than it provides
-a convinient basis for basically any simple game for the platform.
+a convenient basis for basically any simple game for the platform.
 
 So at the top of the file, we import generic
 [Game](modules/surrortg.html#module-surrortg.game) class and
@@ -160,7 +160,8 @@ off
 when you press the key down and up you have bound to a name `switch` from the
 Admin panel.
 
-The game will stop after 15 seconds, after the controller sends final scores from the on_start method.
+The game will stop after 15 seconds, after the controller sends final scores from
+the on_start method.
 
 ### Custom game example: LEDTestGame
 
@@ -170,7 +171,7 @@ detail, and how would you create that by yourself.
 
 From the official Raspberry Pi
 [Lighting an LED tutorial](https://projects.raspberrypi.org/en/projects/physical-computing/2)
-, you will learn that to be able to blink a LED indefinately you can use
+, you will learn that to be able to blink a LED indefinitely you can use
 the following
 [code](https://projects.raspberrypi.org/en/projects/physical-computing/4):
 
@@ -189,8 +190,8 @@ while True:
 
 Here we can see that for blinking LEDs there are three steps:
 
-1. import LED from gpiozero with `from gpiozero import LED`
-2. initilize LED to the GPIO pin 17 with `led = LED(17)`
+1. Import LED from gpiozero with `from gpiozero import LED`
+2. Initialize LED to the GPIO pin 17 with `led = LED(17)`
 3. Turn the LED on and off by calling `led.on()` and `led.off()`
 
 Let's now use this knowledge to modify the SimpleGame into the LEDTestGame:
@@ -227,7 +228,8 @@ it into your use case.
 
 ## Further reading
 
-You can find other templates in the `game_templates` and `game` folders. You should also take a look at [game_development](game_development) and [ready examples](ready_games).
+You can find other templates in the `game_templates` and `game` folders. You should
+also take a look at [game_development](game_development) and [ready examples](ready_games).
 
 The [inputs](modules/surrortg.inputs.html#surrortg-inputs) subpackage contains also
 many other types of inputs, such as
@@ -241,8 +243,8 @@ such as sending
 [laps](modules/surrortg.html#surrortg.game_io.GameIO.send_lap),
 [scores](modules/surrortg.html#surrortg.game_io.GameIO.send_score),
 [enabling](modules/surrortg.html#surrortg.game_io.GameIO.enable_inputs) and
-[disabling](modules/surrortg.html#surrortg.game_io.GameIO.disable_inputs) inputs or
-[resetting all registered inputs](modules/surrortg.html#surrortg.game_io.GameIO.reset_inputs).
+[disabling](modules/surrortg.html#surrortg.game_io.GameIO.disable_inputs) inputs
+or [resetting all registered inputs](modules/surrortg.html#surrortg.game_io.GameIO.reset_inputs).
 
 [on_init](modules/surrortg.html#surrortg.game.Game.on_init) is just one of
 the many methods, that can be used to control the [Game](modules/surrortg.html#module-surrortg.game).

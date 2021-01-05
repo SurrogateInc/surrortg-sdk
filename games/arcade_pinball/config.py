@@ -15,8 +15,8 @@ class GameModes(Enum):
 MAX_BLINKING_START_WAIT_DURING_INIT = 15
 MAX_BLINKING_START_WAIT_DURING_PREPARE = 60
 GAME_MODE = GameModes.PAID
-MAX_INPUTS_PER_INPUT = 25
-PER_SECONDS = 5
+MAX_INPUTS_PER_INPUT = 6
+PER_SECONDS = 1
 
 # Buttons
 LEFT_FLIPPER_PIN = 5
@@ -36,7 +36,7 @@ BALL_SENSOR_PIN = 22
 START_BUTTON_LED_PIN = 23
 PLUNGER_PRESS_TIME = 0.2
 PLUNGER_MIN_FREQ = 5
-AUTO_PLUNGE_TIME = 5
+AUTO_PLUNGE_TIME = 10
 # if set to false, ball count might be wrong
 # but it is ok if the game state is not tied to ball_counter
 WAIT_FOR_BALL_SAVE = False

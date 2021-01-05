@@ -1,4 +1,4 @@
-# Machine setup:
+# Machine setup
 
 Remove speaker wire
 

@@ -11,7 +11,7 @@ class JoystickTest(unittest.TestCase):
     def test_get_direction_4(self):
         """Test that the directions are correct in 4 case
         """
-        joystick = TestJoystick(min_amount=0.1)
+        joystick = TestJoystick()
 
         self.assertEqual(joystick.get_direction_4(0, 1), Directions.TOP)
         self.assertEqual(joystick.get_direction_4(0, -1), Directions.BOTTOM)
@@ -24,7 +24,7 @@ class JoystickTest(unittest.TestCase):
     def test_get_direction_8(self):
         """Test that the directions are correct in 8 case
         """
-        joystick = TestJoystick(min_amount=0.1)
+        joystick = TestJoystick()
 
         self.assertEqual(joystick.get_direction_8(0, 1), Directions.TOP)
         self.assertEqual(joystick.get_direction_8(0, -1), Directions.BOTTOM)

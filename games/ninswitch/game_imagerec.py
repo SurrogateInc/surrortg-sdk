@@ -104,7 +104,7 @@ class NinSwitchImageRecGame(Game):
             if has_flag(frame):
                 logging.info("Has flag!")
             else:
-                logging.info("Does't have flag")
+                logging.info("Doesn't have flag")
 
             # generic
             if i % 100 == 0:
