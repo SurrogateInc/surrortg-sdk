@@ -2,8 +2,8 @@ import logging
 import asyncio
 import pigpio
 from games.claw.config import (
-    TOYSENSOR_PIN,
-    TOYSENSOR_STATE_BLOCKED,
+    TOY_SENSOR_PIN,
+    TOY_SENSOR_STATE_BLOCKED,
 )
 
 
@@ -11,13 +11,13 @@ class ClawToySensor:
     def __init__(self, io, pi):
         self.io = io
         self.pi = pi
-        self.pi.set_mode(TOYSENSOR_PIN, pigpio.INPUT)
+        self.pi.set_mode(TOY_SENSOR_PIN, pigpio.INPUT)
 
     def is_blocked(self):
-        return self.pi.read(TOYSENSOR_PIN) == TOYSENSOR_STATE_BLOCKED
+        return self.pi.read(TOY_SENSOR_PIN) == TOY_SENSOR_STATE_BLOCKED
 
     async def wait_for_toy(self, toy_wait_time):
-        logging.info("Waiting for toys using internal IR sensor")
+        logging.info("Waiting for toys using internal toy sensor")
 
         try:
             await asyncio.wait_for(self.detect_toy(), timeout=toy_wait_time)
