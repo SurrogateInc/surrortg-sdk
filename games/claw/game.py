@@ -6,7 +6,7 @@ from surrortg.inputs import Directions
 from games.claw.claw_joystick import ClawJoystick
 from games.claw.claw_button import ClawButton
 from games.claw.claw_toy_sensor import ClawToySensor
-from games.claw.claw_internal_toy_sensor import ClawInternalToySensor
+from games.claw.claw_arduino_toy_sensor import ClawArduinoToySensor
 from games.claw.config import (
     ABSOLUTE_GAME_MAX_TIME,
     TOY_WAIT_TIME,
@@ -16,6 +16,7 @@ from games.claw.config import (
     AUTOMATIC_MOVE_TIME,
     WAIT_TIME_AFTER_SENSOR_BLOCKED,
     BLOCKED_SENSOR_PING_TIME,
+    BLOCK_GAME_LOOP_IF_SENSOR_BLOCKED,
 )
 
 
@@ -38,9 +39,9 @@ class ClawGame(Game):
             post_press_action=self.post_button_press,
         )
         self.toy_sensor = (
-            ClawInternalToySensor(io=self.io, pi=self.pi)
+            ClawToySensor(io=self.io, pi=self.pi)
             if USE_INTERNAL_IR_SENSOR
-            else ClawToySensor(self.io)
+            else ClawArduinoToySensor(self.io)
         )
 
         # init claw machine state variables
@@ -54,20 +55,26 @@ class ClawGame(Game):
     async def on_prepare(self):
         await self.joystick.reset()
         # make sure the prize sensor is not blocked
-        if self.toy_sensor.get_sensor_state():
-            logging.warning(
-                "TOY SENSOR BLOCKED, PLEASE REMOVE BLOCKING OBJECTS"
-            )
-            # only continue game after the blocking objects have been removed
-            while True:
-                await asyncio.sleep(BLOCKED_SENSOR_PING_TIME)
-                if not self.toy_sensor.get_sensor_state():
-                    logging.info(
-                        f"Toy sensor not stuck anymore, will continue "
-                        f"game in {WAIT_TIME_AFTER_SENSOR_BLOCKED} seconds"
-                    )
-                    await asyncio.sleep(WAIT_TIME_AFTER_SENSOR_BLOCKED)
-                    break
+        if self.toy_sensor.is_blocked():
+            if BLOCK_GAME_LOOP_IF_SENSOR_BLOCKED:
+                logging.warning(
+                    "TOY SENSOR BLOCKED, PLEASE REMOVE BLOCKING OBJECTS"
+                )
+                # continue game after the blocking objects have been removed
+                while True:
+                    await asyncio.sleep(BLOCKED_SENSOR_PING_TIME)
+                    if not self.toy_sensor.is_blocked():
+                        logging.info(
+                            f"Toy sensor not stuck anymore, will continue "
+                            f"game in {WAIT_TIME_AFTER_SENSOR_BLOCKED} seconds"
+                        )
+                        await asyncio.sleep(WAIT_TIME_AFTER_SENSOR_BLOCKED)
+                        break
+            else:
+                logging.warning(
+                    "TOY SENSOR BLOCKED, BUT PROCEEDING ANYWAY "
+                    "(configured not to block game loop while stuck)"
+                )
         # make sure the state is correct before approving game start
         if not self.ready_for_next_game:
             logging.info("Forcing the ClawMachine ready state, please wait...")

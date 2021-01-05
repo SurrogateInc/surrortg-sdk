@@ -7,46 +7,48 @@ from games.claw.config import (
     BOTTOM_PIN,
     RIGHT_PIN,
     MIN_AMOUNT,
+    JOYSTICK_STATE_ON,
+    JOYSTICK_STATE_OFF,
 )
 
 DIR_PINS = [TOP_PIN, LEFT_PIN, BOTTOM_PIN, RIGHT_PIN]
 
 DIRECTION_CMD_MAP = {
     Directions.TOP: {
-        "off": [TOP_PIN],
-        "on": [BOTTOM_PIN, LEFT_PIN, RIGHT_PIN],
+        "on": [TOP_PIN],
+        "off": [BOTTOM_PIN, LEFT_PIN, RIGHT_PIN],
     },
     Directions.BOTTOM: {
-        "off": [BOTTOM_PIN],
-        "on": [TOP_PIN, LEFT_PIN, RIGHT_PIN],
+        "on": [BOTTOM_PIN],
+        "off": [TOP_PIN, LEFT_PIN, RIGHT_PIN],
     },
     Directions.LEFT: {
-        "off": [LEFT_PIN],
-        "on": [TOP_PIN, BOTTOM_PIN, RIGHT_PIN],
+        "on": [LEFT_PIN],
+        "off": [TOP_PIN, BOTTOM_PIN, RIGHT_PIN],
     },
     Directions.RIGHT: {
-        "off": [RIGHT_PIN],
-        "on": [TOP_PIN, BOTTOM_PIN, LEFT_PIN],
+        "on": [RIGHT_PIN],
+        "off": [TOP_PIN, BOTTOM_PIN, LEFT_PIN],
     },
     Directions.TOP_LEFT: {
-        "off": [TOP_PIN, LEFT_PIN],
-        "on": [BOTTOM_PIN, RIGHT_PIN],
+        "on": [TOP_PIN, LEFT_PIN],
+        "off": [BOTTOM_PIN, RIGHT_PIN],
     },
     Directions.TOP_RIGHT: {
-        "off": [TOP_PIN, RIGHT_PIN],
-        "on": [BOTTOM_PIN, LEFT_PIN],
+        "on": [TOP_PIN, RIGHT_PIN],
+        "off": [BOTTOM_PIN, LEFT_PIN],
     },
     Directions.BOTTOM_LEFT: {
-        "off": [BOTTOM_PIN, LEFT_PIN],
-        "on": [TOP_PIN, RIGHT_PIN],
+        "on": [BOTTOM_PIN, LEFT_PIN],
+        "off": [TOP_PIN, RIGHT_PIN],
     },
     Directions.BOTTOM_RIGHT: {
-        "off": [BOTTOM_PIN, RIGHT_PIN],
-        "on": [TOP_PIN, LEFT_PIN],
+        "on": [BOTTOM_PIN, RIGHT_PIN],
+        "off": [TOP_PIN, LEFT_PIN],
     },
     Directions.MIDDLE: {
-        "off": [],
-        "on": [TOP_PIN, BOTTOM_PIN, LEFT_PIN, RIGHT_PIN],
+        "on": [],
+        "off": [TOP_PIN, BOTTOM_PIN, LEFT_PIN, RIGHT_PIN],
     },
 }
 
@@ -69,9 +71,9 @@ class ClawJoystick(Joystick):
         logging.debug(f"Moving {direction}")
         GPIO_cmds = DIRECTION_CMD_MAP[direction]
         for off_pin in GPIO_cmds["off"]:
-            self.pi.write(off_pin, 0)
+            self.pi.write(off_pin, JOYSTICK_STATE_OFF)
         for on_pin in GPIO_cmds["on"]:
-            self.pi.write(on_pin, 1)
+            self.pi.write(on_pin, JOYSTICK_STATE_ON)
 
     async def reset(self, seat=0):
         self.move(Directions.MIDDLE)
