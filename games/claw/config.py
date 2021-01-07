@@ -15,16 +15,17 @@ BLOCK_GAME_LOOP_IF_SENSOR_BLOCKED = True
 BLOCKED_SENSOR_PING_INTERVAL = 1
 # how long to wait after blocking toy has been removed
 WAIT_TIME_AFTER_SENSOR_CLEARED = 10
-# minimum time for claw picking cycle
-# (drop claw, lift claw and release)
-CLAW_PICK_CYCLE_MIN_TIME = 4
 # maximum time for claw picking cycle and detecting toy
 # (drop claw, lift claw, move claw and detect toy by sensor)
 TOY_WAIT_TIME = 10
+# time for claw picking cycle
+# (drop claw, lift claw and release)
+CLAW_PICK_CYCLE_TIME = 7
 # time for claw to move from cornet to corner (longest distance)
 CLAW_CORNER_TO_CORNER_TIME = 2
-# interval in seconds to fire solenoid if toy didn't fly out
-SOLENOID_FIRE_INTERVAL = 5
+# this constant must be set to same value as claw machine game time
+# set game time as long as claw machine allows
+CLAW_GAME_LENGTH = 60
 
 # what are these?
 STOP_TIME_BEFORE_BTN_PRESS = 0.25
@@ -34,7 +35,8 @@ AUTOMATIC_MOVE_TIME = 0.25
 JOYSTICK_DISABLE_PIN = 19
 
 # NOTE! This is a workaround because GE does not send max game length time
-ABSOLUTE_GAME_MAX_TIME = 50
+# This constant must be set to same value as claw machine game time
+GE_GAME_LENGTH = 30
 
 """ClawToySensor"""
 TOY_SENSOR_PIN = 23
@@ -58,6 +60,8 @@ JOYSTICK_STATE_ON = 0
 JOYSTICK_STATE_OFF = 1
 
 """ClawSolenoid"""
+# interval in seconds to fire solenoid if toy didn't fly out
+SOLENOID_FIRE_INTERVAL = 5
 # pin to enable solenoid power supply
 SOLENOID_PSU_PIN = 7
 # pin to fire solenoid

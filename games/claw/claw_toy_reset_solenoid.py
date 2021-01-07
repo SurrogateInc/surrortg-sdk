@@ -4,6 +4,7 @@ import logging
 import pigpio
 
 from games.claw.config import (
+    SOLENOID_FIRE_INTERVAL,
     SOLENOID_PSU_PIN,
     SOLENOID_FIRE_PIN,
 )
@@ -18,6 +19,7 @@ class ClawSolenoid:
         self._pi = pi
         self._pi.write(SOLENOID_FIRE_PIN, pigpio.HIGH)
         self._pi.write(SOLENOID_PSU_PIN, pigpio.HIGH)
+        self.fire_interval = SOLENOID_FIRE_INTERVAL
 
     async def fire(self):
         self._pi.write(SOLENOID_FIRE_PIN, pigpio.LOW)

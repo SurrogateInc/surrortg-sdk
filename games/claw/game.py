@@ -17,14 +17,14 @@ from games.claw.config import (
     BLOCK_GAME_LOOP_IF_SENSOR_BLOCKED,
     BLOCKED_SENSOR_PING_INTERVAL,
     WAIT_TIME_AFTER_SENSOR_CLEARED,
-    CLAW_PICK_CYCLE_MIN_TIME,
     TOY_WAIT_TIME,
+    CLAW_PICK_CYCLE_TIME,
     CLAW_CORNER_TO_CORNER_TIME,
-    SOLENOID_FIRE_INTERVAL,
+    CLAW_GAME_LENGTH,
     STOP_TIME_BEFORE_BTN_PRESS,
     AUTOMATIC_MOVE_TIME,
     JOYSTICK_DISABLE_PIN,
-    ABSOLUTE_GAME_MAX_TIME,
+    GE_GAME_LENGTH,
 )
 
 
@@ -70,7 +70,7 @@ class ClawGame(Game):
 
         if self.toy_sensor.is_blocked():
             if USE_TOY_RESET_SOLENOID:
-                await self.solenoid_toy_reset()
+                await self.solenoid_toy_reset_loop()
             elif BLOCK_GAME_LOOP_IF_SENSOR_BLOCKED:
                 logging.warning(
                     "TOY SENSOR BLOCKED, PLEASE REMOVE BLOCKING OBJECTS"
@@ -88,7 +88,7 @@ class ClawGame(Game):
             else:
                 logging.warning(
                     "TOY SENSOR BLOCKED, BUT PROCEEDING ANYWAY "
-                    "(configured not to block game loop while stuck)"
+                    "(configured not to block game loop if sensor is blocked)"
                 )
 
         # make sure the state is correct before approving game start
@@ -123,10 +123,8 @@ class ClawGame(Game):
         # play game until player pushes button or time is up and GE moves to
         # on finish. This game section should never finish by itself
         try:
-            await asyncio.sleep(ABSOLUTE_GAME_MAX_TIME)
-            logging.warning(
-                "ABSOLUTE_GAME_MAX_TIME passed, this should never happen"
-            )
+            await asyncio.sleep(GE_GAME_LENGTH + 10)
+            logging.warning("GE_GAME_LENGTH passed, this should never happen")
             self.io.disable_inputs()
             await self.joystick.reset()
             self.io.send_playing_ended()
@@ -151,22 +149,44 @@ class ClawGame(Game):
         # preparations are not needed in prepare_game
         self.ready_for_next_game = True
 
-    async def solenoid_toy_reset(self):
-        logging.info("Toy in platform.")
+    async def solenoid_toy_reset_loop(self):
+        reset_task_timeout = (
+            CLAW_GAME_LENGTH - 2 * CLAW_CORNER_TO_CORNER_TIME - 10
+        )
+        while True:
+            try:
+                # run solenoid reset task until it succeeds or timeouts
+                logging.info("Solenoid toy reset task started.")
+                await asyncio.wait_for(
+                    self._solenoid_toy_reset_task(), timeout=reset_task_timeout
+                )
+                logging.info("Solenoid toy reset task completed.")
+                break
+            except (asyncio.TimeoutError, asyncio.CancelledError):
+                logging.info("Solenoid reset task timeouted. Starting again.")
+                # move claw back to bottom left corner
+                self.joystick.move(Directions.BOTTOM_LEFT)
+                await asyncio.sleep(CLAW_CORNER_TO_CORNER_TIME)
+                await self.joystick.reset()
+
+                # pick with claw to end game
+                await self.button.on(seat=0)
+                # wait until claw has completed picking cycle
+                await asyncio.sleep(CLAW_PICK_CYCLE_TIME)
+
+    async def _solenoid_toy_reset_task(self):
         # move claw to top right corner
         self.joystick.move(Directions.TOP_RIGHT)
         await asyncio.sleep(CLAW_CORNER_TO_CORNER_TIME)
         await self.joystick.reset()
 
-        # toy reset loop
         while True:
             # fire toy reset solenoid
-            await self.solenoid.fire()
-            await asyncio.sleep(SOLENOID_FIRE_INTERVAL)
+            await asyncio.shield(self.solenoid.fire())
+            await asyncio.sleep(self.solenoid.fire_interval)
 
             # if toy reset succeeded
             if not self.toy_sensor.is_blocked():
-                logging.info("Toy reset completed.")
                 # move claw back to bottom left
                 self.joystick.move(Directions.BOTTOM_LEFT)
                 await asyncio.sleep(CLAW_CORNER_TO_CORNER_TIME)
@@ -175,7 +195,7 @@ class ClawGame(Game):
                 # pick with claw to end game
                 await self.button.on(seat=0)
                 # wait until claw has completed picking cycle
-                await asyncio.sleep(CLAW_PICK_CYCLE_MIN_TIME)
+                await asyncio.sleep(CLAW_PICK_CYCLE_TIME)
                 break
 
             # if toy reset failed
