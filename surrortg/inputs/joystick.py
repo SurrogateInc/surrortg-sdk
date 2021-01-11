@@ -234,9 +234,9 @@ class MouseJoystick(Joystick):
         dy = self._parse_mouse_delta(command, "dy")
 
         if None not in [x, y, dx, dy]:
-            await self.handle_coordinates(self, x, y, seat, dx=dx, dy=dy)
+            await self.handle_coordinates(x, y, seat, dx=dx, dy=dy)
         elif None not in [x, y]:
-            await self.handle_coordinates(self, x, y, seat)
+            await self.handle_coordinates(x, y, seat)
 
     def _parse_mouse_delta(self, command, key):
         """Parse the delta given as key from the command
