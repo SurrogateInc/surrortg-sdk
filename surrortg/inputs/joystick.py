@@ -81,12 +81,12 @@ class Joystick(Input):
         :param seat: Robot seat
         :type seat: int
         """
-        x = self._parse_coordinate(command, "x")
-        y = self._parse_coordinate(command, "y")
+        x = self._parse_joystick_position(command, "x")
+        y = self._parse_joystick_position(command, "y")
         if x is not None and y is not None:
             await self.handle_coordinates(x, y, seat)
 
-    def _parse_coordinate(self, command, key):
+    def _parse_joystick_position(self, command, key):
         """Parse the coordinate given as key from the command
 
         Returns the parsed coordinate or None if command is invalid
@@ -213,3 +213,69 @@ class Joystick(Input):
         :rtype: str
         """
         return "joystick"
+
+
+class MouseJoystick(Joystick):
+    async def _on_input(self, command, seat):
+        """Mouse and joystick input functionality
+
+        Parses x- and y-coordinates and calls handle_coordinates.
+        If mouse is used, then additional dx and dy values are passed
+        to the handle_coordinates method.
+
+        :param command: Command from game engine
+        :type command: dict
+        :param seat: Robot seat
+        :type seat: int
+        """
+        x = self._parse_joystick_position(command, "x")
+        y = self._parse_joystick_position(command, "y")
+        dx = self._parse_mouse_delta(command, "dx")
+        dy = self._parse_mouse_delta(command, "dy")
+
+        if None not in [x, y, dx, dy]:
+            await self.handle_coordinates(x, y, seat, dx=dx, dy=dy)
+        elif None not in [x, y]:
+            await self.handle_coordinates(x, y, seat)
+
+    def _parse_mouse_delta(self, command, key):
+        """Parse the delta given as key from the command
+
+        Returns the parsed delta or None if command is invalid
+        :param command: Command from game engine
+        :type command: dict
+        :param key: coordinate key name
+        :type key: str
+        :return: key delta parsed from command
+        :rtype: float or None
+        """
+        if key not in command:
+            return None
+
+        try:
+            return int(command[key])
+        except ValueError:
+            raise ValueError(
+                f"MouseJoystick: Could not convert '{command[key]}' into int."
+            )
+
+    async def handle_coordinates(self, x, y, seat, dx=None, dy=None):
+        """Coordinate based Joystick control
+
+        Middle position means x=0, y=0. Right means x is positive, left means
+        x is negative. Top means y is positive, bottom means y is negative.
+        If mouse is used, dx and dy contains mouse position change relative to
+        previous position.
+
+        :param x: x-coordinate, between -1.0 and 1.0
+        :type x: float
+        :param y: y-coordinate, between -1.0 and 1.0
+        :type y: float
+        :param seat: Robot seat
+        :type seat: int
+        :param dx: Mouse x-axis movement relative to previous position
+        :type dx: None or int
+        :param dy: Mouse y-axis movement relative to previous position
+        :type dy: None or int
+        """
+        pass
