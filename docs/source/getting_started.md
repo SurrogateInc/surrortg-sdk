@@ -554,6 +554,50 @@ can find out how to choose the audio capture device to use, some additional
 audio parameters, troubleshooting tips, and how to add custom features if you
 are an advanced user.
 
+##### Datachannel
+
+The system supports WebRTC datachannel, which is used for peer-to-peer
+data communication between the front end and the controller, improving input
+latency.
+
+<strong>Datachannel is enabled automatically if the system detects that it is
+possible.</strong>
+However, to prevent some edge cases where the system may fall back to a
+non-datachannel connection, it is possible to force the use of datachannel in
+the config file.
+
+<details>
+  <summary><strong>
+  For more details on datachannel, click here (advanced)
+  </strong></summary>
+
+  Datachannel can only be used if both the streamer and
+  the controller are running on the same device.
+  To do so, add the following to the top level of srtg.toml:
+
+  ```
+  datachannel = true
+  ```
+
+  <strong>Do this only if you have both streamer and controller running on the
+  same device!</strong> Remember to remove this option if you start running the
+  programs on separate devices!
+
+  The edge cases where the system may fall back to non-datachannel communication
+  are:
+
+   - A player connects very soon after the streamer is started
+   - The streamer restarts during gameplay
+
+   Note that datachannel becomes enabled a few seconds after these events, so
+   only the players connecting/connected within this time frame will have
+   datachannel disabled for the duration of their game. In other words, on a
+   stable system these should not occur, and the automatic datachannel will
+   suffice for most users.
+
+</details>
+</br>
+
 #### Adding your controller to the game
 
 Now that your controller has the correct configuration file, we can add the controller
