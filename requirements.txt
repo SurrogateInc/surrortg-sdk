@@ -1,5 +1,5 @@
 aiohttp
 python-socketio
-python-engineio==3.13.1
+python-engineio
 toml
 pigpio

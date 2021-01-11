@@ -9,7 +9,7 @@ setuptools.setup(
     install_requires=[
         "aiohttp",
         "python-socketio",
-        "python-engineio==3.13.1",  # 3.13.2 does not terminate with ctrl+c
+        "python-engineio",
         "pyyaml",
         "toml",
     ],
