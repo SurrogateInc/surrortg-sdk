@@ -53,6 +53,7 @@ POSITION_YS = {
 
 # number corner x-values
 NUMBER_XS = [1094, 1131, 1156, 1193, 1219, 1245]
+TENS_OF_MINS_X = 1060  # this only exists if the time is +10 min
 
 # how close match is required when deciding is a pixel line or not
 # 0-255, 0 means perfect match
@@ -109,6 +110,9 @@ def get_time_ms(frame, position):
 
     y = POSITION_YS[position]
     nums = [_get_num(frame, [x, y]) for x in NUMBER_XS]
+    tens_of_mins = _get_num(frame, [TENS_OF_MINS_X, y])
+    if isinstance(tens_of_mins, int) and isinstance(nums[0], int):
+        nums[0] = 10 * tens_of_mins + nums[0]
     time_string = f"{nums[0]}:{nums[1]}{nums[2]}.{nums[3]}{nums[4]}{nums[5]}"
     if None in nums:
         return None, time_string
@@ -186,6 +190,7 @@ The tests make sure that
                 yield cv2.imread(str(f.absolute())), f.name
 
     def check_successfull():
+        i = 0
         for i, (frame, name) in enumerate(succesfull_frames()):
             try:
                 prev_pos = int(name[-19])
@@ -213,6 +218,7 @@ The tests make sure that
         print(f"{i} successful checked")
 
     def check_failed():
+        i = 0
         for i, (frame, name) in enumerate(failed_frames()):
             try:
                 # try get position
