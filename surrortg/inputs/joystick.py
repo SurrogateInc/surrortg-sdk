@@ -253,12 +253,10 @@ class MouseJoystick(Joystick):
             return None
 
         try:
-            delta = command[key]
-            delta = int(delta)
-            return delta
+            return int(command[key])
         except ValueError:
             raise ValueError(
-                f"MouseJoystick: Could not convert '{delta}' into int."
+                f"MouseJoystick: Could not convert '{command[key]}' into int."
             )
 
     async def handle_coordinates(self, x, y, seat, dx=None, dy=None):
