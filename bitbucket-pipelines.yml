@@ -40,7 +40,7 @@ definitions:
               AWS_DEFAULT_REGION: 'us-east-1'
               S3_BUCKET: 'surrortg-sdk-docs'
               LOCAL_PATH: 'docs/build/html'
-              DELETE_FLAG: 'true'
+              DELETE_FLAG: 'false'
 
 pipelines:
   default:

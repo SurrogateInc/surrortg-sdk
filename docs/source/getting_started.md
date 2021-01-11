@@ -2,21 +2,33 @@
 
 This document guides you in [installing the SurroRTG SDK](#sdk-installation),
 [creating a game instance](#create-a-game-instance-on-surrogate-tv) and running
-a [template code](#running-template-game).
+a [template code](#running-a-template-game).
 
 To get everything running smoothly you should follow the steps in the order given
 here
 
 1. [Create a game on surrogate.tv](#create-a-game-instance-on-surrogate-tv)
 2. [Install controller SDK](#sdk-installation)
-    1. [Setup Raspberry Pi](#setting-up-raspberry-pi)
-    2. [Install streamer](#installing-surrogate-streamer)
-    3. [Configure your streamer and controller](#configuration-file)
-    4. [Test simple game](#running-a-template-game)
-    5. [Create systemd unit from controller](#running-the-surrortg-python-sdk-controller-automatically-on-boot)
-    6. [Install watcher stream](#installing-surrogate-watcher-stream)
+    1. [Method 1: Premade image](#method-1-installing-a-pre-made-image)
+        1. [Downloading and installing the image](#downloading-and-installing-the-image)
+        2. [Finding the controller setup page](#finding-the-controller-setup-page)
+        3. [Setting up the controller](#setting-up-the-controller)
+        4. [Connect to Internet with an Ethernet cable](#connect-to-internet-with-an-ethernet-cable)
+        5. [Connect to Internet with wifi](#connect-to-internet-with-wifi)
+        6. [After connecting to Internet](#after-connecting-to-internet)
+        7. [SSH Connection to the Raspberry Pi](#ssh-connection-to-the-raspberry-pi)
+    2. [Method 2: Manual installation](#method-2-manual-installation)
+        1. [Setup Raspberry Pi](#setting-up-raspberry-pi)
+        2. [Installing the required SurroRTG SDK components manually](#installing-the-required-surrortg-sdk-components-manually)
+            1. [Install controller](#installing-surrogate-controller)
+            2. [Install streamer](#installing-surrogate-streamer)
+            3. [Install watcher stream](#installing-surrogate-watcher-stream)
+        3. [Configure your streamer and controller](#configuration-file)
+        4. [Add your controller to the game](#adding-your-controller-to-the-game)
+        5. [Test simple game](#running-a-template-game)
+        6. [Create systemd unit from controller](#running-the-surrortg-python-sdk-controller-automatically-on-boot)
 
-You might need to jump between steps 3-6 in case you missed something so remember
+You might need to jump between some steps in case you missed something so remember
 to look around if you run into trouble. Also take a look at the
 [troubleshooting page](troubleshooting). There you can also find out how to read
 logs and restart the code modules.
@@ -29,8 +41,9 @@ requirements:
 1. [Rasperry Pi](https://www.raspberrypi.org/) single board computer,
   for example model 3B+, 3A, or 4B
 2. A 16GB+ micro SD card
-3. An official [Raspberry Pi Camera](https://www.raspberrypi.org/products/camera-module-v2/)
-  or some USB camera (UVC compliant), check the [support list](camera_support)
+3. An SD card reader, either built in to your computer or as an adapter.
+4. An official [Raspberry Pi Camera](https://www.raspberrypi.org/products/camera-module-v2/)
+   or some USB camera (UVC compliant), check the [support list](camera_support)
 
 ## Create a game instance on Surrogate.tv
 
@@ -61,17 +74,25 @@ Turn on the Game Engine for the game by pressing the "TURN IT ON" button.
 The game engine creation process will take around 3 minutes, but you can already
 move to the next step.
 
-We will get back to the game page configurations and getting the streamer to work
-after we have installed the SurroRTG SDK.
+At this point, navigate to the Settings page from the bottom left corner
+of the web page.
 
-**You will need to continue the tutorial to get your streamer and controller connected
-to the game.**
+In the settings page, click the "Show access token" text and copy the token
+to your clipboard.
+
+![Token instructions](_static/images/TokenInstructions.jpeg)
+
+We will get back to the game page configurations and getting the streamer to
+work after we have installed the SurroRTG SDK.
+
+**You will need to continue the tutorial to get your streamer and
+controller connected to the game.**
 
 ## SDK installation
 
-The SDK installation can be done in two different ways:
+The SDK installation can be done in two different ways:  
 [Method 1:](#method-1-installing-a-pre-made-image)
-flashing a premade image file to a SD card
+flashing a premade image file to an SD card
 (recommended)  
 [Method 2:](#method-2-manual-installation)
 manual installation on top of an existing raspbian image
@@ -79,17 +100,186 @@ manual installation on top of an existing raspbian image
 
 ### Method 1: installing a pre made image
 
-**Not yet supported, please follow manual installation**
+**BETA RELEASE**
+Please be aware that the pre made image is in beta phase and might have issues.
+
+**Known issues**
+
+- Changing the hostname does not affect the name of your streamer
+    and controller. "default-robot" is used from the configuration file
+- Additional "default-" robot might appear in the settings/dashboard
+    controller listings
+- Token paste button on the hotspot server is not working,
+    paste the token with ctrl+v or by other means
+- Link to the new IP address of your hotspot server does not
+    always update properly to the settings/dashboard controller listings
+- Only tested with Raspberry Pi 4, 3B+ and 3A+ might have other issues
+    or might not work at all
+- If the Raspberry Pi is in hotspot mode while sshing to it,
+    sudo commands are executing very slow
+
+#### Downloading and installing the image
+
+Download the Surrogate custom [image](image-builds/surrogate-raspbian-latest.img.gz).
+Note that the image file is large and the download can take a long time,
+especially with slow Internet connection.
+Once the download is complete, take note of the file name and location.
+You might also need to extract the image file from the zip file separately,
+but Raspberry Pi Imager should do this automatically for you. We will get back
+to this in the next steps.
+Next plug an SD card to a slot in your computer or to your card reader in order to
+flash the SD card with the image, for which there are several free tools available.
+If your operation system is Windows, MacOS or Ubuntu,
+you can use [Raspberry Pi Imager](https://www.raspberrypi.org/software/).
+Another alternative that supports other Linux distributions is
+[BalenaEtcher](https://www.balena.io/etcher/).
+Once the flashing is complete, remove the SD card from your
+computer and plug it in to the Raspberry Pi.
+
+#### Finding the controller setup page
+
+After plugging the SD card in, you should be able to see a hotspot with ssid
+surrogate-rpi in a minute. Connect to the hotspot with the password "surrogatetv".
+Note that once you connect to the hotspot you will lose your Internet
+connection, unless you're connected to Internet with an Ethernet cable.
+Go to the [Controller configuration page](http://192.168.0.1).
+If you are using an operating system that supports mDNS, such as Linux or MacOS,
+you can also go to [http://surrogate-rpi.local](http://surrogate-rpi.local).
+It might also work on some Windows computers.
+
+#### Setting up the controller
+
+Now paste the token you copied previously to the field and click continue.
+If the field is outlined with a red color, something has gone wrong
+when copying the token.
+
+![Token page](_static/images/TokenPage.png)
+
+Next, if you want, you can give the controller a unique name.
+If you are setting up more than one controller, this step is mandatory,
+as all controllers connecting to the game engine must have unique names.
+Changing the controller name will also change the hostname of the Raspberry Pi.
+If you previously used the mDNS address <http://surrogate-rpi.local>, your
+address will change to `http://[controller name].local`, where `[controller name]`
+is the name you chose. We'll go into connecting the controller to a network in the
+next steps.
+
+![Network page](_static/images/NetworkPage.png)
+
+Next, choose the type of game you want the controller to run. You can see a list
+of templates that you can choose from. If you want to use your own template,
+you'll have to ssh to the Raspberry Pi and do a bit of coding yourself. These
+are covered in [Method 2](#method-2-manual-installation).
+
+Now, you'll have to connect the controller to Internet. There are two ways
+to do this: with an Ethernet cable or wifi credentials.
+
+##### Connect to Internet with an Ethernet cable
+
+If you have an Ethernet cable and a port, plug the cable in the Raspberry Pi,
+wait for a while and refresh the page. This is what you should see.
+
+![Network page](_static/images/NetworkPageEthernet.png)
+
+If you don't see this immediately, give it some time and refresh the page
+a couple of times.
+
+If you want, you can copy the Ethernet IP address visible in the page
+and go to `http://[ip address]` where `[ip address]` needs to be replaced. This
+allows using the page without being connected to the hotspot.
+
+##### Connect to Internet with wifi
+
+If you don't have an Ethernet cable, however, you can type your wifi credentials
+(ssid and password) in the "Internet connection" section in the web page, then
+press "Connect" and you should see this popup.
+
+![Network page popup](_static/images/NetworkPagePopup.png)
+
+If your controller does not soon appear in the controller list, most likely
+something has gone wrong. Another indicator for something going wrong with
+connecting to wifi is if the hotspot does not disappear after a while from
+your network list. If this is the case, connect to the hotspot again and go
+back to the controller setup page. Most likely your wifi is unreachable for
+the controller or the credentials were typed incorrectly.
+
+When your controller does appear in the list, you should be able to click the
+controller name, which will lead you to the controller setup page again with the
+new IP address. If you were using an mDNS address, you don't have to click the
+link. The mDNS address will be eventually resolved to the new IP address.
+
+Here's how the dashboard should look like after connecting with wifi.
+
+![Controller disabled](_static/images/DashboardControllerDisabled.png)
+
+Remember to press the "Enabled" slider. After doing that and if everything
+goes well, you should see this.
+
+![Controller connected](_static/images/DashboardControllerConnected.png)
+
+If either controller or streamer shows a red cross, they've been unable to
+connect to game engine. In this case, you should also be able to see errors
+described in the next section. Usually the problem is that you've forgotten
+to plug in some peripherals to the Raspberry Pi.
+
+##### After connecting to Internet
+
+In the network page, press Continue.
+
+At this point, if everything goes well, you should see this page.
+
+![Happy game engine](_static/images/GameEnginePageHappy.png)
+
+If you have forgotten to connect a camera or some other peripherals required
+by the type of game chosen, you will see an error such as this.
+
+![Unhappy game engine](_static/images/GameEnginePageUnhappy.png)
+
+If that is the case, check that all required peripherals are connected and
+that the chosen game type is correct.
+
+##### SSH connection to the Raspberry Pi
+
+If you've decided to use the premade image but still need to ssh to your
+Raspberry Pi, you need to do the following:
+
+1. Connect the Raspberry Pi to a monitor, keyboard and a power cable
+2. Log in with the default username `pi` and password `creator1337`
+3. **IMPORTANT:** change the default password to something else
+    by typing
+
+    ```
+    sudo passwd pi
+    ```
+
+    in the terminal and then give a secure password of your choice when
+    prompted
+4. Use raspi-config utility to enable ssh. Inside the utility tool
+   `Interfaces -> SSH -> enable`.
+
+    ```
+    sudo raspi-config
+    ```
+
+5. Now you should be able to ssh to the Raspberry Pi with username and password
 
 ### Method 2: manual installation
 
 #### Setting up Raspberry Pi
 
-First follow Raspberry Pi's [general setup](https://projects.raspberrypi.org/en/projects/raspberry-pi-setting-up).
-**Note: Choose Raspberry Pi OS (other) -> Raspberry Pi OS Lite (32-bit) as the
-operating system** to install the official Rasbpian image. We recommend setting
-up your internet connection and enabling ssh-connection via sudo raspi-config by
-following [raspi-config](https://www.raspberrypi.org/documentation/configuration/raspi-config.md#)
+First either:
+
+- Follow Raspberry Pi's [general setup](https://projects.raspberrypi.org/en/projects/raspberry-pi-setting-up).
+  **Note: Choose Raspberry Pi OS (other) -> Raspberry Pi OS Lite (32-bit) as the
+  operating system** to install the official Rasbpian image.
+
+- Download the premade [image](image-builds/surrogate-raspbian-latest.img.gz)
+  to speed up the installation process. For information on how to flash the image,
+  see [this](#downloading-and-installing-the-image).
+
+After one of the options above, we recommend setting up your internet connection
+and enabling ssh-connection via `sudo raspi-config` by following
+[raspi-config](https://www.raspberrypi.org/documentation/configuration/raspi-config.md#)
 setup. Alternatively, you can do everything on your host computer after flashing
 the image to an SD card by following [headless-wifi-setup](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md#)
 and [headless-ssh-setup](https://www.raspberrypi.org/documentation/remote-access/ssh/README.md#)
@@ -116,7 +306,27 @@ sudo apt full-upgrade
 sudo reboot
 ```
 
-#### Installing Surrogate Controller
+**Also, if you enabled SSH, remember to change the default user's password,
+if you didn't already!**
+
+Now that you have a working image, we can move on.
+
+**If you use the official Raspberry Pi OS:**  
+[Install the required components](
+  #installing-the-required-surrortg-sdk-components-manually
+).  
+
+**If you are using the premade image:**  
+If you want, you can remove the image's hotspot server completely by running
+the following script: `/opt/uninstall-raspi-server-stuff.sh`.
+You can also leave the hotspot server as a backup solution if you want.
+
+You can now skip the manual installation parts and continue to
+[the configuration file](#configuration-file) part.
+
+#### Installing the required SurroRTG SDK components manually
+
+##### Installing Surrogate Controller
 
 First we need to install git and some other dependencies.
 
@@ -181,7 +391,7 @@ thus needs to have the packages installed in the correct location. This will be
 later changed to use python virtual environments but at the moment this is the
 only approach supported out-of-the-box.
 
-#### Installing Surrogate Streamer
+##### Installing Surrogate Streamer
 
 Next we will install Surrogate streamer module and configuration files. The following
 commands add our custom repository and its key to your apt-sources and installs
@@ -215,10 +425,33 @@ experience smoother and more robust.**
 Pi has 1GB or more RAM available) or by editing `/boot/config.txt` -> `gpu_mem=256`.
 Reboot the system after.
 
+##### Installing Surrogate Watcher Stream
+
+Wacther stream is a stream that is visible to the viewers when the game is online.
+The stream is a copy of the game stream, and requires that you have finished
+[installing the streamer](#installing-surrogate-streamer) before following these
+steps.
+
+Setting up watcher stream has only 2 steps. First, install the apt-package by running:
+
+```
+sudo apt install srtg-watcherstream
+```
+
+After installation and [configuration](#configuration-file), toggle the stream
+on from your game admin dashboard. You should see the video stream on the game
+page after a short delay.
+
+![Watcher view](_static/images/WatcherView.jpg)
+
+The watcherview components creates a systemd unit `srtg-watcherstream`, which
+you can [control](#controlling-systemd-units) similarly to other systemd units.
+
 #### Configuration file
 
-When you installed the streamer, it added a configuration file to `/etc/srtg/srtg.toml`.
-You can edit it with the following commands, or with your favorite text editor.
+When you installed the streamer or used the Surrogate image, it added a configuration
+file to `/etc/srtg/srtg.toml`. You can edit it with the following commands, or
+with your favorite text editor.
 
 ```
 sudo nano /etc/srtg/srtg.toml
@@ -229,7 +462,8 @@ Save this id as you will need to use if for future configuration.
 
 Next you need to copy your controller `token` from `game settings page` to the
 configuration file. You can navigate the page by pressing the `Settings` button
-on your game dashboard, or by entering the following web address `www.surrogate.tv/game/<SHORT_ID_YOU_CHOSE>/settings`.
+on your game dashboard, or by entering the following web address
+`www.surrogate.tv/game/<SHORT_ID_YOU_CHOSE>/settings`.
 
 Here's an example image to help you find the Controller Token on the game settings
 page:
@@ -307,51 +541,16 @@ If you want to know what resolutions and formats your `usb camera` supports, run
 v4l2-utils -d /dev/video<ID> --list-formats-ext
 ```
 
-<details>
-  <summary>**Choosing audio capture device (advanced)**</summary>
-
-**WARNING:** this will overwrite your `/etc/asound.conf` file.
-A backup will be saved, however.
-
-If you have multiple audio capture devices (aka "cards" in alsa parlance) and
-wish to specify which one is used, you can find a list of available devices with
-the following command:
+To enable audio, make sure you have the following in your srtg.toml file:
 
 ```
-sudo arecord --list-devices
+[[sources]]
+kind = "audio"
+label = "main"
 ```
-
-The output will look something like this:
-
-```
-**** List of CAPTURE Hardware Devices ****
-card 1: webcam [Full HD webcam], device 0: USB Audio [USB Audio]
-  Subdevices: 1/1
-  Subdevice #0: subdevice #0
-card 2: C925e [Logitech Webcam C925e], device 0: USB Audio [USB Audio]
-  Subdevices: 1/1
-  Subdevice #0: subdevice #0
-```
-
-To choose the second device on the list, you must add the string after `card 2:`
-to the config file:
-
-```
-[sources.audio_params]
-audio_capture_dev_name = "C925e"
-```
-
-**Beta feature:** If you have an audio capture card with multiple devices, you
-can specify which device to use by also adding the device number to the config
-file:
-
-```
-[sources.audio_params]
-audio_capture_dev_name = "C925e"
-audio_capture_dev_idx = 1
-```
-
-</details>
+For more information about audio, see [the audio page](audio). There you
+can find out how to choose the audio capture device to use, some additional
+audio parameters, troubleshooting tips, and how to add custom features if you are an advanced user.
 
 #### Adding your controller to the game
 
@@ -377,6 +576,10 @@ this means that the camera of your controller is working. You can press the prev
 button to see it in action.
 
 #### Running a template game
+
+**Note: If you used the Surrogate image, you can skip this step and see
+[how to manage the controller as a service](#running-the-surrortg-python-sdk-controller-automatically-on-boot)
+instead**
 
 At this point we should have the `streamer` working if you have a camera connected
 and configured properly.
@@ -438,24 +641,3 @@ sudo systemctl restart controller
 ```
 
 For instructions on how to control systemd units, see [troubleshooting page](troubleshooting)
-
-#### Installing Surrogate Watcher Stream
-
-Wacther stream is a stream that is visible to the viewers when the game is online.
-The stream is a copy of the game stream, and requires that you have finished
-[installing the streamer](#installing-surrogate-streamer) before following these
-steps.
-
-Setting up watcher stream has only 2 steps. First, install the apt-package by running:
-
-```
-sudo apt install srtg-watcherstream
-```
-
-After installation, toggle the stream on from your game admin dashboard. You
-should see the video stream on the game page after a short delay.
-
-![Watcher view](_static/images/WatcherView.jpg)
-
-The watcherview components creates a systemd unit `srtg-watcherstream`, which
-you can [control](#controlling-systemd-units) similarly to other systemd units.
