@@ -28,7 +28,7 @@ class GameTest(unittest.TestCase):
 
             def run(self):
                 self._pre_run(
-                    "./tests/test_config.toml",
+                    "./tests/test_data/test_config.toml",
                     socketio_logging_level=logging.WARNING,
                     robot_type="robot",
                 )
@@ -94,7 +94,7 @@ class GameTest(unittest.TestCase):
 
             def run(self):
                 self._pre_run(
-                    "./tests/test_config.toml",
+                    "./tests/test_data/test_config.toml",
                     socketio_logging_level=logging.WARNING,
                     robot_type="robot",
                 )
@@ -151,7 +151,7 @@ class GameTest(unittest.TestCase):
         with self.assertLogs(level="DEBUG") as cm:
             g = Game()
             g._pre_run(
-                "./tests/test_config.toml",
+                "./tests/test_data/test_config.toml",
                 socketio_logging_level=logging.WARNING,
                 robot_type="robot",
             )  # this simulates run(), really only part of it
@@ -183,7 +183,7 @@ class GameTest(unittest.TestCase):
         with self.assertLogs(level="DEBUG") as cm:
             g = GameModSomeImplemented()
             g._pre_run(
-                "./tests/test_config.toml",
+                "./tests/test_data/test_config.toml",
                 socketio_logging_level=logging.WARNING,
                 robot_type="robot",
             )  # this simulates run(), really only part of it
@@ -212,7 +212,7 @@ class GameTest(unittest.TestCase):
         # (run called, but io._can_register_inputs is not set)
         g = Game()
         g._pre_run(
-            "./tests/test_config.toml",
+            "./tests/test_data/test_config.toml",
             socketio_logging_level=logging.WARNING,
             robot_type="robot",
         )  # this simulates run(), really only part of it
@@ -222,7 +222,7 @@ class GameTest(unittest.TestCase):
         # test the correct use
         g = Game()
         g._pre_run(
-            "./tests/test_config.toml",
+            "./tests/test_data/test_config.toml",
             socketio_logging_level=logging.WARNING,
             robot_type="robot",
         )  # this simulates run(), really only part of it
@@ -247,7 +247,7 @@ class GameTest(unittest.TestCase):
 
         # after run(), io should not raise RuntimeError
         g._pre_run(
-            "./tests/test_config.toml",
+            "./tests/test_data/test_config.toml",
             socketio_logging_level=logging.WARNING,
             robot_type="robot",
         )  # this simulates run(), really only part of it

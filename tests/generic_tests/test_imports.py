@@ -16,15 +16,20 @@ class ImportTest(unittest.TestCase):
         """
 
         # DEVICES
-        from surrortg.devices.udp import UdpActuator, UdpBot, UdpCar, UdpInput
-        from surrortg.devices.udp.udp_protocol import (  # noqa:F811
+        from surrortg.devices.udp import (  # noqa:F401
+            UdpActuator,
+            UdpBot,
+            UdpCar,
+            UdpInput,
+        )
+        from surrortg.devices.udp.udp_protocol import (  # noqa:F811,F401
             open_remote_endpoint,
             open_local_endpoint,
             open_remote_endpoint,
         )
 
         # INPUTS
-        from surrortg.inputs import (
+        from surrortg.inputs import (  # noqa:F401
             Input,
             Switch,
             DelayedSwitch,
@@ -34,11 +39,11 @@ class ImportTest(unittest.TestCase):
         )
 
         # NETWORK
-        from surrortg.network import (
+        from surrortg.network import (  # noqa:F401
             SocketHandler,
             MessageRouter,
             MultiSeatMessageRouter,
         )
 
         # ROOT
-        from surrortg import Game, GameIO
+        from surrortg import Game, GameIO  # noqa:F401

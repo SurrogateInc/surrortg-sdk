@@ -13,7 +13,7 @@ sphinx-rtd-theme = "==0.4.3"
 surrortg = {editable = true, path = "."}
 
 [scripts]
-tests = "python -m unittest discover tests"
+tests = "python tests/main.py"
 black = "black --check --diff --config=pyproject.toml ."
 flake8 = "flake8 --config=.flake8"
 pipeline = """bash -c '\
