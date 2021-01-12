@@ -154,8 +154,7 @@ class CarGame(Game):
         )
 
     async def on_exit(self, reason, exception):
-        await self.motor.shutdown()
-        await self.steering.shutdown()
+        await self.io.shutdown_inputs()
         self.pi.stop()
 
 
