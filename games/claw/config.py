@@ -11,7 +11,7 @@ USE_JOYSTICK_SPLITTER = False
 USE_TOY_RESET_SOLENOID = False
 # wait until something clears toy from front of the toy sensor
 BLOCK_GAME_LOOP_IF_SENSOR_BLOCKED = True
-# how ofter toy sensor is pinged when sensor is blocked
+# how often toy sensor is pinged when sensor is blocked
 BLOCKED_SENSOR_PING_INTERVAL = 1
 # how long to wait after blocking toy has been removed
 WAIT_TIME_AFTER_SENSOR_CLEARED = 10
@@ -21,21 +21,22 @@ TOY_WAIT_TIME = 10
 # time for claw picking cycle
 # (drop claw, lift claw and release)
 CLAW_PICK_CYCLE_TIME = 7
-# time for claw to move from cornet to corner (longest distance)
+# time for claw to move from corner to corner (longest distance)
 CLAW_CORNER_TO_CORNER_TIME = 2
 # this constant must be set to same value as claw machine game time
 # set game time as long as claw machine allows
 CLAW_GAME_LENGTH = 60
-
-# what are these?
+# time to wait between disabling player inputs and pressing claw button
 STOP_TIME_BEFORE_BTN_PRESS = 0.25
+# claw needs to be moved right before game starts to start claw game timer
+# this constant defines how long claw is moved during that operation
 AUTOMATIC_MOVE_TIME = 0.25
 
 # pin for Surrogate joystick splitter
 JOYSTICK_DISABLE_PIN = 19
 
 # NOTE! This is a workaround because GE does not send max game length time
-# This constant must be set to same value as claw machine game time
+# This constant must be set to same value as GE game length
 GE_GAME_LENGTH = 30
 
 """ClawToySensor"""
