@@ -17,7 +17,7 @@ class PwmActuator(LinearActuator):
     ESC.
 
     :param pi: instance of pigpio gpio control class
-    :param pin: GPIO pin number to ouput the pwm signal
+    :param pin: GPIO pin number to output the pwm signal
     :type pin: int
     :param: delta_max: Maximum value of pulsewidth dirrence
         from the middle (1500) position. Default value of 300

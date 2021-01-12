@@ -3,9 +3,9 @@ Example:
 ::
 
     async def main():
-        # Create a local UDP enpoint
+        # Create a local UDP endpoint
         local = await open_local_endpoint('localhost', 8888)
-        # Create a remote UDP enpoint, pointing to the first one
+        # Create a remote UDP endpoint, pointing to the first one
         remote = await open_remote_endpoint(*local.address)
         # The remote endpoint sends a datagram
         remote.send(b'Hey Hey, My My')
@@ -55,11 +55,11 @@ class DatagramEndpointProtocol(asyncio.DatagramProtocol):
         warnings.warn(msg.format(exc))
 
 
-# Enpoint classes
+# Endpoint classes
 
 
 class Endpoint:
-    """High-level interface for UDP enpoints.
+    """High-level interface for UDP endpoints.
     Can either be local or remote.
     It is initialized with an optional queue size for the incoming datagrams.
     """
@@ -96,7 +96,7 @@ class Endpoint:
     def send(self, data, addr):
         """Send a datagram to the given address."""
         if self._closed:
-            raise IOError("Enpoint is closed")
+            raise IOError("Endpoint is closed")
         self._transport.sendto(data, addr)
 
     async def receive(self):
@@ -105,16 +105,16 @@ class Endpoint:
         This method is a coroutine.
         """
         if self._queue.empty() and self._closed:
-            raise IOError("Enpoint is closed")
+            raise IOError("Endpoint is closed")
         data, addr = await self._queue.get()
         if data is None:
-            raise IOError("Enpoint is closed")
+            raise IOError("Endpoint is closed")
         return data, addr
 
     def abort(self):
         """Close the transport immediately."""
         if self._closed:
-            raise IOError("Enpoint is closed")
+            raise IOError("Endpoint is closed")
         self._transport.abort()
         self.close()
 
@@ -132,7 +132,7 @@ class Endpoint:
 
 
 class LocalEndpoint(Endpoint):
-    """High-level interface for UDP local enpoints.
+    """High-level interface for UDP local endpoints.
     It is initialized with an optional queue size for the incoming datagrams.
     """
 
@@ -140,7 +140,7 @@ class LocalEndpoint(Endpoint):
 
 
 class RemoteEndpoint(Endpoint):
-    """High-level interface for UDP remote enpoints.
+    """High-level interface for UDP remote endpoints.
     It is initialized with an optional queue size for the incoming datagrams.
     """
 
@@ -179,7 +179,7 @@ async def open_local_endpoint(
     host="0.0.0.0", port=0, *, queue_size=None, **kwargs
 ):
     """Open and return a local datagram endpoint.
-    An optional queue size arguement can be provided.
+    An optional queue size argument can be provided.
     Extra keyword arguments are forwarded to `loop.create_datagram_endpoint`.
     """
     return await open_datagram_endpoint(
@@ -193,7 +193,7 @@ async def open_local_endpoint(
 
 async def open_remote_endpoint(host, port, *, queue_size=None, **kwargs):
     """Open and return a remote datagram endpoint.
-    An optional queue size arguement can be provided.
+    An optional queue size argument can be provided.
     Extra keyword arguments are forwarded to `loop.create_datagram_endpoint`.
     """
     return await open_datagram_endpoint(

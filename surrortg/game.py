@@ -166,7 +166,7 @@ class Game:
     async def on_init(self):
         """Initialize the game before connecting to the game engine
 
-        Typically the input devices are registered here with
+        The input devices are registered here with
         a self.io.register_inputs({...}) call.
         """
         pass
@@ -256,7 +256,7 @@ class Game:
         # log info if certain methods not implemented
         for method_name in CHECK_IMPLEMENTATION:
             if self._not_implemented(method_name):
-                logging.info(self._get_not_implemented_message(method_name))
+                logging.debug(self._get_not_implemented_message(method_name))
 
         # GameIO should only be accessed through property self.io
         self._io = GameIO(
@@ -309,8 +309,11 @@ class Game:
         # get ready to handle GE messages
         self._handler_lock = asyncio.Lock()
 
-        # initialize the game
+        # Allow self.io.register_inputs usage and initialize the game.
+        # Then forbid all later self.io.register_inputs calls.
+        self.io._can_register_inputs = True
         await self.on_init()
+        self.io._can_register_inputs = False
 
         # play the game until interrupted, terminated or crashed
         self._main_task = asyncio.create_task(self.io._socket_handler.run())
@@ -335,7 +338,7 @@ class Game:
             self._exit_reason = 0
             self._exception = e
             await self._exit_correctly()
-            raise  # after exiting correclty, raise the original exception
+            raise  # after exiting correctly, raise the original exception
 
     def _request_update(self):
         logging.info("Update request received")
