@@ -339,17 +339,22 @@ class SocketHandler:
     """
 
     def __init__(
-        self, url, query={}, socketio_logging_level=logging.WARNING,
+        self,
+        url,
+        query={},
+        message_callbacks=[],
+        response_callbacks={},
+        socketio_connect_callback=lambda: None,
+        socketio_logging_level=logging.WARNING,
     ):
-        self.connect_callbacks = []
-        self.callbacks = []
-        self.response_callbacks = {}
+        self.message_callbacks = message_callbacks
+        self.response_callbacks = response_callbacks
         self.socketio_namespace = SocketioNamespace(
             SOCKETIO_NAMESPACE,
             url,
             query,
             self._handle_message,
-            self._handle_on_connect,
+            socketio_connect_callback,
             socketio_logging_level,
             socketio_logging_level,
         )
@@ -371,27 +376,13 @@ class SocketHandler:
                 return_when=asyncio.FIRST_COMPLETED,
             )
 
-    def register_on_connect_cb(self, cb):
-        self.connect_callbacks.append(cb)
-
-    def _handle_on_connect(self):
-        for cb in self.connect_callbacks:
-            asyncio.create_task(cb())
-
-    def register_on_message_cb(self, cb):
-        self.callbacks.append(cb)
-
-    def register_on_message_response_cb(self, cb, responds_checker):
-        self.response_callbacks[responds_checker] = cb
-
     async def _handle_message(self, msg):
         # use the correct response callback if exists
         response_callback = self._get_response_callback(msg)
         if response_callback is not None:
             return await response_callback(msg)
         # otherwise use the regular callbacks
-        for cb in self.callbacks:
-            asyncio.create_task(cb(msg))
+        await asyncio.gather(*[mcb(msg) for mcb in self.message_callbacks])
 
     def _get_response_callback(self, msg):
         for checker, cb in self.response_callbacks.items():
@@ -491,7 +482,7 @@ if __name__ == "__main__":
         if message.src != "gameEngine":
             logging.info(f"Message not from GE, {message}")
         else:
-            asyncio.create_task(send_msg_and_request_event())
+            await asyncio.create_task(send_msg_and_request_event())
             if is_config(message):
                 logging.info(f"Event: CONFIG")
                 return "CONFIG"

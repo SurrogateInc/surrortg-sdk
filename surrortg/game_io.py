@@ -21,7 +21,8 @@ class GameIO:
         robot_type,
     ):
         self._config = get_config(config_path)
-
+        self.input_bindings = {}
+        self._message_router = MultiSeatMessageRouter(robot_log_handler)
         self._socket_handler = SocketHandler(
             self._config["game_engine"]["url"],
             query={
@@ -32,24 +33,22 @@ class GameIO:
                 "gameId": self._config["game_engine"]["id"],
                 "token": self._config["game_engine"]["token"],
             },
+            message_callbacks=[
+                ge_message_handler,
+                self._message_router.handle_message,
+            ],
+            response_callbacks={self._is_config_message: ge_message_handler},
+            socketio_connect_callback=self.provide_inputs,
             socketio_logging_level=socketio_logging_level,
         )
-        self._socket_handler.register_on_message_cb(ge_message_handler)
-        self._socket_handler.register_on_message_response_cb(
-            ge_message_handler, self._is_config_message
-        )
-        self._message_router = MultiSeatMessageRouter(robot_log_handler)
-        self._socket_handler.register_on_message_cb(
-            self._message_router.handle_message
-        )
-        self._socket_handler.register_on_connect_cb(self.provide_inputs)
-        self.input_bindings = {}
         self._can_register_inputs = False
 
     def _is_config_message(self, message):
         return message.src == "gameEngine" and message.event == "config"
 
-    async def provide_inputs(self):
+    def provide_inputs(self):
+        # NOTE: this is called only after game.on_init has been awaited
+        # so it should have the necessary input_bindings
         bindings = []
         for commandId, obj in self.input_bindings.items():
             bindings.append({"commandId": commandId, **obj})
