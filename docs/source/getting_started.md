@@ -480,9 +480,14 @@ You can restart the streamer systemd module by running:
 sudo systemctl restart srtg
 ```
 
-Here is how your config file should look like. If you are using USB camera the
-`[sources.videoparams] -> type` should be `"v4l2"` and if you are using raspi
-camera it should be `"rpi_csi"`.
+Here is how your config file should look like. If you are using a camera that
+supports V4L2, `[sources.videoparams] -> type` should be `"v4l2"`. USB cameras
+and most CSI cameras should support V4L2. If you are using a CSI camera without
+V4L2 support, set `"rpi_csi"` as the video source type. Camera configuration
+(brightness, saturation, etc.) in the admin panel is only available for V4L2
+cameras.
+
+If your camera supports raw capture, you may wish to set capture_format to raw.
 
 ```toml
 device_id = "<INSERT CONTROLLER NAME HERE>"
@@ -508,7 +513,8 @@ height = 720
 framerate = 30
 v4l2_encoded_loopback_dev = 20
 # Optional, used to specify which camera to use if you have multiple cameras connected
-#v4l2_dev = "path to your video device: /dev/videoX"
+# Using the /dev/by-id/ path is recommended.
+#v4l2_dev = "path to your video device: /dev/videoX OR /dev/by-id/camera_name-index0"
 # Optional capture format: raw, mjpeg. Defaults to mjpeg or available one
 #capture_format = mjpeg
 
@@ -540,6 +546,21 @@ If you want to know what resolutions and formats your `usb camera` supports, run
 ```
 v4l2-utils -d /dev/video<ID> --list-formats-ext
 ```
+
+<strong>If you are using a CSI camera with V4L2 support
+(e.g. Raspberry Pi Camera), the following settings are recommended:</strong>
+
+```
+type = "v4l2"
+capture_format = raw
+# If using multiple cameras:
+v4l2_dev = "/dev/video49"
+```
+
+<strong>N.B.: The CSI V4L2 device is set as /dev/video49 by the surrogate
+streamer.</strong>
+
+##### Audio
 
 To enable audio, make sure you have the following in your srtg.toml file:
 
