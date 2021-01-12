@@ -279,12 +279,7 @@ class LocalSocketHandler:
                 logging.info("Connected localsocket")
             except asyncio.CancelledError:
                 raise
-            except socket.error as e:
-                if e.__class__.__name__ != "ConnectionRefusedError":
-                    logging.info(
-                        "Failed to connect localsocket: "
-                        "{traceback.format_exc()}"
-                    )
+            except ConnectionRefusedError:
                 await asyncio.sleep(LOCAL_SOCKET_RECONNECT_TIMEOUT)
             except Exception:
                 logging.info(
