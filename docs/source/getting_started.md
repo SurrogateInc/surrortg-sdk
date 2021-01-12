@@ -516,7 +516,7 @@ v4l2_encoded_loopback_dev = 20
 # Using the /dev/by-id/ path is recommended.
 #v4l2_dev = "path to your video device: /dev/videoX OR /dev/by-id/camera_name-index0"
 # Optional capture format: raw, mjpeg. Defaults to mjpeg or available one
-#capture_format = mjpeg
+#capture_format = "mjpeg"
 
 # Audio, optional. This will enable audio if you have an audio capture device connected.
 # The default alsa device will be used, unless a specific device is chosen with the
@@ -552,7 +552,7 @@ v4l2-utils -d /dev/video<ID> --list-formats-ext
 
 ```
 type = "v4l2"
-capture_format = raw
+capture_format = "raw"
 # If using multiple cameras:
 v4l2_dev = "/dev/video49"
 ```
