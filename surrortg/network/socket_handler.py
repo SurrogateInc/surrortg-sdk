@@ -120,11 +120,24 @@ class SocketioNamespace(socketio.AsyncClientNamespace):
         self.connected = False
 
     async def on_message(self, data, *args):
+        msg = None
         try:
             msg = Message.from_dict(data)
             return await self.message_handler(msg)
         except MessageValidationError as e:
             logging.warning(f"Message validation failed: {e}")
+        except Exception:
+            # python-socketio does not know how to handle asyncio errors,
+            # (ERROR:asyncio:Task exception was never retrieved)
+            # so let's catch and handle them in here:
+            #
+            # These should not happen, and some message handler must be broken
+            # --> kill the program
+            logging.error(
+                f"Message handling failed for message {msg}:\n"
+                f"{traceback.format_exc()}"
+            )
+            sys.exit(1)
 
     async def send_message(self, msg, callback=None):
         try:
