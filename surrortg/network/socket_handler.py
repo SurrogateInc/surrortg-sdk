@@ -16,6 +16,7 @@ SOCKETIO_CONNECTION_MAX_SLEEP = 60
 SOCKETIO_WAIT_FOR_CONNECTED_TIMEOUT = 10
 
 SOCKETIO_NAMESPACE = "/signaling"
+LOCAL_SOCKET_NAME = "/tmp/.srtg-sock"
 
 LOCAL_SOCKET_RECONNECT_TIMEOUT = 5
 
@@ -278,6 +279,8 @@ class LocalSocketHandler:
                 logging.info("Connected localsocket")
             except asyncio.CancelledError:
                 raise
+            except ConnectionRefusedError:
+                await asyncio.sleep(LOCAL_SOCKET_RECONNECT_TIMEOUT)
             except Exception:
                 logging.info(
                     f"Failed to connect localsocket: {traceback.format_exc()}"
@@ -330,19 +333,13 @@ class SocketHandler:
     :type url: String
     :param query: socketio query parameters, defaults to {}
     :type query: Dict, optional
-    :param local_socket_name: path to local socket, defaults to None
-    :type local_socket_name: String, optional
     :param socketio_logging_level: both socketio and engineio logging level,
         None disables all logging, defaults to logging.WARNING
     :type socketio_logging_level: Int/None, optional
     """
 
     def __init__(
-        self,
-        url,
-        query={},
-        local_socket_name=None,
-        socketio_logging_level=logging.WARNING,
+        self, url, query={}, socketio_logging_level=logging.WARNING,
     ):
         self.connect_callbacks = []
         self.callbacks = []
@@ -356,10 +353,8 @@ class SocketHandler:
             socketio_logging_level,
             socketio_logging_level,
         )
-        self.local_socket_handler = (
-            None
-            if local_socket_name is None
-            else LocalSocketHandler(local_socket_name, self._handle_message)
+        self.local_socket_handler = LocalSocketHandler(
+            LOCAL_SOCKET_NAME, self._handle_message
         )
 
     async def run(self):
