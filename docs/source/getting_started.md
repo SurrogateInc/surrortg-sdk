@@ -513,8 +513,9 @@ height = 720
 framerate = 30
 v4l2_encoded_loopback_dev = 20
 # Optional, used to specify which camera to use if you have multiple cameras connected
-# Using the /dev/by-id/ path is recommended.
-#v4l2_dev = "path to your video device: /dev/videoX OR /dev/by-id/camera_name-index0"
+# Using the /dev/v4l/by-id/ path is recommended.
+# Use /dev/video49 for CSI cameras (e.g. Raspberry Pi camera)
+#v4l2_dev = "path to your video device: /dev/videoX OR /dev/v4l/by-id/camera_name-index0"
 # Optional capture format: raw, mjpeg. Defaults to mjpeg or available one
 #capture_format = "mjpeg"
 
@@ -577,9 +578,9 @@ are an advanced user.
 
 ##### Datachannel
 
-The system supports WebRTC datachannel, which is used for peer-to-peer
-data communication between the front end and the controller, improving input
-latency.
+The system supports datachannel, which is used for peer-to-peer
+data communication between the front end and the controller similar to our game
+video stream, improving input latency.
 
 <strong>Datachannel is enabled automatically if the system detects that it is
 possible.</strong>
@@ -594,7 +595,8 @@ the config file.
 
   Datachannel can only be used if both the streamer and
   the controller are running on the same device.
-  To do so, add the following to the top level of srtg.toml:
+  In order to force datachannel to be always enabled, add the following to the
+  top level of srtg.toml:
 
   ```
   datachannel = true
@@ -612,9 +614,10 @@ the config file.
 
    Note that datachannel becomes enabled a few seconds after these events, so
    only the players connecting/connected within this time frame will have
-   datachannel disabled for the duration of their game. In other words, on a
-   stable system these should not occur, and the automatic datachannel will
-   suffice for most users.
+   datachannel disabled for the duration of their game. They will still be able
+   to control the game, just not with the improved latency provided by
+   datachannel. In other words, on a stable system these should not occur, and
+   the automatic datachannel will suffice for most users.
 
 </details>
 </br>
