@@ -16,6 +16,7 @@ SOCKETIO_CONNECTION_MAX_SLEEP = 60
 SOCKETIO_WAIT_FOR_CONNECTED_TIMEOUT = 10
 
 SOCKETIO_NAMESPACE = "/signaling"
+LOCAL_SOCKET_NAME = "/tmp/.srtg-sock"
 
 LOCAL_SOCKET_RECONNECT_TIMEOUT = 5
 
@@ -278,6 +279,8 @@ class LocalSocketHandler:
                 logging.info("Connected localsocket")
             except asyncio.CancelledError:
                 raise
+            except ConnectionRefusedError:
+                await asyncio.sleep(LOCAL_SOCKET_RECONNECT_TIMEOUT)
             except Exception:
                 logging.info(
                     f"Failed to connect localsocket: {traceback.format_exc()}"
@@ -330,8 +333,6 @@ class SocketHandler:
     :type url: String
     :param query: socketio query parameters, defaults to {}
     :type query: Dict, optional
-    :param local_socket_name: path to local socket, defaults to None
-    :type local_socket_name: String, optional
     :param socketio_logging_level: both socketio and engineio logging level,
         None disables all logging, defaults to logging.WARNING
     :type socketio_logging_level: Int/None, optional
@@ -341,25 +342,24 @@ class SocketHandler:
         self,
         url,
         query={},
-        local_socket_name=None,
+        message_callbacks=[],
+        response_callbacks={},
+        socketio_connect_callback=lambda: None,
         socketio_logging_level=logging.WARNING,
     ):
-        self.connect_callbacks = []
-        self.callbacks = []
-        self.response_callbacks = {}
+        self.message_callbacks = message_callbacks
+        self.response_callbacks = response_callbacks
         self.socketio_namespace = SocketioNamespace(
             SOCKETIO_NAMESPACE,
             url,
             query,
             self._handle_message,
-            self._handle_on_connect,
+            socketio_connect_callback,
             socketio_logging_level,
             socketio_logging_level,
         )
-        self.local_socket_handler = (
-            None
-            if local_socket_name is None
-            else LocalSocketHandler(local_socket_name, self._handle_message)
+        self.local_socket_handler = LocalSocketHandler(
+            LOCAL_SOCKET_NAME, self._handle_message
         )
 
     async def run(self):
@@ -376,27 +376,13 @@ class SocketHandler:
                 return_when=asyncio.FIRST_COMPLETED,
             )
 
-    def register_on_connect_cb(self, cb):
-        self.connect_callbacks.append(cb)
-
-    def _handle_on_connect(self):
-        for cb in self.connect_callbacks:
-            asyncio.create_task(cb())
-
-    def register_on_message_cb(self, cb):
-        self.callbacks.append(cb)
-
-    def register_on_message_response_cb(self, cb, responds_checker):
-        self.response_callbacks[responds_checker] = cb
-
     async def _handle_message(self, msg):
         # use the correct response callback if exists
         response_callback = self._get_response_callback(msg)
         if response_callback is not None:
             return await response_callback(msg)
         # otherwise use the regular callbacks
-        for cb in self.callbacks:
-            asyncio.create_task(cb(msg))
+        await asyncio.gather(*[mcb(msg) for mcb in self.message_callbacks])
 
     def _get_response_callback(self, msg):
         for checker, cb in self.response_callbacks.items():
@@ -496,7 +482,7 @@ if __name__ == "__main__":
         if message.src != "gameEngine":
             logging.info(f"Message not from GE, {message}")
         else:
-            asyncio.create_task(send_msg_and_request_event())
+            await asyncio.create_task(send_msg_and_request_event())
             if is_config(message):
                 logging.info(f"Event: CONFIG")
                 return "CONFIG"
