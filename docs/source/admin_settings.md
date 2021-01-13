@@ -99,15 +99,16 @@ to connect and control the game robots.
   to the players:
 
     - **Full random** - If the pairing type is set to full random,
-    players get allocated to the robots in random order.
+      players get allocated to the robots in random order.
 
     - **Robot seat order** - If set to by robot seat order, players
-    will receive their robots based on the “Seat” order. For example, there is a
-    3 car racing game, in the robot configuration the red car has seat 0, the green
-    car has seat 1, and the yellow car has seat 2. 2 players queue up for the game.
-    The player who queued first will always get the red car, and the player who
-    queued second will always get the green car. The yellow car will never be
-    used in a 2 player game.
+      will receive their robots based on the “Seat” order. For example,
+      there is a 3 car racing game, in the robot configuration the red
+      car has seat 0, the green car has seat 1, and the yellow car has
+      seat 2. 2 players queue up for the game.
+      The player who queued first will always get the red car,
+      and the player who queued second will always get the green car.
+      The yellow car will never be used in a 2 player game.
 
 **Note:** If you’d like to enable a robot selection menu (player
 can choose a specific robot to control), please contact support.
@@ -218,10 +219,37 @@ experience on top of the video feed. Here’s what can be added:
 **Note:** the maximum file size is 20MB and the total maximum size
 of all files is 200 MB.
 
+## In-Game configuration
+
+### Score settings
+
+Use the score settings to change the scoring type of the game.
+You need to take the score type into account when sending scores from the robot.
+Change score type will also effect the best scores (all time) and
+"monthly best" scores on game page. The sort order can be edited to change
+the order to descending or ascending.
+Here are the different types:
+
+- **Points** - Biggest/Lowest score per user. The robot should sent score as integer.
+
+- **Timestamp** - Best/Worst time per user. The robot should send score as integer
+  in milliseconds.
+
+- **ELO** - ELO scoring system where you get more points by winning people who have
+  better ELO than you. Robot should send scores 1, 2, 3, 4, ..., n where user with
+  score 1 is the winner and score 2 mean second and so on.
+
+- **Total Wins** - Cumulative amount of wins per user. Robot should send score 1
+  to mark game as won.
+
+- **Total Games** - Cumulative amount of games per user
+
+**Note:** Changing the score type will reset all previous best and monthly scores.
+
 ### Controls
 
-The controls page allows binding the keyboard keys used to operate the commands
-of the robot controllers.
+The controls page allows binding the keyboard keys and configuring mobile
+control position and size.
 
 The keys in the control settings are automatically fetched from the currently
 enabled robot’s game Python file and are shown on the page. For each key, it
@@ -236,11 +264,37 @@ If you want to revert the changes, just refresh the page.
 **Note:** all the enabled robot controllers should have the same key
 function classes, otherwise the game will malfunction.
 
-### Schedule
+#### Mobile Controls
+
+In mobile the controls are displayed on top of the game stream (in landscape)
+or below the stream in portrait. You can control the position and size
+of the inputs from the "Mobile Lanscape" and "Mobile Portrait" fields.
+The position and size is presented by 3 integers between
+0-100 that are separated by comma.
+First integer is the x position (left to right) as percentage from the total
+control area width.
+Second integer is the y position (top to bottom) as percentage from the total
+control area height.
+Last integer is the total size (diameter) of the input as percentage from the
+total control area height.
+For e.g.
+
+**Landscape "10, 90, 10"**
+Would be in bottom left with size of one tenth of the total control are height.
+
+![Game creation](_static/images/pokemon_lanscape_input.png)
+
+**Portrait "85, 50, 60"**
+Would be in right middle with size bit over half of the control area height.
+![Game creation](_static/images/pokemon_portrait_input.png)
+
+**Note:** In case of incorrect input the text box will have red edges.
+
+## Schedule
 
 The schedule page allows the game creator to set when the game will be online
-and playable. The schedule is shown based on the time zone of the person accessing
-the Schedule page.
+and playable. The schedule is shown based on the time zone of the person
+accessing the Schedule page.
 
 To add a new timeslot, press the “Add time slot” button, and configure the
 session time.
