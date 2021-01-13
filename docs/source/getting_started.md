@@ -480,9 +480,14 @@ You can restart the streamer systemd module by running:
 sudo systemctl restart srtg
 ```
 
-Here is how your config file should look like. If you are using USB camera the
-`[sources.videoparams] -> type` should be `"v4l2"` and if you are using raspi
-camera it should be `"rpi_csi"`.
+Here is how your config file should look like. If you are using a camera that
+supports V4L2, `[sources.videoparams] -> type` should be `"v4l2"`. USB cameras
+and most CSI cameras should support V4L2. If you are using a CSI camera without
+V4L2 support, set `"rpi_csi"` as the video source type. Camera configuration
+(brightness, saturation, etc.) in the admin panel is only available for V4L2
+cameras.
+
+If your camera supports raw capture, you may wish to set capture_format to raw.
 
 ```toml
 device_id = "<INSERT CONTROLLER NAME HERE>"
@@ -508,9 +513,11 @@ height = 720
 framerate = 30
 v4l2_encoded_loopback_dev = 20
 # Optional, used to specify which camera to use if you have multiple cameras connected
-#v4l2_dev = "path to your video device: /dev/videoX"
+# Using the /dev/v4l/by-id/ path is recommended.
+# Use /dev/video49 for CSI cameras (e.g. Raspberry Pi camera)
+#v4l2_dev = "path to your video device: /dev/videoX OR /dev/v4l/by-id/camera_name-index0"
 # Optional capture format: raw, mjpeg. Defaults to mjpeg or available one
-#capture_format = mjpeg
+#capture_format = "mjpeg"
 
 # Audio, optional. This will enable audio if you have an audio capture device connected.
 # The default alsa device will be used, unless a specific device is chosen with the
@@ -541,6 +548,21 @@ If you want to know what resolutions and formats your `usb camera` supports, run
 v4l2-utils -d /dev/video<ID> --list-formats-ext
 ```
 
+<strong>If you are using a CSI camera with V4L2 support
+(e.g. Raspberry Pi Camera), the following settings are recommended:</strong>
+
+```
+type = "v4l2"
+capture_format = "raw"
+# If using multiple cameras:
+v4l2_dev = "/dev/video49"
+```
+
+<strong>N.B.: The CSI V4L2 device is set as /dev/video49 by the surrogate
+streamer.</strong>
+
+##### Audio
+
 To enable audio, make sure you have the following in your srtg.toml file:
 
 ```
@@ -548,9 +570,57 @@ To enable audio, make sure you have the following in your srtg.toml file:
 kind = "audio"
 label = "main"
 ```
+
 For more information about audio, see [the audio page](audio). There you
 can find out how to choose the audio capture device to use, some additional
-audio parameters, troubleshooting tips, and how to add custom features if you are an advanced user.
+audio parameters, troubleshooting tips, and how to add custom features if you
+are an advanced user.
+
+##### Datachannel
+
+The system supports datachannel, which is used for peer-to-peer
+data communication between the front end and the controller similar to our game
+video stream, improving input latency.
+
+<strong>Datachannel is enabled automatically if the system detects that it is
+possible.</strong>
+However, to prevent some edge cases where the system may fall back to a
+non-datachannel connection, it is possible to force the use of datachannel in
+the config file.
+
+<details>
+  <summary><strong>
+  For more details on datachannel, click here (advanced)
+  </strong></summary>
+
+  Datachannel can only be used if both the streamer and
+  the controller are running on the same device.
+  In order to force datachannel to be always enabled, add the following to the
+  top level of srtg.toml:
+
+  ```
+  datachannel = true
+  ```
+
+  <strong>Do this only if you have both streamer and controller running on the
+  same device!</strong> Remember to remove this option if you start running the
+  programs on separate devices!
+
+  The edge cases where the system may fall back to non-datachannel communication
+  are:
+
+   - A player connects very soon after the streamer is started
+   - The streamer restarts during gameplay
+
+   Note that datachannel becomes enabled a few seconds after these events, so
+   only the players connecting/connected within this time frame will have
+   datachannel disabled for the duration of their game. They will still be able
+   to control the game, just not with the improved latency provided by
+   datachannel. In other words, on a stable system these should not occur, and
+   the automatic datachannel will suffice for most users.
+
+</details>
+</br>
 
 #### Adding your controller to the game
 
