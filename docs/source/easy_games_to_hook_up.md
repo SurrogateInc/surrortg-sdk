@@ -81,28 +81,19 @@ GND. Optionally, some jumper cables and a breadboard can be used for easier cons
 
 ![Led wiring](_static/images/led.png)
 
-(image from a beginner friendly
+(Image from a beginner friendly
 [Lighting an LED tutorial](https://projects.raspberrypi.org/en/projects/physical-computing/2))
 
-From the terminal, you can now start the LEDTestGame by enabling
-the virtual environment, moving to the game's directory, and starting
-the game
+From the terminal, you can now start the LEDTestGame by running
+the following command in your SurroRTG SDK’s repository root:
 
 ```
-pipenv shell
-cd ~/surrortg-sdk/getting_started
-python led_test_game.py
+sudo python3 -m games.led_test_game.game
 ```
 
 This should now allow you to queue to the game at `www.surrogate.tv/game/<SHORT_ID_YOU_CHOSE>`,
 and while on the game you can blink the lights with the space bar. After 10 blinks,
 the game should end with a score of 10.
-
-Then to exit the virtual environment, just call:
-
-```
-exit
-```
 
 ## Rc-Car Game
 
