@@ -58,4 +58,5 @@ class LedTestGame(Game):
         self.score = 0
 
 
-LedTestGame().run()
+if __name__ == "__main__":
+    LedTestGame().run()
