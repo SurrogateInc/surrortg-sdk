@@ -12,4 +12,5 @@ class RVRGame(Game):
         await self.rvr.shutdown()
 
 
-RVRGame().run()
+if __name__ == "__main__":
+    RVRGame().run()

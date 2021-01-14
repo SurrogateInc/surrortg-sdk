@@ -232,4 +232,5 @@ class ClawGame(Game):
         self.pi.stop()
 
 
-ClawGame().run()
+if __name__ == "__main__":
+    ClawGame().run()

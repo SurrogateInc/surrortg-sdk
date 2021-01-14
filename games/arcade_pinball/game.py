@@ -167,4 +167,5 @@ class ArcadePinballGame(Game):
         logging.info(f"blinking started")
 
 
-ArcadePinballGame().run()
+if __name__ == "__main__":
+    ArcadePinballGame().run()
