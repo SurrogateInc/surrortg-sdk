@@ -3,11 +3,24 @@ from games.ninswitch.ns_gamepad_serial import NSGamepadSerial, NSButton, NSDPad
 from games.ninswitch.ns_switch import NSSwitch
 from games.ninswitch.ns_dpad_switch import NSDPadSwitch
 from games.ninswitch.ns_joystick import NSJoystick
+import pigpio
+import asyncio
 
 
 class NinSwitchSimpleGame(Game):
     async def on_init(self):
         # init controls
+        # connect to pigpio daemon
+
+        self.pi = pigpio.pi()
+        if not self.pi.connected:
+            raise RuntimeError("Could not connect to pigpio")
+
+        # init joystick splitter, enable physical joystick by default
+        self.pi.set_mode(20, pigpio.OUTPUT)
+        self.pi.set_mode(21, pigpio.OUTPUT)
+        self.pi.write(20, 1)
+        self.pi.write(21, 1)
         self.nsg = NSGamepadSerial()
         self.nsg.begin()
         self.io.register_inputs(
@@ -44,13 +57,29 @@ class NinSwitchSimpleGame(Game):
     on_config, on_prepare, on_pre_game, on_countdown, on_start...
     """
 
+    async def on_config(self):
+        self.pi.write(20, 0)
+        self.pi.write(21, 0)
+        await asyncio.sleep(0.1)
+        self.pi.write(20, 1)
+        self.pi.write(21, 1)
+
+    async def on_pre_game(self):
+        self.nsg.press(NSButton.A)
+        self.nsg.release(NSButton.A)
+        self.nsg.press(NSButton.A)
+        self.nsg.release(NSButton.A)
+
     async def on_finish(self):
         self.io.disable_inputs()
         self.nsg.releaseAll()
+        self.nsg.press(NSButton.HOME)
+        self.nsg.release(NSButton.HOME)
 
     async def on_exit(self, reason, exception):
         # end controls
         self.nsg.end()
+        self.pi.stop()
 
 
 if __name__ == "__main__":
