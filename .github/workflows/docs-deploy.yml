@@ -1,0 +1,83 @@
+name: Build and release SurroRTG SDK docs
+
+on:
+  push:
+    branches: [main]
+  
+  release:
+    types:
+      - created
+    
+jobs:
+  aws-docs-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+      
+      - name: Configure deploy parameters at release
+        if: github.event_name == 'release'
+        run: |
+          echo "DOCS_CF_ALIAS=${{ secrets.RELEASE_DOCS_DOMAIN }}" >> $GITHUB_ENV
+          echo "BUCKET_NAME=release-surrortg-sdk-docs" >> $GITHUB_ENV
+          echo "STACK_NAME=release-surrortg-sdk-docs" >> $GITHUB_ENV
+
+      - name: Configure deploy parameters at push
+        if: github.event_name == 'push'
+        run: |
+          echo "DOCS_CF_ALIAS=${{ secrets.MAIN_DOCS_DOMAIN }}" >> $GITHUB_ENV
+          echo "BUCKET_NAME=main-surrortg-sdk-docs" >> $GITHUB_ENV
+          echo "STACK_NAME=main-surrortg-sdk-docs" >> $GITHUB_ENV
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'eu-west-1'
+
+      - name: Deploy S3 Bucket for images
+        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        with:
+          name: surrortg-sdk-images
+          template: s3-docs.yml
+          no-fail-on-empty-changeset: "1"
+          parameter-overrides: >-
+            s3BucketName=surrortg-sdk-images,
+            docsCfAlias=${{ secrets.IMAGE_DOMAIN }},
+            certificateArn=${{ secrets.CERTIFICATE_ARN }}
+
+      - name: Deploy S3 Bucket for dev images
+        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        with:
+          name: dev-surrortg-sdk-images
+          template: s3-docs.yml
+          no-fail-on-empty-changeset: "1"
+          parameter-overrides: >-
+            s3BucketName=dev-surrortg-sdk-images,
+            docsCfAlias=${{ secrets.DEV_IMAGE_DOMAIN }},
+            certificateArn=${{ secrets.CERTIFICATE_ARN }}
+
+      - name: Deploy S3 Bucket for docs
+        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        with:
+          name: ${{ env.STACK_NAME }}
+          template: s3-docs.yml
+          no-fail-on-empty-changeset: "1"
+          parameter-overrides: >-
+            s3BucketName=${{ env.BUCKET_NAME }},
+            docsCfAlias=${{ env.DOCS_CF_ALIAS }},
+            certificateArn=${{ secrets.CERTIFICATE_ARN }}
+
+      - name: Build and upload docs
+        run: |
+          pip install pipenv
+          pipenv sync --dev
+          pipenv run docs
+          aws s3 sync ./docs/build/html s3://${{ env.BUCKET_NAME }} --delete

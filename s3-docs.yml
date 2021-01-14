@@ -1,0 +1,106 @@
+Parameters:
+  s3BucketName:
+    Type: String
+  docsCfAlias:
+    Type: String
+  certificateArn:
+    Type: String
+
+Resources:
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: 'Delete'
+    Metadata:
+      Comment: !Ref AWS::StackName
+    Properties:
+      AccessControl: 'Private'
+      BucketName: !Ref s3BucketName
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - '*'
+            AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - PUT
+              - POST
+              - DELETE
+
+  S3BucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Metadata:
+      Comment: !Ref AWS::StackName
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 's3:GetObject'
+            Effect: 'Allow'
+            Principal:
+              CanonicalUser: !GetAtt CfOriginAccessIdentity.S3CanonicalUserId
+            Resource:
+              - !Sub 'arn:aws:s3:::${S3Bucket}/*'
+
+  CfDistribution:
+    Type: 'AWS::CloudFront::Distribution'
+    Metadata:
+      Comment: !Ref AWS::StackName
+    Properties:
+      DistributionConfig:
+        Comment: !Ref AWS::StackName
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - 'HEAD'
+            - 'GET'
+          CachedMethods:
+            - 'HEAD'
+            - 'GET'
+          Compress: false
+          DefaultTTL: 86400
+          ForwardedValues:
+            Cookies:
+              Forward: 'none'
+            Headers:
+              - 'Origin'
+            QueryString: false
+          MaxTTL: 31536000
+          MinTTL: 86400
+          TargetOriginId: !Sub 's3-origin-${S3Bucket}'
+          ViewerProtocolPolicy: 'redirect-to-https'
+        DefaultRootObject: 'index.html'
+        Enabled: true
+        HttpVersion: 'http1.1'
+        IPV6Enabled: false
+        Origins:
+          - DomainName: !GetAtt S3Bucket.DomainName
+            Id: !Sub 's3-origin-${S3Bucket}'
+            OriginPath: ''
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CfOriginAccessIdentity}'
+        PriceClass: 'PriceClass_All'
+        ViewerCertificate:
+          AcmCertificateArn: !Ref certificateArn
+          MinimumProtocolVersion: TLSv1.2_2019
+          SslSupportMethod: sni-only
+        Aliases:
+          - !Ref docsCfAlias
+
+  CfOriginAccessIdentity:
+    Type: 'AWS::CloudFront::CloudFrontOriginAccessIdentity'
+    Metadata:
+      Comment: !Ref AWS::StackName
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Ref AWS::StackName
+
+Outputs:
+  S3BucketName:
+    Description: 'Bucket name'
+    Value: !Ref S3Bucket
+  CfDistributionId:
+    Description: 'Id for our cloudfront distribution'
+    Value: !Ref CfDistribution
+  CfDistributionDomainName:
+    Description: 'Domain name for our cloudfront distribution'
+    Value: !GetAtt CfDistribution.DomainName
