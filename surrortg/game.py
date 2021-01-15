@@ -406,9 +406,13 @@ class Game:
             self._current_ge_task = asyncio.create_task(
                 self._ge_task(task_name, method, message)
             )
-
-        # await for the new GE task to finish
-        return await self._current_ge_task
+        try:
+            # await for the new GE task to finish
+            return await self._current_ge_task
+        except asyncio.CancelledError:
+            # if new message arrives while previous one is still being handled,
+            # it will cause previous message handling to be cancelled.
+            return None
 
     async def _ge_task(self, task_name, method, message):
         try:
