@@ -18,7 +18,7 @@ class LEDSwitch(Switch):
 
         # Initialize LED pin
         self._pi.set_mode(LED_PIN, pigpio.OUTPUT)
-        # Store reference to update score callback function
+        # Store reference to score callback function
         self.score_cb = score_cb
 
     async def on(self, seat=0):
@@ -55,8 +55,10 @@ class LedTestGame(Game):
         self.io.register_inputs({"switch": LEDSwitch(self.update_score)})
 
     async def on_prepare(self):
+        # Set score to 0 before game starts
         self.score = 0
 
 
 if __name__ == "__main__":
+    # Start running game
     LedTestGame().run()

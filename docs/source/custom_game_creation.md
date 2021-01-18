@@ -169,57 +169,191 @@ Now we are ready to look into previous chapter's
 [LEDTestGame](getting_started.html#running-the-ledtestgame) in more
 detail, and how would you create that by yourself.
 
-From the official Raspberry Pi
-[Lighting an LED tutorial](https://projects.raspberrypi.org/en/projects/physical-computing/2)
-, you will learn that to be able to blink a LED indefinitely you can use
-the following
-[code](https://projects.raspberrypi.org/en/projects/physical-computing/4):
+LEDTestGame uses pigpio, which is library for controlling GPIO pins in Raspberry
+Pi. It allows GPIO pins to be controlled multiple ways, one of them being through
+Python. Main part of the pigpio is its daemon, which is Linux service. It must
+be running in order for the pigpio to work. And assuming that either pre made SDK
+image is used, or that all steps were followed in manual SDK installation, pigpio
+should be already installed to your Raspberry Pi and its daemon service enabled
+such that it starts automatically even after reboot.
+
+Following code shows minimum steps to use pigpio to blink LED with fixed interval.
+It is commented heavily and attempts to explain all steps clearly.
 
 ```python
-from gpiozero import LED
 from time import sleep
+import pigpio
 
-led = LED(17)
+# BCM pin number for LED pin
+LED_PIN = 17
 
+# Connect to pigpio daemon. It is possible that connecting to daemon fails and
+# in such case it is necessary to handle that for example by raising exception.
+pi = pigpio.pi()
+if not pi.connected:
+    raise RuntimeError("Could not connect to pigpio daemon.")
+
+# Set LED pin to output mode. It is not strictly necessary to do this as pigpio
+# will set pin to output mode when it is being driven to HIGH or LOW, but this
+# can clarify what pin is intended to use for, especially in more complex code.
+pi.set_mode(LED_PIN, pigpio.OUTPUT)
+
+# Start toggling LED on and off
 while True:
-    led.on()
+    pi.write(LED_PIN, pigpio.HIGH)
     sleep(1)
-    led.off()
+    pi.write(LED_PIN, pigpio.LOW)
     sleep(1)
 ```
 
-Here we can see that for blinking LEDs there are three steps:
-
-1. Import LED from gpiozero with `from gpiozero import LED`
-2. Initialize LED to the GPIO pin 17 with `led = LED(17)`
-3. Turn the LED on and off by calling `led.on()` and `led.off()`
-
-Let's now use this knowledge to modify the SimpleGame into the LEDTestGame:
+Now that we have some kind of understanding how pigpio can be used to control GPIO
+pin to blink an LED, we can move forward to turn this a bit closer to LEDTestGame.
 
 ```python
-from gpiozero import LED  # step 1.
+import logging
+
+import pigpio
+
 from surrortg import Game
 from surrortg.inputs import Switch
 
 
+LED_PIN = 17
+
+
+# This class will mainly implement functionality that happens when LED input
+# is pressed or released during game. It inherents from Switch parent class,
+# which provides basic functionality for switch type input. In this case most
+# important functionality provided by Switch class are on() and off() methods,
+# which are called when LED input is pressed or released. We can override these
+# methods to add custom code that is executed on such events.
 class LEDSwitch(Switch):
     def __init__(self):
-        self.led = LED(17)  # step 2.
+        # Connect to pigpio daemon
+        self._pi = pigpio.pi()
+        if not self._pi.connected:
+            raise RuntimeError("Could not connect to pigpio daemon.")
+
+        # Initialize LED pin
+        self._pi.set_mode(LED_PIN, pigpio.OUTPUT)
+
+    # Override on() method to implement custom functionality when LED input is
+    # pressed; Turn LED on and log the event.
+    async def on(self, seat=0):
+        self._pi.write(LED_PIN, pigpio.HIGH)
+        logging.info("LED on")
+
+    # Override off() method to implement custom functionality when LED input is
+    # released; Turn LED off and log the event.
+    async def off(self, seat=0):
+        self._pi.write(LED_PIN, pigpio.LOW)
+        logging.info("LED off")
+
+    # Override shutdown method to implement custom functionality when
+    # controller code stops running.
+    async def shutdown(self, seat):
+        # Set LED pin into safe state by setting it to input mode
+        self._pi.set_mode(LED_PIN, pigpio.INPUT)
+        # Close pigpio daemon connection
+        self._pi.close()
+
+
+# This class will implement all functionality related to the game itself. It
+# must inherent from Game parent class because it will provide lot of features
+# that are happening behind the scenes and are mandatory for the game to work.
+class LedTestGame(Game):
+    # Override on_init() method. This method is called once when controller
+    # software starts to run and can be used to initialize various things.
+    async def on_init(self):
+        # Register LED input. This will inform Surrogate platform from all
+        # inputs that controller supports and add those to the game.
+        self.io.register_inputs({"switch": LEDSwitch()})
+
+
+if __name__ == "__main__":
+    # Start running game.
+    LedTestGame().run()
+```
+
+This game will control LED when corresponding input is pressed, but it will do
+so until Game Engine tells it to stop (300 seconds by default). It is useful to
+have such a timeout to prevent game from running forever, but usually game should
+be also stopped if specific condition occurs. In following code we will add score
+feature, which will increment score every time LED input is pressed, and stops
+the game when score reaches 10. With these changes this code should be now equivalent
+to the LEDTestGame.
+
+```python
+import logging
+
+import pigpio
+
+from surrortg import Game
+from surrortg.inputs import Switch
+
+
+LED_PIN = 17
+
+
+class LEDSwitch(Switch):
+    # LEDSwitch takes now additional parameter which is callback function
+    # to handle score updates.
+    def __init__(self, score_cb):
+        # Connect to pigpio daemon
+        self._pi = pigpio.pi()
+        if not self._pi.connected:
+            raise RuntimeError("Could not connect to pigpio daemon.")
+
+        # Initialize LED pin
+        self._pi.set_mode(LED_PIN, pigpio.OUTPUT)
+        # Store reference to score callback function
+        self.score_cb = score_cb
 
     async def on(self, seat=0):
-        print("LED on")
-        self.led.on()  # step 3.
+        self._pi.write(LED_PIN, pigpio.HIGH)
+        # Call score callback every time LED input is pressed
+        self.score_cb()
+        logging.info("LED on")
 
     async def off(self, seat=0):
-        print("LED off")
-        self.led.off()  # step 3.
+        self._pi.write(LED_PIN, pigpio.LOW)
+        logging.info("LED off")
+
+    async def shutdown(self, seat):
+        # Set LED pin into safe state by setting it to input mode
+        self._pi.set_mode(LED_PIN, pigpio.INPUT)
+        # Close pigpio daemon connection
+        self._pi.close()
 
 
 class LedTestGame(Game):
-    async def on_init(self):
-        self.io.register_inputs({"switch": LEDSwitch()})
+    # This function will be used to increment score and send updated score to
+    # Game Engine. It will also send final score when score reaches 10, which
+    # causes Game Engine to end the game.
+    def update_score(self):
+        self.score += 1
+        logging.info(f"score: {self.score}")
+        if self.score >= 10:
+            # End game by sending final score to Game Engine.
+            self.io.send_score(score=self.score, final_score=True)
+            # Disable all registered inputs.
+            self.io.disable_inputs()
+        else:
+            # Send updated scores to Game Engine.
+            self.io.send_score(score=self.score)
 
-LedTestGame().run()
+    async def on_init(self):
+        # Register LED input with update score callback function
+        self.io.register_inputs({"switch": LEDSwitch(self.update_score)})
+
+    async def on_prepare(self):
+        # Set score to 0 before game starts
+        self.score = 0
+
+
+if __name__ == "__main__":
+    # Start running game
+    LedTestGame().run()
 ```
 
 This process can be extended to basically any Python program:
