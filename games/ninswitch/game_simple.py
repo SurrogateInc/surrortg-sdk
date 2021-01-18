@@ -98,29 +98,42 @@ class NinSwitchSimpleGame(Game):
     """
 
     async def on_config(self):
+        i = 0
+        while not await self.is_home_current_selected():
+            logging.info("Not on Home, current game selected...")
+            if i >= 5:
+                logging.info("single pressing Home")
+                await self.single_press_button(NSButton.HOME)
+            await asyncio.sleep(1)
+            i += 1
+            # TODO notify stuck somehow? Or do something more complicated?
+        logging.info("On Home, current game selected")
+
+        # reset the board
         self.pi.write(20, 0)
         self.pi.write(21, 0)
         await asyncio.sleep(0.1)
         self.pi.write(20, 1)
         self.pi.write(21, 1)
 
-    async def on_pre_game(self):
+    async def on_start(self):
+        # this somehow enables the board after the reset?
         self.nsg.press(NSButton.A)
         self.nsg.release(NSButton.A)
-        self.nsg.press(NSButton.A)
-        self.nsg.release(NSButton.A)
+
+        # exit home to the game
+        logging.info("single pressing A")
+        await self.single_press_button(NSButton.A)
+        await asyncio.sleep(1)
+
+        # enable playing
+        self.io.enable_inputs()
 
     async def on_finish(self):
         self.io.disable_inputs()
         self.nsg.releaseAll()
-        self.nsg.press(NSButton.HOME)
-        self.nsg.release(NSButton.HOME)
-        await asyncio.sleep(1)
-        if await self.is_home_current_selected():
-            logging.info("On Home, current game selected")
-        else:
-            logging.info("Not on home current game selected")
-            # TODO react accordingly? Check again?
+        logging.info("single pressing Home")
+        await self.single_press_button(NSButton.HOME)
 
     async def on_exit(self, reason, exception):
         # end controls
@@ -131,10 +144,17 @@ class NinSwitchSimpleGame(Game):
         if SAVE_FRAMES:
             self.image_rec_task.cancel()
 
+    async def single_press_button(self, button):
+        self.nsg.press(button)
+        await asyncio.sleep(0.5)
+        self.nsg.release(button)
+
     async def is_home_current_selected(self):
         return self.has_home_current_game_selected(await self.cap.read())
 
     async def image_rec_main(self):
+        """Only used when SAVE_FRAMES=True"""
+
         # loop through frames
         i = 0
         async for frame in self.cap.frames():
@@ -144,6 +164,8 @@ class NinSwitchSimpleGame(Game):
             i += 1
 
     def image_rec_done_cb(self, fut):
+        """Only used when SAVE_FRAMES=True"""
+
         # make program end if image_rec_task raises error
         if not fut.cancelled() and fut.exception() is not None:
             import traceback, sys  # noqa: E401
@@ -156,4 +178,4 @@ class NinSwitchSimpleGame(Game):
 
 
 if __name__ == "__main__":
-    NinSwitchSimpleGame().run()
+    NinSwitchSimpleGame().run(start_games_inputs_enabled=False)
