@@ -116,7 +116,8 @@ class NinSwitchSimpleGame(Game):
         # end controls
         self.nsg.end()
         self.pi.stop()
-
+        # end image rec task
+        await self.cap.release()
         self.image_rec_task.cancel()
 
     async def image_rec_main(self):
