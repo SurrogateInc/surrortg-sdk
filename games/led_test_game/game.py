@@ -60,5 +60,5 @@ class LedTestGame(Game):
 
 
 if __name__ == "__main__":
-    # Start running game
+    # Start running the game
     LedTestGame().run()

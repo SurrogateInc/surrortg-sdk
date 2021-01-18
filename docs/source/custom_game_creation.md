@@ -169,15 +169,15 @@ Now we are ready to look into previous chapter's
 [LEDTestGame](getting_started.html#running-the-ledtestgame) in more
 detail, and how would you create that by yourself.
 
-LEDTestGame uses pigpio, which is library for controlling GPIO pins in Raspberry
+LEDTestGame uses pigpio, which is a library for controlling GPIO pins in Raspberry
 Pi. It allows GPIO pins to be controlled multiple ways, one of them being through
-Python. Main part of the pigpio is its daemon, which is Linux service. It must
-be running in order for the pigpio to work. And assuming that either pre made SDK
-image is used, or that all steps were followed in manual SDK installation, pigpio
-should be already installed to your Raspberry Pi and its daemon service enabled
-such that it starts automatically even after reboot.
+Python. The main part of pigpio is its daemon, which is a Linux service. It must
+be running in order for the pigpio to work. And assuming that either the pre made
+SDK image was used, or that all steps were followed in manual SDK installation,
+pigpio should be already installed to your Raspberry Pi and its daemon service
+enabled such that it starts automatically even after reboot.
 
-Following code shows minimum steps to use pigpio to blink LED with fixed interval.
+The following code shows minimum steps to use pigpio to blink LED with fixed interval.
 It is commented heavily and attempts to explain all steps clearly.
 
 ```python
@@ -194,8 +194,9 @@ if not pi.connected:
     raise RuntimeError("Could not connect to pigpio daemon.")
 
 # Set LED pin to output mode. It is not strictly necessary to do this as pigpio
-# will set pin to output mode when it is being driven to HIGH or LOW, but this
-# can clarify what pin is intended to use for, especially in more complex code.
+# will set the pin to output mode when it is being driven to HIGH or LOW, but
+# this can clarify what pin is intended to be use for, especially in more
+# complex code.
 pi.set_mode(LED_PIN, pigpio.OUTPUT)
 
 # Start toggling LED on and off
@@ -221,12 +222,12 @@ from surrortg.inputs import Switch
 LED_PIN = 17
 
 
-# This class will mainly implement functionality that happens when LED input
+# This class mainly implements functionality that happens when the LED input
 # is pressed or released during game. It inherents from Switch parent class,
 # which provides basic functionality for switch type input. In this case most
 # important functionality provided by Switch class are on() and off() methods,
-# which are called when LED input is pressed or released. We can override these
-# methods to add custom code that is executed on such events.
+# which are called when the LED input is pressed or released. We can override
+# these methods to add custom code that is executed on such events.
 class LEDSwitch(Switch):
     def __init__(self):
         # Connect to pigpio daemon
@@ -237,14 +238,14 @@ class LEDSwitch(Switch):
         # Initialize LED pin
         self._pi.set_mode(LED_PIN, pigpio.OUTPUT)
 
-    # Override on() method to implement custom functionality when LED input is
-    # pressed; Turn LED on and log the event.
+    # Override on() method to implement custom functionality when the LED input
+    # is pressed; Turn on the LED and log the event.
     async def on(self, seat=0):
         self._pi.write(LED_PIN, pigpio.HIGH)
         logging.info("LED on")
 
-    # Override off() method to implement custom functionality when LED input is
-    # released; Turn LED off and log the event.
+    # Override off() method to implement custom functionality when the LED input
+    # is released; Turn off the LED and log the event.
     async def off(self, seat=0):
         self._pi.write(LED_PIN, pigpio.LOW)
         logging.info("LED off")
@@ -258,30 +259,30 @@ class LEDSwitch(Switch):
         self._pi.close()
 
 
-# This class will implement all functionality related to the game itself. It
+# This class implements all functionality related to the game itself. It
 # must inherent from Game parent class because it will provide lot of features
 # that are happening behind the scenes and are mandatory for the game to work.
 class LedTestGame(Game):
-    # Override on_init() method. This method is called once when controller
+    # Override on_init() method. This method is called once when the controller
     # software starts to run and can be used to initialize various things.
     async def on_init(self):
-        # Register LED input. This will inform Surrogate platform from all
-        # inputs that controller supports and add those to the game.
+        # Register the LED input. This will inform Surrogate platform from all
+        # inputs that the controller supports and add those to the game.
         self.io.register_inputs({"switch": LEDSwitch()})
 
 
 if __name__ == "__main__":
-    # Start running game.
+    # Start running the game.
     LedTestGame().run()
 ```
 
-This game will control LED when corresponding input is pressed, but it will do
-so until Game Engine tells it to stop (300 seconds by default). It is useful to
-have such a timeout to prevent game from running forever, but usually game should
-be also stopped if specific condition occurs. In following code we will add score
-feature, which will increment score every time LED input is pressed, and stops
-the game when score reaches 10. With these changes this code should be now equivalent
-to the LEDTestGame.
+This game will control the LED when corresponding input is pressed, but it will
+do so until Game Engine tells it to stop (300 seconds by default). It is useful
+to have such a timeout to prevent the game from running forever, but usually the
+game should also be stopped if specific condition occurs. In the following code
+we will add score feature, which will increment score every time the LED input
+is pressed, and stops the game when score reaches 10. With these changes this code
+should be now equivalent to the LEDTestGame.
 
 ```python
 import logging
@@ -352,7 +353,7 @@ class LedTestGame(Game):
 
 
 if __name__ == "__main__":
-    # Start running game
+    # Start running the game
     LedTestGame().run()
 ```
 
