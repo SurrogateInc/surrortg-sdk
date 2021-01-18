@@ -78,15 +78,19 @@ class NinSwitchSimpleGame(Game):
             },
         )
 
-        # init image rec
-        self.is_home_current_selected = False
-        self.image_rec_task = asyncio.create_task(self.image_rec_main())
-        self.image_rec_task.add_done_callback(self.image_rec_done_cb)
+        # create capture
+        self.cap = await AsyncVideoCapture.create("/dev/video21")
+        # get home current detector
+        self.has_home_current_game_selected = get_pixel_detector(
+            HOME_CURRENT_GAME_SELECTED_PIXELS
+        )
 
-        # init frame saving
         if SAVE_FRAMES:
+            # init image rec task only if saving frames
             logging.info(f"SAVING FRAMES TO {SAVE_DIR_PATH}")
             Path(SAVE_DIR_PATH).mkdir(parents=True, exist_ok=True)
+            self.image_rec_task = asyncio.create_task(self.image_rec_main())
+            self.image_rec_task.add_done_callback(self.image_rec_done_cb)
 
     """
     here you could do something with
@@ -111,6 +115,12 @@ class NinSwitchSimpleGame(Game):
         self.nsg.releaseAll()
         self.nsg.press(NSButton.HOME)
         self.nsg.release(NSButton.HOME)
+        await asyncio.sleep(1)
+        if await self.is_home_current_selected():
+            logging.info("On Home, current game selected")
+        else:
+            logging.info("Not on home current game selected")
+            # TODO react accordingly? Check again?
 
     async def on_exit(self, reason, exception):
         # end controls
@@ -118,30 +128,16 @@ class NinSwitchSimpleGame(Game):
         self.pi.stop()
         # end image rec task
         await self.cap.release()
-        self.image_rec_task.cancel()
+        if SAVE_FRAMES:
+            self.image_rec_task.cancel()
+
+    async def is_home_current_selected(self):
+        return self.has_home_current_game_selected(await self.cap.read())
 
     async def image_rec_main(self):
-        # create capture
-        self.cap = await AsyncVideoCapture.create("/dev/video21")
-
-        # get detector
-        has_home_current_game_selected = get_pixel_detector(
-            HOME_CURRENT_GAME_SELECTED_PIXELS
-        )
-
         # loop through frames
         i = 0
         async for frame in self.cap.frames():
-            # detect
-            if has_home_current_game_selected(frame):
-                logging.info("is home, the current game selected")
-                self.is_home_current_selected = True
-            else:
-                self.is_home_current_selected = False
-
-            # generic
-            if i % 1000 == 0:
-                logging.info("1000 frames checked")
             if SAVE_FRAMES:
                 cv2.imwrite(f"{SAVE_DIR_PATH}/{i}.jpg", frame)
                 logging.info(f"SAVED {i}.jpg")
