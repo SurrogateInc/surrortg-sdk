@@ -32,6 +32,54 @@ HOME_CURRENT_GAME_SELECTED_PIXELS = [
     ((427, 577), (87, 87, 87)),
 ]
 
+GAME_OVER_RETRY_PIXELS = [
+    ((448, 292), (250, 249, 218)),
+    ((591, 293), (244, 245, 214)),
+    ((678, 288), (255, 255, 225)),
+    ((821, 294), (253, 254, 223)),
+    ((640, 450), (156, 149, 45)),
+    ((664, 449), (157, 150, 46)),
+    ((635, 481), (144, 139, 35)),
+    ((648, 481), (146, 139, 33)),
+    ((664, 470), (255, 254, 218)),
+    ((620, 464), (255, 253, 213)),
+]
+
+GAME_OVER_SAVE_AND_QUIT_PIXELS = [
+    ((447, 293), (252, 251, 221)),
+    ((569, 298), (245, 246, 215)),
+    ((677, 294), (255, 254, 226)),
+    ((801, 293), (249, 250, 218)),
+    ((743, 299), (255, 254, 226)),
+    ((618, 515), (147, 141, 31)),
+    ((619, 545), (147, 143, 36)),
+    ((672, 546), (145, 142, 35)),
+    ((696, 513), (150, 142, 35)),
+    ((704, 533), (255, 255, 206)),
+    ((586, 529), (255, 255, 219)),
+]
+
+SAVE_TO_WHICH_FILE_PIXELS = [
+    ((1149, 681), (226, 231, 164)),
+    ((1165, 681), (224, 227, 158)),
+    ((1218, 682), (250, 249, 201)),
+    ((547, 39), (255, 255, 226)),
+    ((609, 38), (25, 28, 0)),
+    ((238, 244), (94, 79, 46)),
+    ((235, 470), (97, 84, 49)),
+    ((1047, 246), (91, 82, 43)),
+    ((1047, 413), (97, 84, 49)),
+    ((650, 286), (245, 224, 167)),
+    ((649, 434), (255, 226, 175)),
+]
+
+# when detected, disable inputs and do actions until not detected
+AUTO_ACTIONS = {
+    get_pixel_detector(GAME_OVER_RETRY_PIXELS): NSButton.A,
+    get_pixel_detector(GAME_OVER_SAVE_AND_QUIT_PIXELS): NSDPad.UP,
+    get_pixel_detector(SAVE_TO_WHICH_FILE_PIXELS): NSButton.B,
+}
+
 
 class NinSwitchSimpleGame(Game):
     async def on_init(self):
@@ -85,12 +133,12 @@ class NinSwitchSimpleGame(Game):
             HOME_CURRENT_GAME_SELECTED_PIXELS
         )
 
+        self.image_rec_task = asyncio.create_task(self.image_rec_main())
+        self.image_rec_task.add_done_callback(self.image_rec_done_cb)
+
         if SAVE_FRAMES:
-            # init image rec task only if saving frames
             logging.info(f"SAVING FRAMES TO {SAVE_DIR_PATH}")
             Path(SAVE_DIR_PATH).mkdir(parents=True, exist_ok=True)
-            self.image_rec_task = asyncio.create_task(self.image_rec_main())
-            self.image_rec_task.add_done_callback(self.image_rec_done_cb)
 
     """
     here you could do something with
@@ -141,31 +189,54 @@ class NinSwitchSimpleGame(Game):
         self.pi.stop()
         # end image rec task
         await self.cap.release()
-        if SAVE_FRAMES:
-            self.image_rec_task.cancel()
+        self.image_rec_task.cancel()
 
     async def single_press_button(self, button):
         self.nsg.press(button)
         await asyncio.sleep(0.5)
         self.nsg.release(button)
 
+    async def single_press_dpad(self, dpad):
+        self.nsg.dPad(dpad)
+        await asyncio.sleep(0.5)
+        self.nsg.dPad(NSDPad.CENTERED)
+
     async def is_home_current_selected(self):
         return self.has_home_current_game_selected(await self.cap.read())
 
     async def image_rec_main(self):
-        """Only used when SAVE_FRAMES=True"""
-
-        # loop through frames
         i = 0
+        ongoing_auto_action = False
         async for frame in self.cap.frames():
+            detected = False
+            for detector, action in AUTO_ACTIONS.items():
+                if detector(frame):
+                    detected = True
+                    if not ongoing_auto_action:
+                        logging.info("Auto action started")
+                        self.io.disable_inputs()
+                        ongoing_auto_action = True
+
+                    if type(action) == NSButton:
+                        logging.info("button")
+                        await self.single_press_button(action)
+                    elif type(action) == NSDPad:
+                        logging.info("dpad")
+                        await self.single_press_dpad(action)
+                    break
+
+            if not detected and ongoing_auto_action:
+                logging.info("Auto action stopped")
+                ongoing_auto_action = False
+                self.io.enable_inputs()
+
             if SAVE_FRAMES:
                 cv2.imwrite(f"{SAVE_DIR_PATH}/{i}.jpg", frame)
                 logging.info(f"SAVED {i}.jpg")
             i += 1
+            await asyncio.sleep(0)
 
     def image_rec_done_cb(self, fut):
-        """Only used when SAVE_FRAMES=True"""
-
         # make program end if image_rec_task raises error
         if not fut.cancelled() and fut.exception() is not None:
             import traceback, sys  # noqa: E401
