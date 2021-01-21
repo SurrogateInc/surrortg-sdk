@@ -1,6 +1,6 @@
 image: python:3.7.3
 
-definitions: 
+definitions:
   steps:
     - step: &unittests
         name: unittests
@@ -29,18 +29,11 @@ definitions:
         script:
           - pip install codespell==v2.0.0 # if version changed, change also on .pre-commit-config.yaml!
           - codespell --ignore-words=.codespell-ignore .
-    - step: &docs
-        name: docs
+    - step: &github-sync
+        name: github-sync
         script:
-          - pip install pipenv
-          - pipenv sync --dev
-          - pipenv run docs
-          - pipe: atlassian/aws-s3-deploy:0.4.4
-            variables:
-              AWS_DEFAULT_REGION: 'us-east-1'
-              S3_BUCKET: 'surrortg-sdk-docs'
-              LOCAL_PATH: 'docs/build/html'
-              DELETE_FLAG: 'false'
+          - git remote add github-repo git@github.com:SurrogateInc/surrortg-sdk.git
+          - git push github-repo HEAD:main
 
 pipelines:
   default:
@@ -52,11 +45,11 @@ pipelines:
       - step: *codespell
 
   branches:
-    main: # If tests/formatting fails, does not build docs.
+    main: # If tests/formatting fails, does not push to Github.
       - parallel:
         - step: *unittests
         - step: *black
         - step: *flake8
         - step: *markdownlint
         - step: *codespell
-      - step: *docs
+      - step: *github-sync
