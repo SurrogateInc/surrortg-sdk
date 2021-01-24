@@ -56,7 +56,7 @@ The image recognition needs a loopback device set up to `/dev/video21`:
 To install everything correctly on Raspberry Pi:
 
 1. First change to the ninswitch directory with `cd games/ninswitch`
-2. Install the Python requirements by running `sudo pip3 install -r requiremets.txt`
+2. Install the Python requirements by running `sudo pip3 install -r requirements.txt`
 3. Run the setup script with `sudo ./setup.sh`
 4. Use `sudo nano /boot/config.txt` to add `dtoverlay=disable-bt` as the last line
     of config.txt. Then save and exit.
