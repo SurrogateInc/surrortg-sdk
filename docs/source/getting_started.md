@@ -38,7 +38,7 @@ logs and restart the code modules.
 To get started with installation and running a sample game, these are the hardware
 requirements:
 
-1. [Rasperry Pi](https://www.raspberrypi.org/) single board computer,
+1. [Raspberry Pi](https://www.raspberrypi.org/) single board computer,
   for example model 3B+, 3A, or 4B
 2. A 16GB+ micro SD card
 3. An SD card reader, either built in to your computer or as an adapter.
@@ -263,7 +263,7 @@ Raspberry Pi, you need to do the following:
 
 5. Now you should be able to ssh to the Raspberry Pi with username and password
 
-### Method 2: manual installation
+### Method 2: Manual installation
 
 #### Setting up Raspberry Pi
 
