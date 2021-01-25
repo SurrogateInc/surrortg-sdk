@@ -17,19 +17,33 @@ cv2.setNumThreads(1)
 # image rec
 SAVE_FRAMES = False
 SAVE_DIR_PATH = "/opt/srtg-python/imgs"
+ACTION_STOP_FRAMES_REQUIRED = 5  # compensate failing frames
 
 # ((x, y), (r, g, b))
 HOME_CURRENT_GAME_SELECTED_PIXELS = [
-    ((22, 697), (52, 52, 52)),
-    ((25, 17), (52, 52, 52)),
-    ((1261, 16), (52, 52, 52)),
-    ((1258, 695), (52, 52, 52)),
-    ((288, 543), (252, 1, 16)),
-    ((344, 543), (255, 1, 12)),
-    ((164, 482), (17, 202, 255)),
-    ((173, 483), (4, 208, 255)),
-    ((169, 474), (7, 202, 255)),
-    ((427, 577), (87, 87, 87)),
+    ((162, 483), (0, 201, 252)),
+    ((289, 541), (253, 1, 14)),
+    ((412, 684), (52, 52, 52)),
+    ((621, 686), (253, 253, 253)),
+    ((816, 684), (52, 52, 52)),
+    ((1062, 684), (52, 52, 52)),
+    ((1102, 682), (255, 255, 255)),
+]
+
+MAYBE_GAME_OVER_PIXELS = [
+    ((446, 290), (253, 254, 220)),
+    ((469, 265), (251, 250, 219)),
+    ((483, 308), (252, 251, 221)),
+    ((502, 306), (253, 255, 213)),
+    ((568, 302), (252, 253, 222)),
+    ((610, 296), (250, 254, 221)),
+    ((675, 290), (255, 255, 225)),
+    ((696, 265), (253, 255, 224)),
+    ((712, 307), (252, 252, 218)),
+    ((750, 310), (252, 251, 220)),
+    ((776, 297), (255, 252, 223)),
+    ((835, 282), (244, 243, 215)),
+    ((821, 311), (247, 250, 219)),
 ]
 
 GAME_OVER_RETRY_PIXELS = [
@@ -75,9 +89,12 @@ SAVE_TO_WHICH_FILE_PIXELS = [
 
 # when detected, disable inputs and do actions until not detected
 AUTO_ACTIONS = {
-    get_pixel_detector(GAME_OVER_RETRY_PIXELS): NSButton.A,
-    get_pixel_detector(GAME_OVER_SAVE_AND_QUIT_PIXELS): NSDPad.UP,
-    get_pixel_detector(SAVE_TO_WHICH_FILE_PIXELS): NSButton.B,
+    get_pixel_detector(
+        MAYBE_GAME_OVER_PIXELS
+    ): [],  # this just blocks the controls
+    get_pixel_detector(GAME_OVER_RETRY_PIXELS): [NSButton.A],
+    get_pixel_detector(GAME_OVER_SAVE_AND_QUIT_PIXELS): [NSDPad.UP],
+    get_pixel_detector(SAVE_TO_WHICH_FILE_PIXELS): [NSButton.B],
 }
 
 
@@ -149,9 +166,10 @@ class NinSwitchSimpleGame(Game):
         i = 0
         while not await self.is_home_current_selected():
             logging.info("Not on Home, current game selected...")
-            if i >= 5:
+            if i >= 10:
                 logging.info("single pressing Home")
-                await self.single_press_button(NSButton.HOME)
+                await self.single_press(NSButton.HOME)
+                await asyncio.sleep(1)
             await asyncio.sleep(1)
             i += 1
             # TODO notify stuck somehow? Or do something more complicated?
@@ -171,7 +189,7 @@ class NinSwitchSimpleGame(Game):
 
         # exit home to the game
         logging.info("single pressing A")
-        await self.single_press_button(NSButton.A)
+        await self.single_press(NSButton.A)
         await asyncio.sleep(1)
 
         # enable playing
@@ -180,8 +198,9 @@ class NinSwitchSimpleGame(Game):
     async def on_finish(self):
         self.io.disable_inputs()
         self.nsg.releaseAll()
+        await asyncio.sleep(0.1)
         logging.info("single pressing Home")
-        await self.single_press_button(NSButton.HOME)
+        await self.single_press(NSButton.HOME)
 
     async def on_exit(self, reason, exception):
         # end controls
@@ -191,44 +210,50 @@ class NinSwitchSimpleGame(Game):
         await self.cap.release()
         self.image_rec_task.cancel()
 
-    async def single_press_button(self, button):
-        self.nsg.press(button)
-        await asyncio.sleep(0.5)
-        self.nsg.release(button)
-
-    async def single_press_dpad(self, dpad):
-        self.nsg.dPad(dpad)
-        await asyncio.sleep(0.5)
-        self.nsg.dPad(NSDPad.CENTERED)
+    async def single_press(self, pressable):
+        if type(pressable) == NSButton:
+            self.nsg.press(pressable)
+            await asyncio.sleep(0.1)
+            self.nsg.release(pressable)
+        elif type(pressable) == NSDPad:
+            self.nsg.dPad(pressable)
+            await asyncio.sleep(0.1)
+            self.nsg.dPad(NSDPad.CENTERED)
+        else:
+            raise RuntimeError(f"Cannot press {pressable}")
 
     async def is_home_current_selected(self):
         return self.has_home_current_game_selected(await self.cap.read())
 
     async def image_rec_main(self):
         i = 0
+        stop_frames = 0
         ongoing_auto_action = False
         async for frame in self.cap.frames():
             detected = False
-            for detector, action in AUTO_ACTIONS.items():
+            for detector, actions in AUTO_ACTIONS.items():
                 if detector(frame):
                     detected = True
+                    stop_frames = 0
                     if not ongoing_auto_action:
                         logging.info("Auto action started")
                         self.io.disable_inputs()
+                        self.nsg.releaseAll()
                         ongoing_auto_action = True
 
-                    if type(action) == NSButton:
-                        logging.info("button")
-                        await self.single_press_button(action)
-                    elif type(action) == NSDPad:
-                        logging.info("dpad")
-                        await self.single_press_dpad(action)
-                    break
+                    for action in actions:
+                        logging.info(f"pressing: {action}")
+                        await self.single_press(action)
 
             if not detected and ongoing_auto_action:
-                logging.info("Auto action stopped")
-                ongoing_auto_action = False
-                self.io.enable_inputs()
+                stop_frames += 1
+                if stop_frames > ACTION_STOP_FRAMES_REQUIRED:
+                    logging.info("Auto action stopped")
+                    ongoing_auto_action = False
+                    self.io.enable_inputs()
+                    stop_frames = 0
+                else:
+                    logging.info(f"Action stop frame {stop_frames}.")
 
             if SAVE_FRAMES:
                 cv2.imwrite(f"{SAVE_DIR_PATH}/{i}.jpg", frame)
