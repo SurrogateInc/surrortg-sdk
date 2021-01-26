@@ -92,9 +92,13 @@ AUTO_ACTIONS = {
     get_pixel_detector(
         MAYBE_GAME_OVER_PIXELS
     ): [],  # this just blocks the controls
-    get_pixel_detector(GAME_OVER_RETRY_PIXELS): [NSButton.A],
-    get_pixel_detector(GAME_OVER_SAVE_AND_QUIT_PIXELS): [NSDPad.UP],
-    get_pixel_detector(SAVE_TO_WHICH_FILE_PIXELS): [NSButton.B],
+    get_pixel_detector(GAME_OVER_RETRY_PIXELS): [NSButton.A],  # press retry
+    get_pixel_detector(GAME_OVER_SAVE_AND_QUIT_PIXELS): [
+        NSDPad.UP
+    ],  # move up to retry
+    get_pixel_detector(SAVE_TO_WHICH_FILE_PIXELS): [
+        NSButton.B
+    ],  # move back to retry screen
 }
 
 
@@ -142,6 +146,7 @@ class NinSwitchSimpleGame(Game):
                 "capture": NSSwitch(self.nsg, NSButton.CAPTURE),
             },
         )
+        self.lock = asyncio.Lock()
 
         # create capture
         self.cap = await AsyncVideoCapture.create("/dev/video21")
@@ -149,9 +154,11 @@ class NinSwitchSimpleGame(Game):
         self.has_home_current_game_selected = get_pixel_detector(
             HOME_CURRENT_GAME_SELECTED_PIXELS
         )
+        self.has_maybe_game_over = get_pixel_detector(MAYBE_GAME_OVER_PIXELS)
 
         self.image_rec_task = asyncio.create_task(self.image_rec_main())
         self.image_rec_task.add_done_callback(self.image_rec_done_cb)
+        self.inputs_can_be_enabled = False
 
         if SAVE_FRAMES:
             logging.info(f"SAVING FRAMES TO {SAVE_DIR_PATH}")
@@ -163,17 +170,18 @@ class NinSwitchSimpleGame(Game):
     """
 
     async def on_config(self):
-        i = 0
-        while not await self.is_home_current_selected():
-            logging.info("Not on Home, current game selected...")
-            if i >= 10:
-                logging.info("single pressing Home")
-                await self.single_press(NSButton.HOME)
+        async with self.lock:
+            i = 0
+            while not await self.is_home_current_selected():
+                logging.info(
+                    f"[on_config]: Not on Home, current game selected {i}."
+                )
+                if i >= 10:
+                    logging.info("[on_config]: single pressing Home")
+                    await self.single_press(NSButton.HOME)
                 await asyncio.sleep(1)
-            await asyncio.sleep(1)
-            i += 1
-            # TODO notify stuck somehow? Or do something more complicated?
-        logging.info("On Home, current game selected")
+                i += 1
+            logging.info("[on_config]: On Home, current game selected")
 
         # reset the board
         self.pi.write(20, 0)
@@ -190,17 +198,57 @@ class NinSwitchSimpleGame(Game):
         # exit home to the game
         logging.info("single pressing A")
         await self.single_press(NSButton.A)
-        await asyncio.sleep(1)
+
+        # make sure home is away
+        # (three times because of failing frame reads...)
+        while (
+            await self.is_home_current_selected()
+            or await self.is_home_current_selected()
+            or await self.is_home_current_selected()
+        ):
+            logging.info("Waiting for home to go away...")
+        logging.info("Not Home")
+
+        # give image rec some time to press retry from the game over screen
+        await asyncio.sleep(0.4)
+        logging.info("Slept")
+
+        # make sure game over is away
+        # (three times because of failing frame reads...)
+        while (
+            await self.is_maybe_game_over()
+            or await self.is_maybe_game_over()
+            or await self.is_maybe_game_over()
+        ):
+            logging.info("Waiting for Game Over to go away...")
+        logging.info("Not Game Over")
 
         # enable playing
-        self.io.enable_inputs()
+        async with self.lock:
+            self.inputs_can_be_enabled = True
+            self.io.enable_inputs()
 
     async def on_finish(self):
+        self.inputs_can_be_enabled = False
         self.io.disable_inputs()
+        logging.info("[on_finish]: resetting inputs")
         self.nsg.releaseAll()
-        await asyncio.sleep(0.1)
-        logging.info("single pressing Home")
-        await self.single_press(NSButton.HOME)
+
+        async with self.lock:
+            # why the first press does not work?
+            await self.single_press(NSButton.HOME)
+            # the workaround...
+            i = 0
+            while not await self.is_home_current_selected():
+                logging.info(
+                    f"[on_finish]: Not on Home, current game selected {i}."
+                )
+                if i % 3 == 0:  # take failed frames into account
+                    logging.info("[on_finish]: single pressing Home")
+                    await self.single_press(NSButton.HOME)
+                await asyncio.sleep(0.5)
+                i += 1
+            logging.info("[on_finish]: On Home, current game selected")
 
     async def on_exit(self, reason, exception):
         # end controls
@@ -225,41 +273,48 @@ class NinSwitchSimpleGame(Game):
     async def is_home_current_selected(self):
         return self.has_home_current_game_selected(await self.cap.read())
 
+    async def is_maybe_game_over(self):
+        return self.has_maybe_game_over(await self.cap.read())
+
     async def image_rec_main(self):
         i = 0
         stop_frames = 0
         ongoing_auto_action = False
         async for frame in self.cap.frames():
-            detected = False
-            for detector, actions in AUTO_ACTIONS.items():
-                if detector(frame):
-                    detected = True
-                    stop_frames = 0
-                    if not ongoing_auto_action:
-                        logging.info("Auto action started")
-                        self.io.disable_inputs()
-                        self.nsg.releaseAll()
-                        ongoing_auto_action = True
+            async with self.lock:
+                detected = False
+                for detector, actions in AUTO_ACTIONS.items():
+                    if detector(frame):
+                        detected = True
+                        stop_frames = 0
+                        if not ongoing_auto_action:
+                            logging.info("Auto action started")
+                            self.io.disable_inputs()
+                            self.nsg.releaseAll()
+                            ongoing_auto_action = True
 
-                    for action in actions:
-                        logging.info(f"pressing: {action}")
-                        await self.single_press(action)
+                        for action in actions:
+                            logging.info(f"pressing: {action}")
+                            await self.single_press(action)
 
-            if not detected and ongoing_auto_action:
-                stop_frames += 1
-                if stop_frames > ACTION_STOP_FRAMES_REQUIRED:
-                    logging.info("Auto action stopped")
-                    ongoing_auto_action = False
-                    self.io.enable_inputs()
-                    stop_frames = 0
-                else:
-                    logging.info(f"Action stop frame {stop_frames}.")
+                if not detected and ongoing_auto_action:
+                    stop_frames += 1
+                    if stop_frames > ACTION_STOP_FRAMES_REQUIRED:
+                        logging.info("Auto action stopped")
+                        ongoing_auto_action = False
+                        stop_frames = 0
+                        if self.inputs_can_be_enabled:
+                            logging.info("enabling inputs")
+                            self.io.enable_inputs()
+                    else:
+                        logging.info(f"Action stop frame {stop_frames}.")
 
-            if SAVE_FRAMES:
-                cv2.imwrite(f"{SAVE_DIR_PATH}/{i}.jpg", frame)
-                logging.info(f"SAVED {i}.jpg")
-            i += 1
-            await asyncio.sleep(0)
+                if SAVE_FRAMES:
+                    cv2.imwrite(f"{SAVE_DIR_PATH}/{i}.jpg", frame)
+                    logging.info(f"SAVED {i}.jpg")
+                i += 1
+
+            await asyncio.sleep(0)  # might be redundant?
 
     def image_rec_done_cb(self, fut):
         # make program end if image_rec_task raises error
