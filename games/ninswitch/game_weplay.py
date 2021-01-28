@@ -102,7 +102,7 @@ AUTO_ACTIONS = {
 }
 
 
-class NinSwitchSimpleGame(Game):
+class NinSwitchWePlayGame(Game):
     async def on_init(self):
         # init controls
         # connect to pigpio daemon
@@ -174,14 +174,14 @@ class NinSwitchSimpleGame(Game):
             i = 0
             while not await self.is_home_current_selected():
                 logging.info(
-                    f"[on_config]: Not on Home, current game selected {i}."
+                    f"on_config: Not on Home, current game selected {i}."
                 )
                 if i >= 10:
-                    logging.info("[on_config]: single pressing Home")
+                    logging.info("on_config: single pressing Home")
                     await self.single_press(NSButton.HOME)
                 await asyncio.sleep(1)
                 i += 1
-            logging.info("[on_config]: On Home, current game selected")
+            logging.info("on_config: On Home, current game selected")
 
         # reset the board
         self.pi.write(20, 0)
@@ -207,11 +207,9 @@ class NinSwitchSimpleGame(Game):
             or await self.is_home_current_selected()
         ):
             logging.info("Waiting for home to go away...")
-        logging.info("Not Home")
 
         # give image rec some time to press retry from the game over screen
         await asyncio.sleep(0.4)
-        logging.info("Slept")
 
         # make sure game over is away
         # (three times because of failing frame reads...)
@@ -221,17 +219,17 @@ class NinSwitchSimpleGame(Game):
             or await self.is_maybe_game_over()
         ):
             logging.info("Waiting for Game Over to go away...")
-        logging.info("Not Game Over")
 
         # enable playing
         async with self.lock:
             self.inputs_can_be_enabled = True
             self.io.enable_inputs()
+            logging.info("Inputs enabled")
 
     async def on_finish(self):
         self.inputs_can_be_enabled = False
         self.io.disable_inputs()
-        logging.info("[on_finish]: resetting inputs")
+        logging.info("on_finish: resetting inputs")
         self.nsg.releaseAll()
 
         async with self.lock:
@@ -241,14 +239,14 @@ class NinSwitchSimpleGame(Game):
             i = 0
             while not await self.is_home_current_selected():
                 logging.info(
-                    f"[on_finish]: Not on Home, current game selected {i}."
+                    f"on_finish: Not on Home, current game selected {i}."
                 )
                 if i % 3 == 0:  # take failed frames into account
                     logging.info("[on_finish]: single pressing Home")
                     await self.single_press(NSButton.HOME)
                 await asyncio.sleep(0.5)
                 i += 1
-            logging.info("[on_finish]: On Home, current game selected")
+            logging.info("on_finish: On Home, current game selected")
 
     async def on_exit(self, reason, exception):
         # end controls
@@ -329,4 +327,4 @@ class NinSwitchSimpleGame(Game):
 
 
 if __name__ == "__main__":
-    NinSwitchSimpleGame().run(start_games_inputs_enabled=False)
+    NinSwitchWePlayGame().run(start_games_inputs_enabled=False)
