@@ -155,8 +155,15 @@ class Game:
         use "logical". Logical robot type is for advanced use only.
         :type robot_type: string, optional
         """
+
         if logging_level is not None:
-            logging.getLogger().setLevel(logging_level)
+            logging.basicConfig(
+                format=(
+                    "surrortg-{levelname}: {message:<40} ({filename}:{lineno})"
+                ),
+                style="{",
+                level=logging_level,
+            )
         self.start_games_inputs_enabled = start_games_inputs_enabled
 
         # this structure makes testing easier
