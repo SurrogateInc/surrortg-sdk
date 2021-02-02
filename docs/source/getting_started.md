@@ -120,7 +120,7 @@ Please be aware that the pre made image is in beta phase and might have issues.
 
 #### Downloading and installing the image
 
-Download the Surrogate custom [image](image-builds/surrogate-raspbian-latest.img.gz).
+Download the Surrogate custom [image](https://image.surrogate.tv/surrogate-raspbian-latest.img.gz).
 Note that the image file is large and the download can take a long time,
 especially with slow Internet connection.
 Once the download is complete, take note of the file name and location.
@@ -273,7 +273,7 @@ First either:
   **Note: Choose Raspberry Pi OS (other) -> Raspberry Pi OS Lite (32-bit) as the
   operating system** to install the official Rasbpian image.
 
-- Download the premade [image](image-builds/surrogate-raspbian-latest.img.gz)
+- Download the premade [image](https://image.surrogate.tv/surrogate-raspbian-latest.img.gz)
   to speed up the installation process. For information on how to flash the image,
   see [this](#downloading-and-installing-the-image).
 
