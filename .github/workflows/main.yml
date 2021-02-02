@@ -1,0 +1,98 @@
+name: Run tests and linters
+ 
+on: [push, pull_request]
+
+jobs:
+  unittests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python 3.7 
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+
+      - name: Install dependencies
+        run: |
+          pip install pipenv
+          pipenv sync
+
+      - name: Run unit tests
+        run: pipenv run tests
+
+  black:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python 3.7 
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+
+      - name: Install dependencies
+        run: pip install black==19.10b0 # if version changed, change also on .pre-commit-config.yaml and bitbucket-pipelines.yml! 
+
+      - name: Run black 
+        run: black --check --diff --config=pyproject.toml . 
+
+  flake8:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python 3.7 
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+
+      - name: Install dependencies
+        run: pip install flake8==3.7.9 # if version changed, change also on .pre-commit-config.yaml and bitbucket-pipelines.yml! 
+
+      - name: Run flake8 
+        run: flake8 --config=.flake8
+
+  markdownlint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Ruby 2.7.2
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7.2
+
+      - name: Install dependencies
+        run: gem install mdl -v 0.11.0 # if version changed, change also on .pre-commit-config.yaml and bitbucket-pipelines.yml!
+
+      - name: Run markdownlint
+        run: mdl --style '.mdl-style.rb' .
+
+  codespell:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+
+      - name: Install dependencies
+        run: pip install codespell==v2.0.0 # if version changed, change also on .pre-commit-config.yaml and bitbucket-pipelines.yml!
+
+      - name: Run codespell
+        run: codespell --ignore-words=.codespell-ignore .
+
+

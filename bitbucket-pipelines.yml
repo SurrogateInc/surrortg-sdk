@@ -11,23 +11,23 @@ definitions:
     - step: &black
         name: black
         script:
-          - pip install black==19.10b0 # if version changed, change also on .pre-commit-config.yaml!
+          - pip install black==19.10b0 # if version changed, change also on .pre-commit-config.yaml and .github/workflows/main.yml!
           - black --check --diff --config=pyproject.toml .
     - step: &flake8
         name: flake8
         script:
-          - pip install flake8==3.7.9 # if version changed, change also on .pre-commit-config.yaml!
+          - pip install flake8==3.7.9 # if version changed, change also on .pre-commit-config.yaml and .github/workflows/main.yml!
           - flake8 --config=.flake8
     - step: &markdownlint
         name: markdownlint
         image: ruby:2.7.2 # override default image
         script:
-          - gem install mdl -v 0.11.0 # if version changed, change also on .pre-commit-config.yaml!
+          - gem install mdl -v 0.11.0 # if version changed, change also on .pre-commit-config.yaml and .github/workflows/main.yml!
           - mdl --style '.mdl-style.rb' .
     - step: &codespell
         name: codespell
         script:
-          - pip install codespell==v2.0.0 # if version changed, change also on .pre-commit-config.yaml!
+          - pip install codespell==v2.0.0 # if version changed, change also on .pre-commit-config.yaml and .github/workflows/main.yml!
           - codespell --ignore-words=.codespell-ignore .
     - step: &github-sync
         name: github-sync
