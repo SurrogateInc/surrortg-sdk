@@ -311,7 +311,7 @@ class Game:
             # wait for the tasks to end
             self._loop.run_until_complete(asyncio.gather(*tasks))
 
-        logging.info("Game ended.")
+        logging.info("Game ended.\n")
 
     async def _main(self):
         # get ready to handle GE messages

@@ -5,6 +5,8 @@ import logging
 import json
 import traceback
 import socketio
+import os
+from signal import SIGINT
 from dataclasses import dataclass, field, asdict
 from typing import Any, Dict, Optional
 
@@ -132,12 +134,19 @@ class SocketioNamespace(socketio.AsyncClientNamespace):
             # so let's catch and handle them in here:
             #
             # These should not happen, and some message handler must be broken
-            # --> kill the program
+            # --> kill the program with SIGINT after returning from
+            #     'on_message'
             logging.error(
                 f"Message handling failed for message {msg}:\n"
-                f"{traceback.format_exc()}"
+                f"\n{traceback.format_exc()}"
             )
-            sys.exit(1)
+            logging.info("Sending SIGINT to exit program.")
+            asyncio.run_coroutine_threadsafe(
+                self.send_sigint(), asyncio.get_event_loop(),
+            )
+
+    async def send_sigint(self):
+        os.kill(os.getpid(), SIGINT)
 
     async def send_message(self, msg, callback=None):
         try:
