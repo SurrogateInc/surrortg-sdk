@@ -121,8 +121,10 @@ class GameStates(Enum):
     ITEMS_MENU = auto()
 
 
-game_state = GameStates.PLAYING  # assume no menu open at the start
-ongoing_game_state_transition = False  # allow only one transition at once
+# on_init does one B press, so this initial state should be correct
+game_state = GameStates.PLAYING
+# allow only one transition at once
+ongoing_game_state_transition = False
 
 
 class MinusSwitch(Switch):
@@ -393,6 +395,11 @@ class NinSwitchWePlayGame(Game):
         if SAVE_FRAMES:
             logging.info(f"SAVING FRAMES TO {SAVE_DIR_PATH}")
             Path(SAVE_DIR_PATH).mkdir(parents=True, exist_ok=True)
+
+        # single press B, this will exit MAP_MENU/ITEMS_MENU,
+        # to PLAYING game_state
+        logging.info("single pressing B to get away from menus")
+        await self.single_press(NSButton.B)
 
     """
     here you could do something with
