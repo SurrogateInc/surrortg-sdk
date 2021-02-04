@@ -8,6 +8,7 @@ from .game_io import GameIO
 # Reason codes are passed to the user as an on_exit parameter.
 # Code and description is also logged.
 EXIT_REASONS = {
+    -1: "Unknown exit reason",
     0: "Uncaught exception",
     1: "Interrupted (SIGINT)",
     2: "Terminated (SIGTERM)",
@@ -233,6 +234,8 @@ class Game:
         +------+---------------------+
         | Code | Reason              |
         +======+=====================+
+        |-1    | Unknown exit reason |
+        +------+---------------------+
         | 0    | Uncaught exception  |
         +------+---------------------+
         | 1    | Interrupted (SIGINT)|
@@ -276,6 +279,11 @@ class Game:
         self._players = None
         self._current_seat = None
 
+        # set initial exit_reason, this should be different
+        # when the program ends
+        self._exit_reason = -1
+        self._exception = None
+
     def _not_implemented(self, method_name):
         return getattr(type(self), method_name) == getattr(Game, method_name)
 
@@ -303,7 +311,7 @@ class Game:
             # wait for the tasks to end
             self._loop.run_until_complete(asyncio.gather(*tasks))
 
-        logging.info("Game ended.")
+        logging.info("Game ended.\n")
 
     async def _main(self):
         # get ready to handle GE messages
