@@ -54,7 +54,11 @@ MAYBE_GAME_OVER_PIXELS = [
     ((821, 311), (247, 250, 219)),
 ]
 
-GAME_OVER_RETRY_PIXELS = [
+# game over retry is challenging, because you either have to use
+# moving pixels, or some pixels with transparency. Neither works
+# perfectly, so we'll use both at the same time
+
+GAME_OVER_RETRY_PIXELS_1 = [
     ((447, 291), (252, 253, 222)),
     ((525, 311), (251, 252, 221)),
     ((736, 283), (245, 244, 216)),
@@ -67,6 +71,38 @@ GAME_OVER_RETRY_PIXELS = [
     ((927, 451), (255, 250, 130)),
     ((927, 474), (255, 255, 141)),
     ((913, 489), (252, 249, 120)),
+]
+
+GAME_OVER_RETRY_PIXELS_2 = [
+    ((447, 290), (251, 252, 220)),
+    ((503, 305), (249, 250, 218)),
+    ((591, 299), (249, 250, 219)),
+    ((710, 270), (253, 249, 220)),
+    ((822, 311), (253, 255, 218)),
+    ((637, 452), (164, 160, 60)),
+    ((645, 460), (255, 250, 212)),
+    ((642, 481), (163, 160, 47)),
+    ((664, 469), (242, 237, 199)),
+    ((662, 453), (165, 158, 52)),
+]
+
+GAME_OVER_RETRY_PIXELS_3 = [
+    ((447, 289), (250, 251, 219)),
+    ((524, 289), (249, 246, 215)),
+    ((568, 311), (252, 253, 222)),
+    ((678, 292), (247, 246, 216)),
+    ((711, 271), (255, 252, 225)),
+    ((749, 310), (253, 251, 226)),
+    ((821, 289), (247, 248, 217)),
+    ((362, 432), (249, 242, 109)),
+    ((347, 432), (255, 251, 121)),
+    ((347, 447), (250, 248, 127)),
+    ((347, 494), (253, 245, 118)),
+    ((919, 432), (252, 242, 121)),
+    ((933, 432), (254, 250, 116)),
+    ((933, 447), (243, 240, 123)),
+    ((933, 479), (241, 239, 126)),
+    ((933, 494), (247, 246, 102)),
 ]
 
 GAME_OVER_SAVE_AND_QUIT_PIXELS = [
@@ -102,7 +138,9 @@ AUTO_ACTIONS = {
     get_pixel_detector(
         MAYBE_GAME_OVER_PIXELS
     ): [],  # this just blocks the controls
-    get_pixel_detector(GAME_OVER_RETRY_PIXELS): [NSButton.A],  # press retry
+    get_pixel_detector(GAME_OVER_RETRY_PIXELS_1): [NSButton.A],  # press retry
+    get_pixel_detector(GAME_OVER_RETRY_PIXELS_2): [NSButton.A],  # press retry
+    get_pixel_detector(GAME_OVER_RETRY_PIXELS_3): [NSButton.A],  # press retry
     get_pixel_detector(GAME_OVER_SAVE_AND_QUIT_PIXELS): [
         NSDPad.UP
     ],  # move up to retry
@@ -227,6 +265,7 @@ class NinSwitchWeplayGame(Game):
             or await self.is_home_current_selected()
         ):
             logging.info("Waiting for home to go away...")
+            await asyncio.sleep(0.05)
 
         # give image rec some time to press retry from the game over screen
         await asyncio.sleep(0.4)
@@ -239,6 +278,7 @@ class NinSwitchWeplayGame(Game):
             or await self.is_maybe_game_over()
         ):
             logging.info("Waiting for Game Over to go away...")
+            await asyncio.sleep(0.05)
 
         # enable playing
         async with self.lock:
