@@ -138,9 +138,15 @@ AUTO_ACTIONS = {
     get_pixel_detector(
         MAYBE_GAME_OVER_PIXELS
     ): [],  # this just blocks the controls
-    get_pixel_detector(GAME_OVER_RETRY_PIXELS_1): [NSButton.A],  # press retry
-    get_pixel_detector(GAME_OVER_RETRY_PIXELS_2): [NSButton.A],  # press retry
-    get_pixel_detector(GAME_OVER_RETRY_PIXELS_3): [NSButton.A],  # press retry
+    get_pixel_detector(GAME_OVER_RETRY_PIXELS_1, close=50): [
+        NSButton.A
+    ],  # press retry
+    get_pixel_detector(GAME_OVER_RETRY_PIXELS_2, close=50): [
+        NSButton.A
+    ],  # press retry
+    get_pixel_detector(GAME_OVER_RETRY_PIXELS_3, close=50): [
+        NSButton.A
+    ],  # press retry
     get_pixel_detector(GAME_OVER_SAVE_AND_QUIT_PIXELS): [
         NSDPad.UP
     ],  # move up to retry
@@ -204,7 +210,7 @@ class NinSwitchWeplayGame(Game):
         self.cap = await AsyncVideoCapture.create("/dev/video21")
         # get home current detector
         self.has_home_current_game_selected = get_pixel_detector(
-            HOME_CURRENT_GAME_SELECTED_PIXELS
+            HOME_CURRENT_GAME_SELECTED_PIXELS, close=35
         )
         self.has_maybe_game_over = get_pixel_detector(MAYBE_GAME_OVER_PIXELS)
 
@@ -293,8 +299,9 @@ class NinSwitchWeplayGame(Game):
         self.nsg.releaseAll()
 
         async with self.lock:
-            # why the first press does not work?
+            # why the first press does not work always?
             await single_press(NSButton.HOME, self.nsg)
+            await asyncio.sleep(0.5)
             # the workaround...
             i = 0
             while not await self.is_home_current_selected():
@@ -304,6 +311,7 @@ class NinSwitchWeplayGame(Game):
                 if i % 3 == 0:  # take failed frames into account
                     logging.info("on_finish: single pressing Home")
                     await single_press(NSButton.HOME, self.nsg)
+                    await asyncio.sleep(1)
                 else:
                     await asyncio.sleep(0.5)
                 i += 1
