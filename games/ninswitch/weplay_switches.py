@@ -2,11 +2,27 @@ import asyncio
 import logging
 from enum import Enum, auto
 from surrortg.inputs import Switch
-from games.ninswitch.ns_gamepad_serial import NSButton
+from games.ninswitch.ns_gamepad_serial import NSButton, NSDPad
 
 # auto button presses
 PRESS_TIME = 0.1
 POST_PRESS_TIME = 0.5
+
+
+async def single_press(pressable, nsg, post_press_sleep=True):
+    if type(pressable) == NSButton:
+        nsg.press(pressable)
+        await asyncio.sleep(PRESS_TIME)
+        nsg.release(pressable)
+    elif type(pressable) == NSDPad:
+        nsg.dPad(pressable)
+        await asyncio.sleep(PRESS_TIME)
+        nsg.dPad(NSDPad.CENTERED)
+    else:
+        raise RuntimeError(f"Cannot press {pressable}")
+
+    if post_press_sleep:
+        await asyncio.sleep(POST_PRESS_TIME)
 
 
 class GameStates(Enum):
@@ -48,17 +64,11 @@ class WeplayMinusSwitch(Switch):
             ongoing_game_state_transition = True
             game_state = GameStates.MAP_MENU
             logging.info("minus: game_state MAP_MENU")
-            await self.single_press()
+            await single_press(self.minus_button, self.nsg)
             ongoing_game_state_transition = False
 
     async def off(self, seat=0):
         pass
-
-    async def single_press(self):
-        self.nsg.press(self.minus_button)
-        await asyncio.sleep(PRESS_TIME)
-        self.nsg.release(self.minus_button)
-        await asyncio.sleep(POST_PRESS_TIME)
 
 
 class WeplayBSwitch(Switch):
@@ -83,10 +93,7 @@ class WeplayBSwitch(Switch):
             ongoing_game_state_transition = True
             game_state = GameStates.PLAYING
             logging.info("b: game_state PLAYING")
-            self.nsg.press(self.b_button)
-            await asyncio.sleep(PRESS_TIME)
-            self.nsg.release(self.b_button)
-            await asyncio.sleep(POST_PRESS_TIME)
+            await single_press(self.b_button, self.nsg)
             ongoing_game_state_transition = False
         else:
             self.nsg.press(self.b_button)
@@ -129,14 +136,9 @@ class WeplayXSwitch(Switch):
         elif game_state == GameStates.MAP_MENU:
             ongoing_game_state_transition = True
             logging.info("x: game_state visiting MEMORIES...")
-            self.nsg.press(self.x_button)
-            await asyncio.sleep(PRESS_TIME)
-            self.nsg.release(self.x_button)
-            await asyncio.sleep(2.5)
-            self.nsg.press(NSButton.B)
-            await asyncio.sleep(PRESS_TIME)
-            self.nsg.release(NSButton.B)
-            await asyncio.sleep(POST_PRESS_TIME)
+            await single_press(self.x_button, self.nsg)
+            await asyncio.sleep(2)
+            await single_press(NSButton.B, self.nsg)
             logging.info("x: game_state back to MAP_MENU")
             ongoing_game_state_transition = False
         else:
@@ -205,10 +207,7 @@ class WeplayTriggerSwitch(Switch):
 
             game_state = GameStates.ITEMS_MENU
             logging.info("menu_trigger: game_state ITEMS_MENU")
-            self.nsg.press(NSButton.RIGHT_TRIGGER)
-            await asyncio.sleep(PRESS_TIME)
-            self.nsg.release(NSButton.RIGHT_TRIGGER)
-            await asyncio.sleep(POST_PRESS_TIME)
+            await single_press(NSButton.RIGHT_TRIGGER, self.nsg)
 
             ongoing_game_state_transition = False
 
@@ -217,10 +216,7 @@ class WeplayTriggerSwitch(Switch):
 
             game_state = GameStates.MAP_MENU
             logging.info("menu_trigger: game_state MAP_MENU")
-            self.nsg.press(NSButton.LEFT_TRIGGER)
-            await asyncio.sleep(PRESS_TIME)
-            self.nsg.release(NSButton.LEFT_TRIGGER)
-            await asyncio.sleep(POST_PRESS_TIME)
+            await single_press(NSButton.LEFT_TRIGGER, self.nsg)
 
             ongoing_game_state_transition = False
         else:

@@ -9,8 +9,7 @@ from games.ninswitch.weplay_switches import (
     WeplayXSwitch,
     WeplayASwitch,
     WeplayTriggerSwitch,
-    PRESS_TIME,
-    POST_PRESS_TIME,
+    single_press,
 )
 from surrortg.image_recognition import AsyncVideoCapture, get_pixel_detector
 from pathlib import Path
@@ -182,7 +181,7 @@ class NinSwitchWeplayGame(Game):
         # single press B, this will exit MAP_MENU/ITEMS_MENU,
         # to PLAYING game_state (weplay_switches.py)
         logging.info("single pressing B to get away from menus")
-        await self.single_press(NSButton.B)
+        await single_press(NSButton.B, self.nsg)
 
     """
     here you could do something with
@@ -198,15 +197,16 @@ class NinSwitchWeplayGame(Game):
                 )
                 if i >= 10:
                     logging.info("on_config: single pressing Home")
-                    await self.single_press(NSButton.HOME)
-                await asyncio.sleep(1)
+                    await single_press(NSButton.HOME, self.nsg)
+                else:
+                    await asyncio.sleep(1)
                 i += 1
             logging.info("on_config: On Home, current game selected")
 
         # reset the board
         self.pi.write(20, 0)
         self.pi.write(21, 0)
-        await asyncio.sleep(PRESS_TIME)
+        await asyncio.sleep(0.1)
         self.pi.write(20, 1)
         self.pi.write(21, 1)
 
@@ -217,7 +217,7 @@ class NinSwitchWeplayGame(Game):
 
         # exit home to the game
         logging.info("single pressing A")
-        await self.single_press(NSButton.A)
+        await single_press(NSButton.A, self.nsg, post_press_sleep=False)
 
         # make sure home is away
         # (three times because of failing frame reads...)
@@ -254,7 +254,7 @@ class NinSwitchWeplayGame(Game):
 
         async with self.lock:
             # why the first press does not work?
-            await self.single_press(NSButton.HOME)
+            await single_press(NSButton.HOME, self.nsg)
             # the workaround...
             i = 0
             while not await self.is_home_current_selected():
@@ -263,8 +263,9 @@ class NinSwitchWeplayGame(Game):
                 )
                 if i % 3 == 0:  # take failed frames into account
                     logging.info("on_finish: single pressing Home")
-                    await self.single_press(NSButton.HOME)
-                await asyncio.sleep(POST_PRESS_TIME)
+                    await single_press(NSButton.HOME, self.nsg)
+                else:
+                    await asyncio.sleep(0.5)
                 i += 1
             logging.info("on_finish: On Home, current game selected")
 
@@ -275,18 +276,6 @@ class NinSwitchWeplayGame(Game):
         # end image rec task
         await self.cap.release()
         self.image_rec_task.cancel()
-
-    async def single_press(self, pressable):
-        if type(pressable) == NSButton:
-            self.nsg.press(pressable)
-            await asyncio.sleep(PRESS_TIME)
-            self.nsg.release(pressable)
-        elif type(pressable) == NSDPad:
-            self.nsg.dPad(pressable)
-            await asyncio.sleep(PRESS_TIME)
-            self.nsg.dPad(NSDPad.CENTERED)
-        else:
-            raise RuntimeError(f"Cannot press {pressable}")
 
     async def is_home_current_selected(self):
         return self.has_home_current_game_selected(await self.cap.read())
@@ -313,7 +302,7 @@ class NinSwitchWeplayGame(Game):
 
                         for action in actions:
                             logging.info(f"pressing: {action}")
-                            await self.single_press(action)
+                            await single_press(action, self.nsg)
 
                 if not detected and ongoing_auto_action:
                     stop_frames += 1
