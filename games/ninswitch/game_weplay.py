@@ -181,8 +181,8 @@ class BSwitch(Switch):
         if ongoing_game_state_transition:
             logging.info("b: blocked")
         elif game_state in [GameStates.MAP_MENU, GameStates.ITEMS_MENU]:
-            game_state = GameStates.PLAYING
             ongoing_game_state_transition = True
+            game_state = GameStates.PLAYING
             logging.info("b: game_state PLAYING")
             self.nsg.press(self.b_button)
             await asyncio.sleep(PRESS_TIME)
@@ -284,7 +284,7 @@ class TriggerSwitch(Switch):
     A normal trigger button, except when on the menus, where a trigger press
     might be different one than the one pressed.
 
-    This forbits entering the save menu page, where someone could delete
+    This forbids entering the save menu page, where someone could delete
     the game file.
     """
 
@@ -302,25 +302,27 @@ class TriggerSwitch(Switch):
             logging.info("menu_trigger: blocked")
 
         elif game_state == GameStates.MAP_MENU:
+            ongoing_game_state_transition = True
+
             game_state = GameStates.ITEMS_MENU
             logging.info("menu_trigger: game_state ITEMS_MENU")
-
-            ongoing_game_state_transition = True
             self.nsg.press(NSButton.RIGHT_TRIGGER)
             await asyncio.sleep(PRESS_TIME)
             self.nsg.release(NSButton.RIGHT_TRIGGER)
             await asyncio.sleep(POST_PRESS_TIME)
+
             ongoing_game_state_transition = False
 
         elif game_state == GameStates.ITEMS_MENU:
+            ongoing_game_state_transition = True
+
             game_state = GameStates.MAP_MENU
             logging.info("menu_trigger: game_state MAP_MENU")
-
-            ongoing_game_state_transition = True
             self.nsg.press(NSButton.LEFT_TRIGGER)
             await asyncio.sleep(PRESS_TIME)
             self.nsg.release(NSButton.LEFT_TRIGGER)
             await asyncio.sleep(POST_PRESS_TIME)
+
             ongoing_game_state_transition = False
         else:
             self.nsg.press(self.trigger_button)
