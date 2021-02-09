@@ -3,6 +3,14 @@ from games.ninswitch.ns_gamepad_serial import NSGamepadSerial, NSButton, NSDPad
 from games.ninswitch.ns_switch import NSSwitch
 from games.ninswitch.ns_dpad_switch import NSDPadSwitch
 from games.ninswitch.ns_joystick import NSJoystick
+from games.ninswitch.weplay_switches import (
+    WeplayMinusSwitch,
+    WeplayBSwitch,
+    WeplayXSwitch,
+    WeplayASwitch,
+    WeplayTriggerSwitch,
+    single_press,
+)
 from surrortg.image_recognition import AsyncVideoCapture, get_pixel_detector
 from pathlib import Path
 import logging
@@ -46,7 +54,11 @@ MAYBE_GAME_OVER_PIXELS = [
     ((821, 311), (247, 250, 219)),
 ]
 
-GAME_OVER_RETRY_PIXELS = [
+# game over retry is challenging, because you either have to use
+# moving pixels, or some pixels with transparency. Neither works
+# perfectly, so we'll use both at the same time
+
+GAME_OVER_RETRY_PIXELS_1 = [
     ((447, 291), (252, 253, 222)),
     ((525, 311), (251, 252, 221)),
     ((736, 283), (245, 244, 216)),
@@ -59,6 +71,38 @@ GAME_OVER_RETRY_PIXELS = [
     ((927, 451), (255, 250, 130)),
     ((927, 474), (255, 255, 141)),
     ((913, 489), (252, 249, 120)),
+]
+
+GAME_OVER_RETRY_PIXELS_2 = [
+    ((447, 290), (251, 252, 220)),
+    ((503, 305), (249, 250, 218)),
+    ((591, 299), (249, 250, 219)),
+    ((710, 270), (253, 249, 220)),
+    ((822, 311), (253, 255, 218)),
+    ((637, 452), (164, 160, 60)),
+    ((645, 460), (255, 250, 212)),
+    ((642, 481), (163, 160, 47)),
+    ((664, 469), (242, 237, 199)),
+    ((662, 453), (165, 158, 52)),
+]
+
+GAME_OVER_RETRY_PIXELS_3 = [
+    ((447, 289), (250, 251, 219)),
+    ((524, 289), (249, 246, 215)),
+    ((568, 311), (252, 253, 222)),
+    ((678, 292), (247, 246, 216)),
+    ((711, 271), (255, 252, 225)),
+    ((749, 310), (253, 251, 226)),
+    ((821, 289), (247, 248, 217)),
+    ((362, 432), (249, 242, 109)),
+    ((347, 432), (255, 251, 121)),
+    ((347, 447), (250, 248, 127)),
+    ((347, 494), (253, 245, 118)),
+    ((919, 432), (252, 242, 121)),
+    ((933, 432), (254, 250, 116)),
+    ((933, 447), (243, 240, 123)),
+    ((933, 479), (241, 239, 126)),
+    ((933, 494), (247, 246, 102)),
 ]
 
 GAME_OVER_SAVE_AND_QUIT_PIXELS = [
@@ -94,7 +138,15 @@ AUTO_ACTIONS = {
     get_pixel_detector(
         MAYBE_GAME_OVER_PIXELS
     ): [],  # this just blocks the controls
-    get_pixel_detector(GAME_OVER_RETRY_PIXELS): [NSButton.A],  # press retry
+    get_pixel_detector(GAME_OVER_RETRY_PIXELS_1, close=50): [
+        NSButton.A
+    ],  # press retry
+    get_pixel_detector(GAME_OVER_RETRY_PIXELS_2, close=50): [
+        NSButton.A
+    ],  # press retry
+    get_pixel_detector(GAME_OVER_RETRY_PIXELS_3, close=50): [
+        NSButton.A
+    ],  # press retry
     get_pixel_detector(GAME_OVER_SAVE_AND_QUIT_PIXELS): [
         NSDPad.UP
     ],  # move up to retry
@@ -104,7 +156,7 @@ AUTO_ACTIONS = {
 }
 
 
-class NinSwitchWePlayGame(Game):
+class NinSwitchWeplayGame(Game):
     async def on_init(self):
         # init controls
         # connect to pigpio daemon
@@ -133,14 +185,18 @@ class NinSwitchWePlayGame(Game):
                 "dpad_right": NSDPadSwitch(self.nsg, NSDPad.RIGHT),
                 "dpad_down": NSDPadSwitch(self.nsg, NSDPad.DOWN),
                 "Y": NSSwitch(self.nsg, NSButton.Y),
-                "X": NSSwitch(self.nsg, NSButton.X),
-                "A": NSSwitch(self.nsg, NSButton.A),
-                "B": NSSwitch(self.nsg, NSButton.B),
+                "X": WeplayXSwitch(self.nsg, NSButton.X),
+                "A": WeplayASwitch(self.nsg, NSButton.A),
+                "B": WeplayBSwitch(self.nsg, NSButton.B),
                 "left_throttle": NSSwitch(self.nsg, NSButton.LEFT_THROTTLE),
-                "left_trigger": NSSwitch(self.nsg, NSButton.LEFT_TRIGGER),
+                "left_trigger": WeplayTriggerSwitch(
+                    self.nsg, NSButton.LEFT_TRIGGER
+                ),
                 "right_throttle": NSSwitch(self.nsg, NSButton.RIGHT_THROTTLE),
-                "right_trigger": NSSwitch(self.nsg, NSButton.RIGHT_TRIGGER),
-                "minus": NSSwitch(self.nsg, NSButton.MINUS),
+                "right_trigger": WeplayTriggerSwitch(
+                    self.nsg, NSButton.RIGHT_TRIGGER
+                ),
+                "minus": WeplayMinusSwitch(self.nsg, NSButton.MINUS),
                 "plus": NSSwitch(self.nsg, NSButton.PLUS),
                 "left_stick": NSSwitch(self.nsg, NSButton.LEFT_STICK),
                 "right_stick": NSSwitch(self.nsg, NSButton.RIGHT_STICK),
@@ -154,7 +210,7 @@ class NinSwitchWePlayGame(Game):
         self.cap = await AsyncVideoCapture.create("/dev/video21")
         # get home current detector
         self.has_home_current_game_selected = get_pixel_detector(
-            HOME_CURRENT_GAME_SELECTED_PIXELS
+            HOME_CURRENT_GAME_SELECTED_PIXELS, close=35
         )
         self.has_maybe_game_over = get_pixel_detector(MAYBE_GAME_OVER_PIXELS)
 
@@ -165,6 +221,11 @@ class NinSwitchWePlayGame(Game):
         if SAVE_FRAMES:
             logging.info(f"SAVING FRAMES TO {SAVE_DIR_PATH}")
             Path(SAVE_DIR_PATH).mkdir(parents=True, exist_ok=True)
+
+        # single press B, this will exit MAP_MENU/ITEMS_MENU,
+        # to PLAYING game_state (weplay_switches.py)
+        logging.info("single pressing B to get away from menus")
+        await single_press(NSButton.B, self.nsg)
 
     """
     here you could do something with
@@ -180,8 +241,9 @@ class NinSwitchWePlayGame(Game):
                 )
                 if i >= 10:
                     logging.info("on_config: single pressing Home")
-                    await self.single_press(NSButton.HOME)
-                await asyncio.sleep(1)
+                    await single_press(NSButton.HOME, self.nsg)
+                else:
+                    await asyncio.sleep(1)
                 i += 1
             logging.info("on_config: On Home, current game selected")
 
@@ -199,7 +261,7 @@ class NinSwitchWePlayGame(Game):
 
         # exit home to the game
         logging.info("single pressing A")
-        await self.single_press(NSButton.A)
+        await single_press(NSButton.A, self.nsg, post_press_sleep=False)
 
         # make sure home is away
         # (three times because of failing frame reads...)
@@ -209,6 +271,7 @@ class NinSwitchWePlayGame(Game):
             or await self.is_home_current_selected()
         ):
             logging.info("Waiting for home to go away...")
+            await asyncio.sleep(0.05)
 
         # give image rec some time to press retry from the game over screen
         await asyncio.sleep(0.4)
@@ -221,6 +284,7 @@ class NinSwitchWePlayGame(Game):
             or await self.is_maybe_game_over()
         ):
             logging.info("Waiting for Game Over to go away...")
+            await asyncio.sleep(0.05)
 
         # enable playing
         async with self.lock:
@@ -235,8 +299,9 @@ class NinSwitchWePlayGame(Game):
         self.nsg.releaseAll()
 
         async with self.lock:
-            # why the first press does not work?
-            await self.single_press(NSButton.HOME)
+            # why the first press does not work always?
+            await single_press(NSButton.HOME, self.nsg)
+            await asyncio.sleep(0.5)
             # the workaround...
             i = 0
             while not await self.is_home_current_selected():
@@ -244,9 +309,11 @@ class NinSwitchWePlayGame(Game):
                     f"on_finish: Not on Home, current game selected {i}."
                 )
                 if i % 3 == 0:  # take failed frames into account
-                    logging.info("[on_finish]: single pressing Home")
-                    await self.single_press(NSButton.HOME)
-                await asyncio.sleep(0.5)
+                    logging.info("on_finish: single pressing Home")
+                    await single_press(NSButton.HOME, self.nsg)
+                    await asyncio.sleep(1)
+                else:
+                    await asyncio.sleep(0.5)
                 i += 1
             logging.info("on_finish: On Home, current game selected")
 
@@ -257,18 +324,6 @@ class NinSwitchWePlayGame(Game):
         # end image rec task
         await self.cap.release()
         self.image_rec_task.cancel()
-
-    async def single_press(self, pressable):
-        if type(pressable) == NSButton:
-            self.nsg.press(pressable)
-            await asyncio.sleep(0.1)
-            self.nsg.release(pressable)
-        elif type(pressable) == NSDPad:
-            self.nsg.dPad(pressable)
-            await asyncio.sleep(0.1)
-            self.nsg.dPad(NSDPad.CENTERED)
-        else:
-            raise RuntimeError(f"Cannot press {pressable}")
 
     async def is_home_current_selected(self):
         return self.has_home_current_game_selected(await self.cap.read())
@@ -295,7 +350,7 @@ class NinSwitchWePlayGame(Game):
 
                         for action in actions:
                             logging.info(f"pressing: {action}")
-                            await self.single_press(action)
+                            await single_press(action, self.nsg)
 
                 if not detected and ongoing_auto_action:
                     stop_frames += 1
@@ -329,4 +384,4 @@ class NinSwitchWePlayGame(Game):
 
 
 if __name__ == "__main__":
-    NinSwitchWePlayGame().run(start_games_inputs_enabled=False)
+    NinSwitchWeplayGame().run(start_games_inputs_enabled=False)
