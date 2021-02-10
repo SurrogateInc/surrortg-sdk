@@ -14,6 +14,7 @@ from games.claw.config import (
     USE_INTERNAL_TOY_SENSOR,
     USE_JOYSTICK_SPLITTER,
     USE_TOY_RESET_SOLENOID,
+    USE_COIN_SIGNAL_GENERATOR,
     BLOCK_GAME_LOOP_IF_SENSOR_BLOCKED,
     BLOCKED_SENSOR_PING_INTERVAL,
     WAIT_TIME_AFTER_SENSOR_CLEARED,
@@ -24,6 +25,7 @@ from games.claw.config import (
     STOP_TIME_BEFORE_BTN_PRESS,
     AUTOMATIC_MOVE_TIME,
     JOYSTICK_DISABLE_PIN,
+    COIN_SIGNAL_PIN,
     GE_GAME_LENGTH,
 )
 
@@ -56,6 +58,12 @@ class ClawGame(Game):
         if USE_TOY_RESET_SOLENOID:
             # init toy reset solenoid
             self.solenoid = ClawSolenoid(self.pi)
+
+        if USE_COIN_SIGNAL_GENERATOR:
+            self.pi.set_mode(COIN_SIGNAL_PIN, pigpio.OUTPUT)
+            self.coin_signal_generator_task = asyncio.create_task(
+                self._coin_signal_generator()
+            )
 
         # init claw machine state variables
         self.ready_for_next_game = False
@@ -230,6 +238,13 @@ class ClawGame(Game):
         if USE_TOY_RESET_SOLENOID:
             await self.solenoid.close()
         self.pi.stop()
+
+    async def _coin_signal_generator(self):
+        while True:
+            self.pi.write(COIN_SIGNAL_PIN, pigpio.HIGH)
+            await asyncio.sleep(0.5)
+            self.pi.write(COIN_SIGNAL_PIN, pigpio.LOW)
+            await asyncio.sleep(0.5)
 
 
 if __name__ == "__main__":

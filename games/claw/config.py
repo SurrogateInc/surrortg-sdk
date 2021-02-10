@@ -9,6 +9,8 @@ USE_INTERNAL_TOY_SENSOR = True
 USE_JOYSTICK_SPLITTER = False
 # set True if claw machine has Surrogate toy reset solenoid
 USE_TOY_RESET_SOLENOID = False
+# set true if claw machine needs coins to start game
+USE_COIN_SIGNAL_GENERATOR = False
 # wait until something clears toy from front of the toy sensor
 BLOCK_GAME_LOOP_IF_SENSOR_BLOCKED = True
 # how often toy sensor is pinged when sensor is blocked
@@ -34,6 +36,9 @@ AUTOMATIC_MOVE_TIME = 0.25
 
 # pin for Surrogate joystick splitter
 JOYSTICK_DISABLE_PIN = 19
+
+# pin for coin door signal
+COIN_SIGNAL_PIN = 20
 
 # NOTE! This is a workaround because GE does not send max game length time
 # This constant must be set to same value as GE game length
