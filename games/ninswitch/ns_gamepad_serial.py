@@ -126,7 +126,8 @@ class NSGamepadSerial:
         if serial_port is None:
             try:
                 # Raspberry Pi UART on pins 14,15
-                serial_port = serial.Serial("/dev/ttyAMA0", 2000000, timeout=0)
+                # serial0 translates either to ttyS0 or ttyAMA0
+                serial_port = serial.Serial("/dev/serial0", 2000000, timeout=0)
             except Exception:
                 try:
                     # CP210x is capable of 2,000,000 bits/sec
