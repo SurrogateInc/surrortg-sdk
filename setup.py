@@ -9,8 +9,8 @@ setuptools.setup(
     install_requires=[
         "aiohttp",
         "pigpio",
-        "python-socketio",
-        "python-engineio",
+        "python-socketio==4.6.1",
+        "python-engineio==3.14.2",
         "pyyaml",
         "toml",
     ],
