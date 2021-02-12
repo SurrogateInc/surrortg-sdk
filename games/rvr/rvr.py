@@ -51,7 +51,10 @@ class RVR(Joystick):
         # init the rvr
         # TODO fix asyncio problems and use the asyncio version
         logging.info("RVR: connecting")
-        self.dal = SerialAsyncDal(asyncio.get_running_loop())
+        # serial0 translates either to ttyS0 or ttyAMA0
+        self.dal = SerialAsyncDal(
+            asyncio.get_running_loop(), port_id="/dev/serial0"
+        )
         self.rvr = SpheroRvrAsync(self.dal)
 
         # fix rvr blocking all default logging after init...
