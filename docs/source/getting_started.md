@@ -255,13 +255,24 @@ Raspberry Pi, you need to do the following:
     in the terminal and then give a secure password of your choice when
     prompted
 4. Use raspi-config utility to enable ssh. Inside the utility tool
-   `Interfaces -> SSH -> enable`.
+   `Interface Options -> SSH -> enable`.
 
     ```
     sudo raspi-config
     ```
 
-5. Now you should be able to ssh to the Raspberry Pi with username and password
+5. Read the Raspberry Pi IP address from the Dashboard or get it with a
+   command:
+
+    ```
+    hostname -I
+    ```
+
+6. Now you should be able to ssh to the Raspberry Pi from your PC by typing:
+
+    ```
+    ssh pi@YOUR_IP_FROM_PREVIOUS_STEP
+    ```
 
 ### Method 2: Manual installation
 
