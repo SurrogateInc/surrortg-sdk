@@ -260,7 +260,6 @@ Raspberry Pi, you need to do the following:
     ```
     sudo raspi-config
     ```
-
 5. Read the Raspberry Pi IP address from the Dashboard or get it with a
    command:
 
