@@ -353,7 +353,7 @@ sudo systemctl start pigpiod
 After this we can clone [the GitHub repository](https://github.com/SurrogateInc/surrortg-sdk).
 
 ```
-cd <folder you want to download the git folder>
+cd <directory where you want to download the git repository>
 git clone https://github.com/SurrogateInc/surrortg-sdk.git
 cd surrortg-sdk
 ```
@@ -690,9 +690,9 @@ detail how the games work!
 To make the python code automatically start after restarting the raspberry pi,
 you will need to follow the steps here to do so. Below are the example contents
 of the existing `controller-rpi.service` file that is located in the sdk `scripts`
-folder. You will need to make sure that the following options are correct:
-`WorkingDirectory` has absolute path to your sdk root folder, and `Environment=GAME_MODULE=`
-has the correct python path inside the sdk folder.
+directory. You will need to make sure that the following options are correct:
+`WorkingDirectory` has absolute path to your sdk root directory, and `Environment=GAME_MODULE=`
+has the correct python path inside the sdk directory.
 
 ```
 [Unit]
@@ -711,7 +711,7 @@ ExecStart=/usr/bin/python3 -m $GAME_MODULE
 WantedBy=multi-user.target
 ```
 
-Then run the `setup-systemd.sh` script (located in `scripts` folder) to update
+Then run the `setup-systemd.sh` script (located in `scripts` directory) to update
 and reload your new systemd module. If you have already created the systemd unit
 and you have not changed the file you are running (GAME_MODULE), you can just
 reload the systemd unit with

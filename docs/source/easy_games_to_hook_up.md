@@ -48,7 +48,7 @@ to enable serial communication or just add line `enable_uart=1` to the end of
 `/boot/config.txt` and reboot the raspberry pi.
 
 Then you will need run the setup script to install the sphero-sdk and dependencies.
-Run the following commands in the **games/rvr/ folder**.
+Run the following commands in the **games/rvr/ directory**.
 
 ```
 sudo pip3 install -r requirements.txt
@@ -56,7 +56,7 @@ sudo pip3 install -r requirements.txt
 ./SETUP.sh
 ```
 
-You can test the game by running in your folder root:
+You can test the game by running in your project root directory:
 
 ```
 sudo python3 -m games.rvr.game
@@ -64,7 +64,7 @@ sudo python3 -m games.rvr.game
 
 or by modifying the systemd file controller-rpi.service by changing the game module
 path in the line starting with `Environment=GAME_MODULE=` to use games.rvr.game
-and running at your folder root:
+and running at your project root directory:
 
 ```
 ./scripts/setup-systemd.sh
