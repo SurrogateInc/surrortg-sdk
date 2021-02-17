@@ -21,6 +21,7 @@ Start your creation journey from :doc:`./getting_started`
    admin_page
    game_development
    ready_games
+   streaming
    troubleshooting
    modules/surrortg
    contributing_to_the_project
