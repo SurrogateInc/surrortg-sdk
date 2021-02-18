@@ -65,7 +65,7 @@ Reboot the system after.
 
 ## Audio troubleshooting
 
-See [the troubleshooting section on the audio page](audio.html#troubleshooting).
+See [the troubleshooting section on the audio page](streamer.html#troubleshooting).
 
 ## Controller troubleshooting
 

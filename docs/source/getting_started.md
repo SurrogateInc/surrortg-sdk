@@ -90,10 +90,10 @@ controller connected to the game.**
 
 ## SDK installation
 
-The SDK installation can be done in two different ways:  
+The SDK installation can be done in two different ways:
 [Method 1:](#method-1-installing-a-pre-made-image)
 flashing a premade image file to an SD card
-(recommended)  
+(recommended)
 [Method 2:](#method-2-manual-installation)
 manual installation on top of an existing raspbian image
 (for advanced users only)
@@ -260,6 +260,7 @@ Raspberry Pi, you need to do the following:
     ```
     sudo raspi-config
     ```
+
 5. Read the Raspberry Pi IP address from the Dashboard or get it with a
    command:
 
@@ -321,12 +322,12 @@ if you didn't already!**
 
 Now that you have a working image, we can move on.
 
-**If you use the official Raspberry Pi OS:**  
+**If you use the official Raspberry Pi OS:**
 [Install the required components](
   #installing-the-required-surrortg-sdk-components-manually
-).  
+).
 
-**If you are using the premade image:**  
+**If you are using the premade image:**
 If you want, you can remove the image's hotspot server completely by running
 the following script: `/opt/uninstall-raspi-server-stuff.sh`.
 You can also leave the hotspot server as a backup solution if you want.
@@ -581,10 +582,10 @@ kind = "audio"
 label = "main"
 ```
 
-For more information about audio, see [the audio page](streamer.html#audio). There you
-can find out how to choose the audio capture device to use, some additional
-audio parameters, troubleshooting tips, and how to add custom features if you
-are an advanced user.
+For more information about audio, see [the audio page](streamer.html#audio).
+There you can find out how to choose the audio capture device to use, some
+additional audio parameters, troubleshooting tips, and how to add custom
+features if you are an advanced user.
 
 ##### Datachannel
 
