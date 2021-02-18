@@ -581,7 +581,7 @@ kind = "audio"
 label = "main"
 ```
 
-For more information about audio, see [the audio page](audio). There you
+For more information about audio, see [the audio page](streamer.html#audio). There you
 can find out how to choose the audio capture device to use, some additional
 audio parameters, troubleshooting tips, and how to add custom features if you
 are an advanced user.

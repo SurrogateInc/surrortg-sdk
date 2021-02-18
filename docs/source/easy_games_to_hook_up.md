@@ -1,3 +1,5 @@
+# Easy games to hook up
+
 ## Sphero rover exploration game
 
 Before starting the tutorial, make sure that you have all of the required hardware
@@ -15,8 +17,8 @@ and the your Raspberry Pi has [SurroRTG SDK installed](getting_started).
 
 First secure the Raspberry Pi inside the RVR. Then use three jumper cables to connect:
 
-Raspberry Pi's GND to RVR's GND  
-Raspberry Pi's TX to RVR's RX  
+Raspberry Pi's GND to RVR's GND
+Raspberry Pi's TX to RVR's RX
 Raspberry Pi's RX to RVR's TX
 
 Mount and connect the camera to Raspberry Pi. Then connect the USB cable from the
@@ -24,7 +26,7 @@ RVR to power up Raspberry Pi, press the button on the RVR's side to turn it on.
 
 ### Create the game on Surrogate.tv
 
-Go to [www.surrogate.tv/admin](www.surrogate.tv/admin) and click `Create a new game`.
+Go to [surrogate.tv/admin](https://surrogate.tv/admin) and click `Create a new game`.
 
 Then choose your custom title, description, and short ID, and then choose type
 of the game to be `RVR`. This will create a Admin panel with the correct settings
@@ -70,7 +72,7 @@ and running at your project root directory:
 ./scripts/setup-systemd.sh
 ```
 
-Now you should be able to got to [www.surrogate.tv/game/YOUR_SHORT_ID](www.surrogate.tv/game/YOUR_SHORT_ID),
+Now you should be able to got to [surrogate.tv/game/YOUR_SHORT_ID](https://surrogate.tv/game/YOUR_SHORT_ID),
 and play the game!
 
 ## Running the LEDTestGame
