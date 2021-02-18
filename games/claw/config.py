@@ -4,6 +4,7 @@ TO OVERRIDE THESE VALUES, USE config_local.py
 """
 
 """Game"""
+# No effect, for now only internal toy sensor is supported
 USE_INTERNAL_TOY_SENSOR = True
 # set True if claw machine has Surrogate joystick splitter
 USE_JOYSTICK_SPLITTER = False
@@ -36,7 +37,6 @@ AUTOMATIC_MOVE_TIME = 0.25
 
 # pin for Surrogate joystick splitter
 JOYSTICK_DISABLE_PIN = 19
-
 # pin for coin door signal
 COIN_SIGNAL_PIN = 20
 
@@ -48,6 +48,7 @@ GE_GAME_LENGTH = 30
 TOY_SENSOR_PIN = 23
 TOY_SENSOR_STATE_BLOCKED = 1
 
+# No effect, Arduino toy sensor is not supported currently
 """ClawArduinoToySensor"""
 ARDUINO_PATH = "/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0"
 BLOCKED_THRESHOLD = 25

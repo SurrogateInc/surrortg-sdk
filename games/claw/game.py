@@ -8,10 +8,8 @@ from surrortg.inputs import Directions
 from games.claw.claw_joystick import ClawJoystick
 from games.claw.claw_button import ClawButton
 from games.claw.claw_toy_sensor import ClawToySensor
-from games.claw.claw_arduino_toy_sensor import ClawArduinoToySensor
 from games.claw.claw_toy_reset_solenoid import ClawSolenoid
 from games.claw.config import (
-    USE_INTERNAL_TOY_SENSOR,
     USE_JOYSTICK_SPLITTER,
     USE_TOY_RESET_SOLENOID,
     USE_COIN_SIGNAL_GENERATOR,
@@ -35,7 +33,7 @@ class ClawGame(Game):
         # connect to pigpio daemon
         self.pi = pigpio.pi()
         if not self.pi.connected:
-            raise RuntimeError("Could not connect to pigpio")
+            raise RuntimeError("Could not connect to pigpio daemon")
 
         if USE_JOYSTICK_SPLITTER:
             # init joystick splitter, enable physical joystick by default
@@ -49,11 +47,7 @@ class ClawGame(Game):
             pre_press_action=self.pre_button_press,
             post_press_action=self.post_button_press,
         )
-        self.toy_sensor = (
-            ClawToySensor(io=self.io, pi=self.pi)
-            if USE_INTERNAL_TOY_SENSOR
-            else ClawArduinoToySensor(self.io)
-        )
+        self.toy_sensor = ClawToySensor(self.pi)
 
         if USE_TOY_RESET_SOLENOID:
             # init toy reset solenoid
@@ -68,6 +62,9 @@ class ClawGame(Game):
         # init claw machine state variables
         self.ready_for_next_game = False
         self.button_pressed = False
+        # assume that previous game was a win in case software crashes
+        # causes solenoid toy reset cycle during software startup if in use
+        self.previous_game_won = True
 
         self.io.register_inputs(
             {"joystick_main": self.joystick, "button_main": self.button,}
@@ -76,10 +73,13 @@ class ClawGame(Game):
     async def on_prepare(self):
         await self.joystick.reset()
 
-        if self.toy_sensor.is_blocked():
-            if USE_TOY_RESET_SOLENOID:
-                await self.solenoid_toy_reset_loop()
-            elif BLOCK_GAME_LOOP_IF_SENSOR_BLOCKED:
+        if USE_TOY_RESET_SOLENOID and (
+            self.toy_sensor.is_blocked() or self.previous_game_won
+        ):
+            self.previous_game_won = False
+            await self.solenoid_toy_reset_loop()
+        elif self.toy_sensor.is_blocked():
+            if BLOCK_GAME_LOOP_IF_SENSOR_BLOCKED:
                 logging.warning(
                     "TOY SENSOR BLOCKED, PLEASE REMOVE BLOCKING OBJECTS"
                 )
@@ -147,7 +147,10 @@ class ClawGame(Game):
             await self.button.on()
 
         # wait for toy and send result
-        await self.toy_sensor.wait_for_toy(TOY_WAIT_TIME)
+        game_won = await self.toy_sensor.toy_detected(TOY_WAIT_TIME)
+        score = 1 if game_won else 0
+        self.io.send_score(score=score, final_score=True)
+        self.previous_game_won = game_won
 
         if USE_JOYSTICK_SPLITTER:
             # enable physical joystick
