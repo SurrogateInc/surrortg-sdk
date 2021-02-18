@@ -1,8 +1,27 @@
 from surrortg import Game
+from surrortg.inputs import Switch
 from games.ninswitch.ns_gamepad_serial import NSGamepadSerial, NSButton, NSDPad
 from games.ninswitch.ns_switch import NSSwitch
 from games.ninswitch.ns_dpad_switch import NSDPadSwitch
 from games.ninswitch.ns_joystick import NSJoystick
+import asyncio
+import logging
+import pigpio
+
+pigpio.exceptions = False
+pi = pigpio.pi()
+nsg_reset = 22
+ON = 0
+OFF = 1
+
+
+async def reset_trinket():
+    pi.write(nsg_reset, ON)
+    logging.info(f"\t TRINKET_RESET down")
+    await asyncio.sleep(0.5)
+    pi.write(nsg_reset, OFF)
+    logging.info(f"\t... TRINKET_RESET up")
+    await asyncio.sleep(2)
 
 
 class NinSwitchSimpleGame(Game):
@@ -10,6 +29,7 @@ class NinSwitchSimpleGame(Game):
         # init controls
         self.nsg = NSGamepadSerial()
         self.nsg.begin()
+
         self.io.register_inputs(
             {
                 "left_joystick": NSJoystick(
@@ -43,6 +63,9 @@ class NinSwitchSimpleGame(Game):
     here you could do something with
     on_config, on_prepare, on_pre_game, on_countdown, on_start...
     """
+
+    async def on_prepare(self):
+        await reset_trinket()
 
     async def on_finish(self):
         self.io.disable_inputs()
