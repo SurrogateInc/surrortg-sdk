@@ -59,17 +59,16 @@ class GameIO:
 
         Input names must be unique.
         If the same input name already exists, error is risen.
-
         The inputs can be registered only during on_init.
 
         :param inputs: A dictionary of input device names and objects.
         :type inputs: dict{String: Input}
-        :raises RuntimeError if input names are not unique
         :param admin: Describes if the input is for admin use only,
-         defaults to False
+            defaults to False
         :type admin: bool, optional
         :param bindable: Describes if the input can be bound to user
-        input. Defaults to True.
+            input. Defaults to True.
+        :raises RuntimeError: if input names are not unique
         :raises RuntimeError: if called outside on_init
         """
         if not self._can_register_inputs:
