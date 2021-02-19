@@ -14,7 +14,7 @@ class UdpCar(UdpBot):
     :param steering_mult: multiplier for steering value, defaults to 1.0
     :type steering_mult: float, optional
     :param repeat_commands: defines if commands should be repeated,
-    defaults to False
+        defaults to False
     :type repeat_commands: bool, optional
     """
 

@@ -1,8 +1,8 @@
 
 
-=====
+==========
 Admin Page
-=====
+==========
 
 This document explains how to use a surrogate.tv game dashboard and game settings pages. Every time a game is created on surrogate.tv 
 the game creator automatically gets these pages available for their access.

@@ -22,7 +22,7 @@ which can be implemented by the game creator, if necessary. None of the states
 are strictly necessary to implement by the creator: the game loop will run without
 any of the handlers implemented. However, you should at least register your inputs
 at on_init in order to control your game. You can find examples of how to implement
-all of the state handlers, in `game_templates` and `games` folders.
+all of the state handlers, in `game_templates` and `games` directories.
 
 Next we will give a more detailed explanation of the different states.
 

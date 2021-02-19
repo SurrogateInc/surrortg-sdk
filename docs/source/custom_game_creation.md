@@ -363,8 +363,8 @@ it into your use case.
 
 ## Further reading
 
-You can find other templates in the `game_templates` and `game` folders. You should
-also take a look at [game_development](game_development) and [ready examples](ready_games).
+You can find other templates in the `game_templates` and `game` directories.
+You should also take a look at [game_development](game_development) and [ready examples](ready_games).
 
 The [inputs](modules/surrortg.inputs.html#surrortg-inputs) subpackage contains also
 many other types of inputs, such as

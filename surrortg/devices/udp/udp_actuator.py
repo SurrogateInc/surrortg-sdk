@@ -13,7 +13,7 @@ class UdpActuator(LinearActuator, UdpInput):
     :param multiplier: multiplier of the value, defaults to 1.0
     :type multiplier: float, optional
     :param repeat_commands: defines if commands should be repeated,
-    defaults to False
+        defaults to False
     :type repeat_commands: bool, optional
     """
 

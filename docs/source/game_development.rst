@@ -1,9 +1,5 @@
-
-.. _target_title:
-
-=====
 Game Development
-=====
+================
 
 .. toctree::
    :maxdepth: 4

@@ -225,7 +225,7 @@ class MultiSeatMessageRouter:
         :param dev: Input device
         :type dev: Input
         :param admin: Describes if the input is for admin use only,
-        defaults to False
+            defaults to False
         :type admin: bool, optional
         """
         self.router.register_input(dev_id, dev, admin)

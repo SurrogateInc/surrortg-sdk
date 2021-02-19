@@ -151,8 +151,8 @@ class Game:
             to True
         :type start_games_inputs_enabled: bool, optional
         :param robot_type: Decides whether the python unit is a controllable
-        robot unit, or a logical unit. Defaults to "robot", for logical,
-        use "logical". Logical robot type is for advanced use only.
+            robot unit, or a logical unit. Defaults to "robot", for logical,
+            use "logical". Logical robot type is for advanced use only.
         :type robot_type: string, optional
         """
 

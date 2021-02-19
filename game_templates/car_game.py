@@ -71,7 +71,7 @@ class PwmActuator(LinearActuator):
         cycled off-on once (release and press key).
 
         :param inc: Amount to increase the current_delta value
-        type: inc: int"""
+        :type: inc: int"""
         if (self.current_delta + inc) <= self.delta_max:
             self.current_delta += inc
             logging.info(
