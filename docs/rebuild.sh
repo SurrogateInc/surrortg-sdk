@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 SCRIPT_PATH=$(dirname `which $0`)
 
 cd $SCRIPT_PATH
