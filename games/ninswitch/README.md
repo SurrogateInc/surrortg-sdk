@@ -145,6 +145,10 @@ Then run the game until the point your detectable object is seen and stop the ga
 You should then revert `SAVE_FRAMES` back to `False` to increase the frame processing
 rate and prevent filling up the SD-card.
 
+Alternatively, you can use the input `capture_frame` while running the game
+through the site (needs to be bound in dashboard). to capture individual
+frames as opposed to persistently capturing frames.
+
 Assuming you have a working ssh connection, these images can be copied from the
 raspi to current directory on your PC with scp:  
 `scp -r <USER>@<RASPI_ADDRESS>:/opt/srtg-python/imgs/ .`
@@ -202,3 +206,18 @@ async def main():
 
 asyncio.run(main())
 ```
+
+## Setting up with Reset Pin
+
+Trinket M0's have been found to be quite tempermental with some controls.
+It is possible to add reset functionality so it can be reset on a button
+press and between every round of your game. Continue using the `game_simple.py`
+if you decide to use the reset pin.
+
+### Hardware Addendum
+
+During the wiring, add a new jumper to the Trinket and Pi:
+   **RST** to **GPIO22**
+
+*NOTE* - Any unused GPIO pin on the pi can be used but will require updating
+the script (Number in the script will be the GPIO number, not pin number).

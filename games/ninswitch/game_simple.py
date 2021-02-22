@@ -1,5 +1,4 @@
 from surrortg import Game
-from surrortg.inputs import Switch
 from games.ninswitch.ns_gamepad_serial import NSGamepadSerial, NSButton, NSDPad
 from games.ninswitch.ns_switch import NSSwitch
 from games.ninswitch.ns_dpad_switch import NSDPadSwitch

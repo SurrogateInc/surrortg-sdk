@@ -3,6 +3,7 @@ import logging
 import cv2
 from pathlib import Path
 from surrortg import Game
+from surrortg.inputs import Switch
 from surrortg.image_recognition import AsyncVideoCapture, get_pixel_detector
 from games.ninswitch.ns_gamepad_serial import NSGamepadSerial, NSButton, NSDPad
 from games.ninswitch.ns_switch import NSSwitch
@@ -13,8 +14,10 @@ from games.ninswitch.ns_joystick import NSJoystick
 cv2.setNumThreads(1)
 
 # image rec
-SAVE_FRAMES = False
+SAVE_ALL_FRAMES = False
 SAVE_DIR_PATH = "/opt/srtg-python/imgs"
+global save_individual_fame
+save_individual_fame = False
 
 # sample detectable
 # ((x, y), (r, g, b))
@@ -30,6 +33,18 @@ FLAG_PIXELS = [
     ((222, 669), (0, 0, 0)),
     ((201, 650), (2, 2, 4)),
 ]
+
+
+class CaptureScreen(Switch):
+    async def on(self, seat=0):
+        global save_individual_fame
+        save_individual_fame = True
+        logging.info(f"\t{seat} | Capturing_Frames down")
+
+    async def off(self, seat=0):
+        global save_individual_fame
+        save_individual_fame = False
+        logging.info(f"\t{seat} | Capturing_Frames up")
 
 
 class NinSwitchImageRecGame(Game):
@@ -63,6 +78,7 @@ class NinSwitchImageRecGame(Game):
                 "right_stick": NSSwitch(self.nsg, NSButton.RIGHT_STICK),
                 "home": NSSwitch(self.nsg, NSButton.HOME),
                 "capture": NSSwitch(self.nsg, NSButton.CAPTURE),
+                "capture_frame": CaptureScreen(),
             },
         )
         # init image rec
@@ -70,9 +86,8 @@ class NinSwitchImageRecGame(Game):
         self.image_rec_task.add_done_callback(self.image_rec_done_cb)
 
         # init frame saving
-        if SAVE_FRAMES:
-            logging.info(f"SAVING FRAMES TO {SAVE_DIR_PATH}")
-            Path(SAVE_DIR_PATH).mkdir(parents=True, exist_ok=True)
+        logging.info(f"SAVING FRAMES TO {SAVE_DIR_PATH}")
+        Path(SAVE_DIR_PATH).mkdir(parents=True, exist_ok=True)
 
     """
     here you could do something with
@@ -109,7 +124,7 @@ class NinSwitchImageRecGame(Game):
             # generic
             if i % 100 == 0:
                 logging.info("100 frames checked")
-            if SAVE_FRAMES:
+            if SAVE_ALL_FRAMES or save_individual_fame:
                 cv2.imwrite(f"{SAVE_DIR_PATH}/{i}.jpg", frame)
                 logging.info(f"SAVED {i}.jpg")
             i += 1
