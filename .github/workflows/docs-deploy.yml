@@ -75,9 +75,11 @@ jobs:
             docsCfAlias=${{ env.DOCS_CF_ALIAS }},
             certificateArn=${{ secrets.CERTIFICATE_ARN }}
 
-      - name: Build and upload docs
+      - name: Build docs
         run: |
           pip install pipenv
           pipenv sync --dev
           pipenv run docs
-          aws s3 sync ./docs/build/html s3://${{ env.BUCKET_NAME }} --delete
+      
+      - name: Upload docs
+        run: aws s3 sync ./docs/build/html s3://${{ env.BUCKET_NAME }} --delete

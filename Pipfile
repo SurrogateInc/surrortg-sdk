@@ -8,6 +8,7 @@ pre-commit = "*"
 myst-parser = "==0.13.5"
 sphinx = "==3.1.1"
 sphinx-rtd-theme = "==0.4.3"
+numpy = "*"
 
 [packages]
 surrortg = {editable = true, path = "."}

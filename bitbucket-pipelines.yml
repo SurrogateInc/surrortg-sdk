@@ -29,6 +29,12 @@ definitions:
         script:
           - pip install codespell==v2.0.0 # if version changed, change also on .pre-commit-config.yaml and .github/workflows/main.yml!
           - codespell --ignore-words=.codespell-ignore .
+    - step: &docs-test
+        name: docs-test
+        script:
+          - pip install pipenv
+          - pipenv sync --dev
+          - pipenv run docs
     - step: &github-sync
         name: github-sync
         script:
@@ -43,6 +49,7 @@ pipelines:
       - step: *flake8
       - step: *markdownlint
       - step: *codespell
+      - step: *docs-test
 
   branches:
     main: # If tests/formatting fails, does not push to Github.
@@ -52,4 +59,5 @@ pipelines:
         - step: *flake8
         - step: *markdownlint
         - step: *codespell
+        - step: *docs-test
       - step: *github-sync
