@@ -36,10 +36,12 @@ jobs:
           python-version: '3.7'
 
       - name: Install dependencies
-        run: pip install black==19.10b0 # if version changed, change also on .pre-commit-config.yaml and bitbucket-pipelines.yml! 
+        run: |
+          pip install pipenv
+          pipenv sync --dev
 
       - name: Run black 
-        run: black --check --diff --config=pyproject.toml . 
+        run: pipenv run black
 
   flake8:
     runs-on: ubuntu-latest
@@ -54,10 +56,12 @@ jobs:
           python-version: '3.7'
 
       - name: Install dependencies
-        run: pip install flake8==3.7.9 # if version changed, change also on .pre-commit-config.yaml and bitbucket-pipelines.yml! 
+        run: |
+          pip install pipenv
+          pipenv sync --dev
 
       - name: Run flake8 
-        run: flake8 --config=.flake8
+        run: pipenv run flake8
 
   markdownlint:
     runs-on: ubuntu-latest
@@ -90,9 +94,11 @@ jobs:
           python-version: '3.7'
 
       - name: Install dependencies
-        run: pip install codespell==v2.0.0 # if version changed, change also on .pre-commit-config.yaml and bitbucket-pipelines.yml!
+        run: |
+          pip install pipenv
+          pipenv sync --dev
 
       - name: Run codespell
-        run: codespell --ignore-words=.codespell-ignore .
+        run: pipenv run codespell
 
 
