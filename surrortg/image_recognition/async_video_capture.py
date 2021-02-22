@@ -36,7 +36,7 @@ class VideoCaptureProcess:
     :type conn: multiprocessing.connection.Connection
     """
 
-    def __init__(self, source, conn, apiPreference):
+    def __init__(self, source, conn, apiPreference):  # noqa: N803
         self._source = source
         self._conn = conn
         self._apiPreference = apiPreference
@@ -108,7 +108,7 @@ class AsyncVideoCapture:
         read_timeout=2,
         release_timeout=2,
         process_class=VideoCaptureProcess,
-        apiPreference=cv2.CAP_V4L2,
+        apiPreference=cv2.CAP_V4L2,  # noqa: N803
     ):
         """Factory method for AsyncVideoCapture, use this instead of __init__
 

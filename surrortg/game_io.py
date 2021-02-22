@@ -50,8 +50,8 @@ class GameIO:
         # NOTE: this is called only after game.on_init has been awaited
         # so it should have the necessary input_bindings
         bindings = []
-        for commandId, obj in self.input_bindings.items():
-            bindings.append({"commandId": commandId, **obj})
+        for command_id, obj in self.input_bindings.items():
+            bindings.append({"commandId": command_id, **obj})
         self._send_threadsafe("robotInputs", payload=bindings)
 
     def register_inputs(self, inputs, admin=False, bindable=True):

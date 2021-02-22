@@ -69,10 +69,10 @@ class ClawJoystick(Joystick):
 
     def move(self, direction):
         logging.debug(f"Moving {direction}")
-        GPIO_cmds = DIRECTION_CMD_MAP[direction]
-        for off_pin in GPIO_cmds["off"]:
+        gpio_cmds = DIRECTION_CMD_MAP[direction]
+        for off_pin in gpio_cmds["off"]:
             self.pi.write(off_pin, JOYSTICK_STATE_OFF)
-        for on_pin in GPIO_cmds["on"]:
+        for on_pin in gpio_cmds["on"]:
             self.pi.write(on_pin, JOYSTICK_STATE_ON)
 
     async def reset(self, seat=0):
