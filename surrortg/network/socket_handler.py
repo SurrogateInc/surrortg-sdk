@@ -272,20 +272,30 @@ class LocalSocketHandler:
             self.connected = False
             return
 
+        msg = None
         try:
             parsed_data = self._parse_data(data)
             if parsed_data is not None:
                 try:
                     msg = Message.from_dict(parsed_data)
-                    return await self.message_handler(msg)
                 except MessageValidationError as e:
                     logging.warning(f"Message validation failed: {e}")
-        except asyncio.CancelledError:
-            raise
         except Exception:
             logging.warning(
                 f"Failed to parse message: {data}\n\n{traceback.format_exc()}"
             )
+
+        if msg is not None:
+            msg_task = asyncio.create_task(self.message_handler(msg))
+            msg_task.add_done_callback(self.msg_task_done_cb)
+
+    def msg_task_done_cb(self, fut):
+        if not fut.cancelled() and fut.exception() is not None:
+            e = fut.exception()
+            logging.error(
+                "".join(traceback.format_exception(None, e, e.__traceback__))
+            )
+            sys.exit(1)
 
     async def connect(self):
         """Connects to the socket in an infinite loop with sleep"""
