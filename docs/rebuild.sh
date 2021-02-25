@@ -14,7 +14,7 @@ cp ../games/ninswitch/README.md source/modules/ninswitch.md
 
 # run apidoc
 sphinx-apidoc -o source/modules/ --templatedir source/apidoc_templates/  --no-toc --no-headings --maxdepth 1 ../surrortg
-sphinx-apidoc -o source/modules  --templatedir source/example_templates/ --tocfile game_templates --no-headings --maxdepth 1 ../game_templates ../game_templates/*_game.py
+sphinx-apidoc -o source/modules/  --templatedir source/example_templates/ --tocfile game_templates --no-headings --maxdepth 1 ../game_templates
 # change the apidoc title with sed
 sed -i '1s/surrortg/SDK reference/' source/modules/surrortg.rst
 sed -i '2s/========/=============/' source/modules/surrortg.rst

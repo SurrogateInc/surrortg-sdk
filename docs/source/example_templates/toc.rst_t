@@ -3,7 +3,5 @@
 {% for docname in docnames %}
 {{ docname }}
 {% for i in range(docname|length) %}-{% endfor%}
-.. automodule:: game_templates.{{docname}}
-    :members:
-    :show-inheritance:
+.. include:: {{ docname }}.rst
 {% endfor %}

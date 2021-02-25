@@ -71,8 +71,9 @@ class SimpleGame(Game):
 # And now you are ready to play!
 if __name__ == "__main__":
     SimpleGame().run()
+
 # More info about:
-# Game: <url>
-# Switch: <url>
-# Inputs: <url>
-# More examples and the full documentation: <url>
+# Game: https://docs.surrogate.tv/modules/surrortg.html#module-surrortg.game # noqa: E501
+# Switch: https://docs.surrogate.tv/modules/surrortg.inputs.html#surrortg.inputs.switch.Switch # noqa: E501
+# Inputs: https://docs.surrogate.tv/modules/surrortg.inputs.html
+# More examples and the full documentation: https://docs.surrogate.tv/game_development.html # noqa: E501

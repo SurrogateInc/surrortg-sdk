@@ -162,9 +162,8 @@ class CarGame(Game):
 if __name__ == "__main__":
     CarGame().run()
 
-
 # More info about:
-# Game: <url>
-# LinearActuator: <url>
-# Car: <url>
-# More examples and the full documentation: <url>
+# Game: https://docs.surrogate.tv/modules/surrortg.html#module-surrortg.game # noqa: E501
+# LinearActuator: https://docs.surrogate.tv/modules/surrortg.inputs.html#surrortg.inputs.linear_actuator.LinearActuator # noqa: E501
+# Inputs: https://docs.surrogate.tv/modules/surrortg.inputs.html
+# More examples and the full documentation: https://docs.surrogate.tv/game_development.html # noqa: E501
