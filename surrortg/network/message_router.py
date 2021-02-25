@@ -23,7 +23,7 @@ class InputBinding:
 @dataclass
 class SeatStatus:
     enabled: bool
-    clientType: str
+    clientType: str  # noqa: N815
 
 
 class MessageRouter:

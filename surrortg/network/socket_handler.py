@@ -34,7 +34,7 @@ class Message:
     src: Optional[str] = None
     seat: Optional[int] = 0
     payload: Optional[Dict[Any, Any]] = field(default_factory=dict)
-    isAdmin: Optional[bool] = False
+    isAdmin: Optional[bool] = False  # noqa: N815
 
     def __post_init__(self):
         self._validate("event", self.event, str)

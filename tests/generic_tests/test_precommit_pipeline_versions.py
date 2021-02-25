@@ -1,5 +1,6 @@
 import unittest
 import yaml
+import toml
 
 
 class BlackFlake8VersionsTest(unittest.TestCase):
@@ -10,22 +11,22 @@ class BlackFlake8VersionsTest(unittest.TestCase):
 
     def test_black_version_consistency(self):
         precommit_ver = self.get_precommit_ver("https://github.com/ambv/black")
-        bitbucket_ver = self.get_bitbucket_ver("black")
-        self.assertEqual(precommit_ver, bitbucket_ver)
+        pipfile_ver = self.get_pipfile_ver("black")
+        self.assertEqual(precommit_ver, pipfile_ver)
 
     def test_flake8_version_consistency(self):
         precommit_ver = self.get_precommit_ver(
             "https://gitlab.com/pycqa/flake8"
         )
-        bitbucket_ver = self.get_bitbucket_ver("flake8")
-        self.assertEqual(precommit_ver, bitbucket_ver)
+        pipfile_ver = self.get_pipfile_ver("flake8")
+        self.assertEqual(precommit_ver, pipfile_ver)
 
     def test_codespell_version_consistency(self):
         precommit_ver = self.get_precommit_ver(
             "https://github.com/codespell-project/codespell"
         )
-        bitbucket_ver = self.get_bitbucket_ver("codespell")
-        self.assertEqual(precommit_ver, bitbucket_ver)
+        pipfile_ver = self.get_pipfile_ver("codespell")
+        self.assertEqual(precommit_ver, pipfile_ver)
 
     def test_markdownlint_version_consistency(self):
         precommit_ver = self.get_precommit_ver(
@@ -63,3 +64,6 @@ class BlackFlake8VersionsTest(unittest.TestCase):
                 f"Step name {step_name} not found from bitbucket-pipelines.yml"
             )
         return ver
+
+    def get_pipfile_ver(self, package):
+        return toml.load("Pipfile")["dev-packages"][package][2:]

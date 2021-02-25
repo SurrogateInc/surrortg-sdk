@@ -5,10 +5,14 @@ verify_ssl = true
 
 [dev-packages]
 pre-commit = "*"
+numpy = "*"
 myst-parser = "==0.13.5"
 sphinx = "==3.1.1"
 sphinx-rtd-theme = "==0.4.3"
-numpy = "*"
+flake8 = "==3.7.9" # if version changed, change also on .pre-commit-config.yaml
+black = "==19.10b0" # if version changed, change also on .pre-commit-config.yaml
+codespell = "==v2.0.0" # if version changed, change also on .pre-commit-config.yaml
+pep8-naming = "==0.11.1"
 
 [packages]
 surrortg = {editable = true, path = "."}
@@ -17,10 +21,12 @@ surrortg = {editable = true, path = "."}
 tests = "python tests/main.py"
 black = "black --check --diff --config=pyproject.toml ."
 flake8 = "flake8 --config=.flake8"
+codespell = "codespell --ignore-words=.codespell-ignore --skip='./docs/build,./docs/source/modules' ."
 pipeline = """bash -c '\
            echo tests: && pipenv run tests && \
            echo black: && pipenv run black && \
-           echo flake8: && pipenv run flake8 \
+           echo flake8: && pipenv run flake8 && \
+           echo codespell: && pipenv run codespell \
            '"""
 docs = "docs/rebuild.sh"
 pdf-docs = "docs/rebuild_pdf.sh"

@@ -191,7 +191,7 @@ class NSGamepadSerial:
             self.write()
         return
 
-    def releaseAll(self):
+    def releaseAll(self):  # noqa: N802
         """Release all buttons"""
         with self.thread_lock:
             self.my_buttons = 0
@@ -205,28 +205,28 @@ class NSGamepadSerial:
             self.write()
         return
 
-    def leftXAxis(self, position):
+    def leftXAxis(self, position):  # noqa: N802
         """Move left stick X axis 0..128..255"""
         with self.thread_lock:
             self.left_x_axis = position
             self.write()
         return
 
-    def leftYAxis(self, position):
+    def leftYAxis(self, position):  # noqa: N802
         """Move left stick Y axis 0..128..255"""
         with self.thread_lock:
             self.left_y_axis = position
             self.write()
         return
 
-    def rightXAxis(self, position):
+    def rightXAxis(self, position):  # noqa: N802
         """Move right stick X axis 0..128..255"""
         with self.thread_lock:
             self.right_x_axis = position
             self.write()
         return
 
-    def rightYAxis(self, position):
+    def rightYAxis(self, position):  # noqa: N802
         """Move right stick Y axis 0..128..255"""
         with self.thread_lock:
             self.right_y_axis = position
@@ -254,7 +254,7 @@ class NSGamepadSerial:
                 return 1  # North East
             return 3  # South East
 
-    def dPadXAxis(self, position):
+    def dPadXAxis(self, position):  # noqa: N802
         """Move right stick X axis 0..128..255"""
         if position < 0 or position > 255:
             position = 128
@@ -264,7 +264,7 @@ class NSGamepadSerial:
             self.write()
         return
 
-    def dPadYAxis(self, position):
+    def dPadYAxis(self, position):  # noqa: N802
         """Move right stick Y axis 0..128..255"""
         if position < 0 or position > 255:
             position = 128
@@ -274,7 +274,7 @@ class NSGamepadSerial:
             self.write()
         return
 
-    def dPad(self, position):
+    def dPad(self, position):  # noqa: N802
         """Move directional pad (0..7, 15)"""
         if position < 0 or position > 7:
             position = 15

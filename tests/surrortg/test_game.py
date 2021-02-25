@@ -23,7 +23,7 @@ class GameTest(unittest.TestCase):
             """Modded game that raises RuntimeError instead of
             connecting to GE"""
 
-            async def raiseError(self):
+            async def raise_error(self):
                 raise RuntimeError
 
             def run(self):
@@ -32,7 +32,7 @@ class GameTest(unittest.TestCase):
                     socketio_logging_level=logging.WARNING,
                     robot_type="robot",
                 )
-                self.io._socket_handler.run = self.raiseError
+                self.io._socket_handler.run = self.raise_error
                 self._run()
                 self._post_run()
 
@@ -55,7 +55,7 @@ class GameTest(unittest.TestCase):
         """
 
         # helper methods for sending INT and TERM signals to the Game
-        PID = os.getpid()
+        pid = os.getpid()
 
         def send_signal_when_running(
             signal,
@@ -80,7 +80,7 @@ class GameTest(unittest.TestCase):
             while game._run_not_called() and tries < 10:
                 time.sleep(0.1)
                 tries = tries + 1
-            os.kill(PID, signal)
+            os.kill(pid, signal)
             if post_signal_action is not None:
                 time.sleep(0.05)
                 post_signal_action(post_signal_action_param)
