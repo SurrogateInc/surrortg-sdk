@@ -73,7 +73,7 @@ if __name__ == "__main__":
 
 
 # More info about:
-# Game: <url>
-# Joystick: <url>
-# Inputs: <url>
-# More examples and the full documentation: <url>
+# Game: https://docs.surrogate.tv/modules/surrortg.html#module-surrortg.game # noqa: E501
+# Joystick: https://docs.surrogate.tv/modules/surrortg.inputs.html#module-surrortg.inputs.joystick # noqa: E501
+# Inputs: https://docs.surrogate.tv/modules/surrortg.inputs.html
+# More examples and the full documentation: https://docs.surrogate.tv/game_development.html # noqa: E501
