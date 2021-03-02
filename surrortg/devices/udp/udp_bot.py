@@ -99,8 +99,11 @@ class UdpBot:
             with open(set_file_name, "r") as f:
                 set_num = int(f.read())
         except FileNotFoundError:
-            logging.warning("Set file not found!\n")
-            raise
+            logging.warning(
+                f"Set file not found from {set_file_name}! "
+                f"Defaulting set to 0"
+            )
+            set_num = 0
         except ValueError:
             logging.warning("Failed to cast set number from file to int")
             raise
