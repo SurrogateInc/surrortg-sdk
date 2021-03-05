@@ -1,6 +1,6 @@
 import asyncio
 import logging
-
+import struct
 from .udp_protocol import open_remote_endpoint
 
 BOT_UDP_PORT = 31337
@@ -14,11 +14,12 @@ class UdpBot:
         self.inputs = {}
         self.bots = {}
         self.endpoints = {}
+        self.bot_listeners_tasks = {}
         self.current_set = 0
         self._loop = asyncio.get_running_loop()
 
     async def handle_config(  # noqa: C901
-        self, ge_config, local_bot_config={},
+        self, ge_config, local_bot_config={}, bot_listener_cb=None,
     ):
         """Handle robot configuration
 
@@ -27,6 +28,9 @@ class UdpBot:
         :param local_bot_config: Local configuration for bots that maps seats
             to bot addresses, defaults to an empty dict
         :type local_bot_config: dict, optional
+        :param bot_listener_cb: This is executed when udp message is received
+            from a bot, defaults to None. Must take parameters seat and data.
+        :type bot_listener_cb: function, optional
         :return: Current set and bots in current set, mapped by seats
         :rtype: (int, dict)
         """
@@ -92,6 +96,13 @@ class UdpBot:
             else:
                 self.bots[seat]["custom"] = {"address": addr}
 
+        # Register listener tasks for all endpoints if callback is given
+        if bot_listener_cb is not None:
+            for seat, endpoint in self.endpoints.items():
+                self.bot_listeners_tasks[seat] = asyncio.create_task(
+                    self._receive_udp_for_seat(seat, endpoint, bot_listener_cb)
+                )
+
         for input_impl in self.inputs.values():
             input_impl.set_endpoints(self.endpoints)
 
@@ -155,9 +166,13 @@ class UdpBot:
         self.inputs.update(new_input)
 
     async def shutdown(self):
-        """Resets all registered inputs for all bots,
-        and then closes all endpoints
+        """Resets all registered inputs for all bots
+
+        Also cancels registered bot listener tasks
+        and closes all endpoints
         """
+        for listener_task in self.bot_listeners_tasks.values():
+            listener_task.cancel()
 
         for seat, endpoint in self.endpoints.items():
             for input_impl in self.inputs.values():
@@ -165,3 +180,23 @@ class UdpBot:
                     input_impl.shutdown(seat), self._loop
                 )
             endpoint.close()
+
+    async def _receive_udp_for_seat(self, seat, endpoint, on_receive_cb):
+        """Receives udp messages from specific bot
+
+        :param seat: Robot seat
+        :type seat: int
+        :param endpoint: Robot endpoint
+        :type endpoint: Endpoint
+        :param on_receive_cb: Function to call when message is received,
+            must take seat, cmd_id and cmd_val as parameters
+        :type on_receive_cb: function
+        """
+        logging.info(f"Receiving messages for seat {seat}")
+        try:
+            while True:
+                data = await endpoint.receive()
+                cmd_id, cmd_val = struct.unpack("BB", data)
+                await on_receive_cb(seat, cmd_id, cmd_val)
+        except asyncio.CancelledError:
+            logging.info(f"Udp receiver for seat {seat} cancelled")
