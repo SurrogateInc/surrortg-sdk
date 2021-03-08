@@ -10,10 +10,6 @@ from games.claw.config import (
 )
 
 
-# time to keep toy reset solenoid in fired state
-SOLENOID_FIRE_TIME = 0.5
-
-
 class ClawSolenoid:
     def __init__(self, pi):
         self._pi = pi
@@ -23,11 +19,12 @@ class ClawSolenoid:
 
     async def fire(self):
         self._pi.write(SOLENOID_FIRE_PIN, pigpio.LOW)
-        await asyncio.sleep(SOLENOID_FIRE_TIME)
+        await asyncio.sleep(0.5)
         self._pi.write(SOLENOID_FIRE_PIN, pigpio.HIGH)
         logging.info("Solenoid fired.")
 
     async def close(self):
+        # Disable solenoid power supply
         self._pi.write(SOLENOID_PSU_PIN, pigpio.LOW)
-        # discharge capacitor
+        # Discharge capacitor
         await self.fire()

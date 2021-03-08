@@ -57,10 +57,10 @@ class ClawJoystick(Joystick):
     def __init__(self, pi):
         self.set_min_amount(MIN_AMOUNT)
         self.pi = pi
-        # set out pins
+        # Set output pins
         for dir_pin in DIR_PINS:
             self.pi.set_mode(dir_pin, pigpio.OUTPUT)
-        # get into stopped state
+        # Stop claw movement
         self.move(Directions.MIDDLE)
 
     async def handle_coordinates(self, x, y, seat=0):

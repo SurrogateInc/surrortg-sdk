@@ -35,10 +35,10 @@ class ClawToySensor:
     async def _wait_for_toy(self):
         try:
             while True:
-                # toy found if sensor is blocked
+                # Toy found if sensor is blocked
                 if self.is_blocked():
                     break
-                # give wait_for() time to update
+                # Give wait_for() time to update
                 await asyncio.sleep(0)
         except asyncio.CancelledError:
             pass
@@ -47,7 +47,7 @@ class ClawToySensor:
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 
-    # connect to pigpio daemon
+    # Connect to pigpio daemon
     pi = pigpio.pi()
     if not pi.connected:
         raise RuntimeError("Could not connect to pigpio daemon")

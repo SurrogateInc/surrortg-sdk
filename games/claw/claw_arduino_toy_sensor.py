@@ -27,7 +27,7 @@ class ClawArduinoToySensor:
     async def detect_toy(self):
         try:
             with serial.Serial(ARDUINO_PATH) as ser:
-                # log the smallest sensor setup value
+                # Log the smallest sensor setup value
                 ser.timeout = 2
                 try:
                     smallest_measurement = int(self._get_line(ser))
@@ -42,19 +42,19 @@ class ClawArduinoToySensor:
                         while True:
                             await asyncio.sleep(1)
                 except asyncio.CancelledError:
-                    raise  # toy detection cancelled
+                    raise  # Toy detection cancelled
                 except Exception as e:
                     logging.info(
                         f"smallest_measurement parsing failed: {e}, "
                         "maybe just missed first line or timeouted"
                     )
 
-                # wait for the toy
+                # Wait for the toy
                 ser.timeout = 0.1
                 while True:
                     if self._get_line(ser) == "D":
                         break
-                    # give time for wait_for to update
+                    # Give time for wait_for to update
                     await asyncio.sleep(0.1)
 
         except serial.SerialException as e:
