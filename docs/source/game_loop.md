@@ -75,7 +75,8 @@ by default, but they can be enabled to allow players to control the game before
 it officially begins.
 
 Intro video can be configured to play during this state from the admin panel.
-Note that the intro video will be cut short if every robot calls self.io.send_pre_game_ready().
+Note that the intro video can be cut short if preGame min length has not been
+set to match the intro video length.
 
 The return value of this method will be set as the self.\_current_seat value
 (which is an integer).
