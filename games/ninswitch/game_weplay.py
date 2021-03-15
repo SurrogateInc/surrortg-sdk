@@ -1,8 +1,17 @@
+import asyncio
+import logging
+from pathlib import Path
+
+import cv2
+import pigpio
+
 from surrortg import Game
+from surrortg.image_recognition import AsyncVideoCapture, get_pixel_detector
 from games.ninswitch.ns_gamepad_serial import NSGamepadSerial, NSButton, NSDPad
 from games.ninswitch.ns_switch import NSSwitch
 from games.ninswitch.ns_dpad_switch import NSDPadSwitch
 from games.ninswitch.ns_joystick import NSJoystick
+from games.ninswitch.trinket_reset_switch import TrinketResetSwitch
 from games.ninswitch.weplay_switches import (
     WeplayMinusSwitch,
     WeplayBSwitch,
@@ -11,12 +20,7 @@ from games.ninswitch.weplay_switches import (
     WeplayTriggerSwitch,
     single_press,
 )
-from surrortg.image_recognition import AsyncVideoCapture, get_pixel_detector
-from pathlib import Path
-import logging
-import pigpio
-import asyncio
-import cv2
+from games.ninswitch.config import RESET_TRINKET_EACH_LOOP
 
 
 # limit the processor use
@@ -158,20 +162,17 @@ AUTO_ACTIONS = {
 
 class NinSwitchWeplayGame(Game):
     async def on_init(self):
-        # init controls
         # connect to pigpio daemon
-
         self.pi = pigpio.pi()
         if not self.pi.connected:
-            raise RuntimeError("Could not connect to pigpio")
+            raise RuntimeError("Could not connect to pigpio daemon")
 
-        # init joystick splitter, enable physical joystick by default
-        self.pi.set_mode(20, pigpio.OUTPUT)
-        self.pi.set_mode(21, pigpio.OUTPUT)
-        self.pi.write(20, 1)
-        self.pi.write(21, 1)
+        # init controls
         self.nsg = NSGamepadSerial()
         self.nsg.begin()
+        self.trinket_reset_switch = TrinketResetSwitch(self.pi)
+
+        # register player controls
         self.io.register_inputs(
             {
                 "left_joystick": NSJoystick(
@@ -204,6 +205,12 @@ class NinSwitchWeplayGame(Game):
                 "capture": NSSwitch(self.nsg, NSButton.CAPTURE),
             },
         )
+
+        # register admin controls
+        self.io.register_inputs(
+            {"trinket_reset": self.trinket_reset_switch}, admin=True,
+        )
+
         self.lock = asyncio.Lock()
 
         # create capture
@@ -247,12 +254,9 @@ class NinSwitchWeplayGame(Game):
                 i += 1
             logging.info("on_config: On Home, current game selected")
 
-        # reset the board
-        self.pi.write(20, 0)
-        self.pi.write(21, 0)
-        await asyncio.sleep(0.1)
-        self.pi.write(20, 1)
-        self.pi.write(21, 1)
+    async def on_prepare(self):
+        if RESET_TRINKET_EACH_LOOP:
+            await self.trinket_reset_switch.reset_trinket()
 
     async def on_start(self):
         # this somehow enables the board after the reset?
@@ -318,12 +322,14 @@ class NinSwitchWeplayGame(Game):
             logging.info("on_finish: On Home, current game selected")
 
     async def on_exit(self, reason, exception):
-        # end controls
+        # close controls
         self.nsg.end()
-        self.pi.stop()
+        self.trinket_reset_switch.close()
         # end image rec task
         await self.cap.release()
         self.image_rec_task.cancel()
+        # close the connection to pigpio daemon
+        self.pi.stop()
 
     async def is_home_current_selected(self):
         return self.has_home_current_game_selected(await self.cap.read())

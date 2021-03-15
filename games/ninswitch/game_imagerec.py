@@ -1,7 +1,10 @@
 import asyncio
 import logging
-import cv2
 from pathlib import Path
+
+import cv2
+import pigpio
+
 from surrortg import Game
 from surrortg.inputs import Switch
 from surrortg.image_recognition import AsyncVideoCapture, get_pixel_detector
@@ -9,6 +12,9 @@ from games.ninswitch.ns_gamepad_serial import NSGamepadSerial, NSButton, NSDPad
 from games.ninswitch.ns_switch import NSSwitch
 from games.ninswitch.ns_dpad_switch import NSDPadSwitch
 from games.ninswitch.ns_joystick import NSJoystick
+from games.ninswitch.trinket_reset_switch import TrinketResetSwitch
+from games.ninswitch.config import RESET_TRINKET_EACH_LOOP
+
 
 # limit the processor use
 cv2.setNumThreads(1)
@@ -49,9 +55,17 @@ class CaptureScreen(Switch):
 
 class NinSwitchImageRecGame(Game):
     async def on_init(self):
+        # connect to pigpio daemon
+        self.pi = pigpio.pi()
+        if not self.pi.connected:
+            raise RuntimeError("Could not connect to pigpio daemon")
+
         # init controls
         self.nsg = NSGamepadSerial()
         self.nsg.begin()
+        self.trinket_reset_switch = TrinketResetSwitch(self.pi)
+
+        # register player controls
         self.io.register_inputs(
             {
                 "left_joystick": NSJoystick(
@@ -81,6 +95,12 @@ class NinSwitchImageRecGame(Game):
                 "capture_frame": CaptureScreen(),
             },
         )
+
+        # register admin controls
+        self.io.register_inputs(
+            {"trinket_reset": self.trinket_reset_switch}, admin=True,
+        )
+
         # init image rec
         self.image_rec_task = asyncio.create_task(self.image_rec_main())
         self.image_rec_task.add_done_callback(self.image_rec_done_cb)
@@ -94,16 +114,23 @@ class NinSwitchImageRecGame(Game):
     on_config, on_prepare, on_pre_game, on_countdown, on_start...
     """
 
+    async def on_prepare(self):
+        if RESET_TRINKET_EACH_LOOP:
+            await self.trinket_reset_switch.reset_trinket()
+
     async def on_finish(self):
         self.io.disable_inputs()
         self.nsg.releaseAll()
 
     async def on_exit(self, reason, exception):
-        # end controls
+        # close controls
         self.nsg.end()
+        self.trinket_reset_switch.close()
         # end image rec task
         await self.cap.release()
         self.image_rec_task.cancel()
+        # close the connection to pigpio daemon
+        self.pi.stop()
 
     async def image_rec_main(self):
         # create capture

@@ -1,34 +1,27 @@
+import pigpio
+
 from surrortg import Game
 from games.ninswitch.ns_gamepad_serial import NSGamepadSerial, NSButton, NSDPad
 from games.ninswitch.ns_switch import NSSwitch
 from games.ninswitch.ns_dpad_switch import NSDPadSwitch
 from games.ninswitch.ns_joystick import NSJoystick
-import asyncio
-import logging
-import pigpio
-
-pigpio.exceptions = False
-pi = pigpio.pi()
-nsg_reset = 22
-ON = 0
-OFF = 1
-
-
-async def reset_trinket():
-    pi.write(nsg_reset, ON)
-    logging.info(f"\t TRINKET_RESET down")
-    await asyncio.sleep(0.5)
-    pi.write(nsg_reset, OFF)
-    logging.info(f"\t... TRINKET_RESET up")
-    await asyncio.sleep(2)
+from games.ninswitch.trinket_reset_switch import TrinketResetSwitch
+from games.ninswitch.config import RESET_TRINKET_EACH_LOOP
 
 
 class NinSwitchSimpleGame(Game):
     async def on_init(self):
+        # connect to pigpio daemon
+        self.pi = pigpio.pi()
+        if not self.pi.connected:
+            raise RuntimeError("Could not connect to pigpio daemon")
+
         # init controls
         self.nsg = NSGamepadSerial()
         self.nsg.begin()
+        self.trinket_reset_switch = TrinketResetSwitch(self.pi)
 
+        # register player controls
         self.io.register_inputs(
             {
                 "left_joystick": NSJoystick(
@@ -58,21 +51,30 @@ class NinSwitchSimpleGame(Game):
             },
         )
 
+        # register admin controls
+        self.io.register_inputs(
+            {"trinket_reset": self.trinket_reset_switch}, admin=True,
+        )
+
     """
     here you could do something with
     on_config, on_prepare, on_pre_game, on_countdown, on_start...
     """
 
     async def on_prepare(self):
-        await reset_trinket()
+        if RESET_TRINKET_EACH_LOOP:
+            await self.trinket_reset_switch.reset_trinket()
 
     async def on_finish(self):
         self.io.disable_inputs()
         self.nsg.releaseAll()
 
     async def on_exit(self, reason, exception):
-        # end controls
+        # close controls
         self.nsg.end()
+        self.trinket_reset_switch.close()
+        # close the connection to pigpio daemon
+        self.pi.stop()
 
 
 if __name__ == "__main__":

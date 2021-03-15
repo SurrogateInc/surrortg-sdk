@@ -1,15 +1,21 @@
 import asyncio
 import logging
-import cv2
 from time import time
 from pathlib import Path
+
+import cv2
+import pigpio
+
 from surrortg import Game
 from surrortg.image_recognition import AsyncVideoCapture, get_pixel_detector
 from games.ninswitch.ns_gamepad_serial import NSGamepadSerial, NSButton, NSDPad
 from games.ninswitch.ns_switch import NSSwitch
 from games.ninswitch.ns_dpad_switch import NSDPadSwitch
 from games.ninswitch.ns_joystick import NSJoystick
+from games.ninswitch.trinket_reset_switch import TrinketResetSwitch
 from games.ninswitch.ocr import get_time_ms
+from games.ninswitch.config import RESET_TRINKET_EACH_LOOP
+
 
 # limit the processor use
 cv2.setNumThreads(1)
@@ -159,9 +165,17 @@ POS_4_PIXELS = [
 
 class NinSwitchIRLKart(Game):
     async def on_init(self):
+        # connect to pigpio daemon
+        self.pi = pigpio.pi()
+        if not self.pi.connected:
+            raise RuntimeError("Could not connect to pigpio daemon")
+
         # init controls
         self.nsg = NSGamepadSerial()
         self.nsg.begin()
+        self.trinket_reset_switch = TrinketResetSwitch(self.pi)
+
+        # register player controls
         self.io.register_inputs(
             {
                 "left_joystick": NSJoystick(
@@ -178,6 +192,8 @@ class NinSwitchIRLKart(Game):
                 "right_throttle": NSSwitch(self.nsg, NSButton.RIGHT_THROTTLE),
             }
         )
+
+        # register admin controls
         self.io.register_inputs(
             {
                 "right_joystick": NSJoystick(
@@ -192,6 +208,7 @@ class NinSwitchIRLKart(Game):
                 "right_stick": NSSwitch(self.nsg, NSButton.RIGHT_STICK),
                 "home": NSSwitch(self.nsg, NSButton.HOME),
                 "capture": NSSwitch(self.nsg, NSButton.CAPTURE),
+                "trinket_reset": self.trinket_reset_switch,
             },
             admin=True,
         )
@@ -229,6 +246,9 @@ class NinSwitchIRLKart(Game):
         self.score_sent = False
 
     async def on_prepare(self):
+        if RESET_TRINKET_EACH_LOOP:
+            await self.trinket_reset_switch.reset_trinket()
+
         logging.info("self.driving...")
         for _ in range(4):
             self.nsg.press(NSButton.A)
@@ -257,12 +277,15 @@ class NinSwitchIRLKart(Game):
         self.stop_controls()
 
     async def on_exit(self, reason, exception):
-        # end controls
+        # close controls
         self.nsg.end()
+        self.trinket_reset_switch.close()
         # end image rec task
         self.image_rec_task_cancelled = True
         await self.cap.release()
         self.image_rec_task.cancel()
+        # close the connection to pigpio daemon
+        self.pi.stop()
 
     async def image_rec_main(self):
         self.cap = await AsyncVideoCapture.create("/dev/video21")
