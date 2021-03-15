@@ -474,6 +474,7 @@ class Game:
     async def _on_pre_game_handler(self, message):
         self._players = self._parse_players(message)
         self._current_seat = await self.on_pre_game()
+        self.io.send_pre_game_ready()
 
     async def _on_countdown_handler(self, message):
         await self.on_countdown()

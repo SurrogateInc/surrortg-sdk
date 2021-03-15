@@ -3,7 +3,7 @@ from .network.socket_handler import SocketHandler
 from .network.message_router import MultiSeatMessageRouter
 from .config_parser import get_config
 
-SURRORTG_VERSION = "0.2.0"
+SURRORTG_VERSION = "0.2.1"
 
 
 class GameIO:

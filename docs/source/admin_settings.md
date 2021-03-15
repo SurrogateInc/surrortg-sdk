@@ -77,13 +77,18 @@ to connect and control the game robots.
   If the player confirms the presence they are moved into the game, but if not,
   the next player in the queue will be taken instead.
 
+- **Min length for the preGame phase** - this field allows defining
+  the minimum time of the on_pre_game() state of the robot. In Batman’66 pinball,
+  this feature is used to wait for the intro video to finish before starting the
+  game. When the timer runs out and every seat has finished on_pre_game(), the game
+  will move to the on_countdown() state. See the [Game states section](game_loop)
+  for more information.
+
 - **Max length for the preGame phase** - this field allows defining
   the maximum time of the on_pre_game() state of the robot. In some games like
   Race Real Cars 1:43, this feature is used for the players to have time to drive
-  to the starting line of the game. In others like Batman’66 pinball, this feature
-  is used to wait for the intro video to finish before starting the game. When the
-  timer runs out, or every seat calls send_pre_game_ready(), the game will move to
-  the on_countdown() state. See the [Game states section](game_loop) for more information.
+  to the starting line of the game. See the [Game states section](game_loop) for
+  more information.
 
 - **Countdown time** - allows having a countdown for the player before
   the game starts, and to choose how many seconds it should be.
