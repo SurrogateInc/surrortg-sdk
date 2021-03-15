@@ -3,11 +3,11 @@
 Ninswitch directory contains three games:
 
 - **game_simple.py** which contains code only for the Switch controls
-- **game_imagerec.py** which the same as game_simple.py, but it also has an image
+- **game_imagerec.py** which is the same as game_simple.py, but it also has an image
     recognition sample code
 - **game_irlkart.py** which contains the full code for the irlkart game
 
-They games are made possible by [gdsports](https://github.com/gdsports)'s [NSGadget_Pi](https://github.com/gdsports/NSGadget_Pi)
+The games are made possible by [gdsports](https://github.com/gdsports)'s [NSGadget_Pi](https://github.com/gdsports/NSGadget_Pi)
 library, which forwards the controls from Rapberry Pi to Switch.
 
 ## Hardware setup
@@ -19,22 +19,23 @@ Hardware requirements:
 - HDMI capture device
 - HDMI cable
 - Micro USB cable
-- jumber cables
+- Jumper cables
 
 Following [NSGadget_Pi](https://github.com/gdsports/NSGadget_Pi)'s setup:
 
 1. Setup Trinket M0:
     - Download the [firmware](https://github.com/gdsports/NSGadget_Pi/blob/master/firmware/NSGadget.ino.f9e9ee2.trinket_m0.bin.uf2)
-    - Plug in the Trinket M0 to the computer
+    - Plug in the Trinket M0 to the computer with the micro USB cable
     - Double tap the Trinket M0 reset button
     - When the TRINKETBOOT USB drive appears, drop the UF2 file on to the drive
     - Wait a few seconds until the Trinket M0 reboots
 2. Do the wiring between Trinket M0 and Raspberry Pi:  
-   **BAT** to **5V0**  
+   **Bat** to **5V0**  
    **Gnd** to **Gnd**  
-   **RX(3)** to **D14(TXD)**  
-   **TX(4)** to **D15(RXD)**
-3. Connect Trinket M0 to Switch dock with the Micro USB cable
+   **Rst** to **GPIO 23**  
+   **RX (3)** to **GPIO 14 (TXD)**  
+   **TX (4)** to **GPIO 15 (RXD)**
+3. Connect Trinket M0 to Switch dock with the micro USB cable
 4. Connect Raspberry Pi to Switch dock through HDMI Capture device and HDMI cable
 
 ## Software setup
@@ -207,17 +208,27 @@ async def main():
 asyncio.run(main())
 ```
 
-## Setting up with Reset Pin
+## Trinket reset feature
 
-Trinket M0's have been found to be quite tempermental with some controls.
-It is possible to add reset functionality so it can be reset on a button
-press and between every round of your game. Continue using the `game_simple.py`
-if you decide to use the reset pin.
+Trinket M0's have been found to be quite temperamental with some controls. For this
+reason one of the Raspberry Pi's GPIO pin is wired to Trinket's reset pin to be
+able to reset the Trinket with the Raspberry Pi. This reset feature is available
+in all ninswitch games and can be used two different ways, either through the admin
+preview or as a part of the game loop.
 
-### Hardware Addendum
+If reset feature is used through admin preview, it means that reset control needs
+to be mapped to some key through the dashboard. After that Trinket can be reset
+by using the preview feature accessible only by the admins.
 
-During the wiring, add a new jumper to the Trinket and Pi:
-   **RST** to **GPIO22**
+Another way to use reset feature is to configure it to reset Trinket each game
+loop. This can be beneficial for games which are not always hosted and are intended
+to run long periods of time on their own. This is disabled by default, but can
+be enabled through the config.
 
-*NOTE* - Any unused GPIO pin on the pi can be used but will require updating
-the script (Number in the script will be the GPIO number, not pin number).
+Trinket reset feature has two configuration options. `TRINKET_RESET_PIN` is used
+to define which Raspberry Pi GPIO pin is used to reset Trinket. It defaults to
+23, but can be set to any free GPIO pin if needed. This requires to change the
+reset pin wiring on the Raspberry Pi side according to the new pin. `RESET_TRINKET_EACH_LOOP`
+is used to define if Trinket reset is performed each game loop and is disabled
+by default. These constants can be overridden by defining them in the `config_local.py`
+file.
