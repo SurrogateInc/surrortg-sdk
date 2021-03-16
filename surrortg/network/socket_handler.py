@@ -311,7 +311,7 @@ class LocalSocketHandler:
                 logging.info("Connected localsocket")
             except asyncio.CancelledError:
                 raise
-            except ConnectionRefusedError:
+            except (ConnectionRefusedError, FileNotFoundError):
                 await asyncio.sleep(LOCAL_SOCKET_RECONNECT_TIMEOUT)
             except Exception:
                 logging.info(
