@@ -19,8 +19,12 @@ class GameIO:
         config_path,
         socketio_logging_level,
         robot_type,
+        device_id,
     ):
         self._config = get_config(config_path)
+
+        if device_id is not None:
+            self._config["device_id"] = device_id
         self.input_bindings = {}
         self._message_router = MultiSeatMessageRouter(robot_log_handler)
         self._socket_handler = SocketHandler(
