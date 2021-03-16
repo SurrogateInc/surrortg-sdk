@@ -1,6 +1,7 @@
 import logging
 import asyncio
 import functools
+from enum import Enum
 from signal import SIGINT, SIGTERM, SIGUSR1
 from .game_io import GameIO
 
@@ -56,6 +57,11 @@ ROBOT_LOG_METHODS = {
 
 # custom Game messages to GE:
 APPROVE_START = "robotApproveStart"
+
+
+class RobotType(Enum):
+    ROBOT = "robot"
+    LOGICAL = "logical"
 
 
 class Game:
@@ -153,7 +159,7 @@ class Game:
         :param robot_type: Decides whether the python unit is a controllable
             robot unit, or a logical unit. Defaults to "robot", for logical,
             use "logical". Logical robot type is for advanced use only.
-        :type robot_type: string, optional
+        :type robot_type: RobotType, optional
         """
 
         if logging_level is not None:
