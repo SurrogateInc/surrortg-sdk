@@ -1,14 +1,19 @@
 repos:
+  - repo: https://github.com/pycqa/isort
+    rev: 5.7.0 # if version changed, change also on Pipfile
+    hooks:
+      - id: isort
+        name: isort (python)
   - repo: https://github.com/ambv/black
-    rev: 19.10b0 # if version changed, change also on Pipfile
+    rev: 20.8b1 # if version changed, change also on Pipfile
     hooks:
       - id: black
   - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.7.9 # if version changed, change also on Pipfile
+    rev: 3.9.0 # if version changed, change also on Pipfile
     hooks:
       - id: flake8
         additional_dependencies: [
-          'pep8-naming==0.11.1',
+          'pep8-naming==0.11.1', # if version changed, change also on Pipfile
         ]
   - repo: https://github.com/markdownlint/markdownlint
     rev: v0.11.0 # if version changed, change also on bitbucket-pipelines.yml, .github/workflows/main.yml

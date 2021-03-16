@@ -8,6 +8,12 @@ definitions:
           - pip install pipenv
           - pipenv sync
           - pipenv run tests
+    - step: &isort
+        name: isort
+        script:
+          - pip install pipenv
+          - pipenv sync --dev
+          - pipenv run isort
     - step: &black
         name: black
         script:
@@ -48,6 +54,7 @@ pipelines:
   default:
     - parallel:
       - step: *unittests
+      - step: *isort
       - step: *black
       - step: *flake8
       - step: *markdownlint
@@ -58,6 +65,7 @@ pipelines:
     main: # If tests/formatting fails, does not push to Github.
       - parallel:
         - step: *unittests
+        - step: *isort
         - step: *black
         - step: *flake8
         - step: *markdownlint

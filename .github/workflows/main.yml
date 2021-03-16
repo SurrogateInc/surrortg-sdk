@@ -26,6 +26,26 @@ jobs:
       - name: Run unit tests
         run: pipenv run tests
 
+  isort:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install pipenv
+          pipenv sync --dev --python ${PYTHON_VERSION}
+
+      - name: Run isort
+        run: pipenv run isort
+
   black:
     runs-on: ubuntu-latest
 

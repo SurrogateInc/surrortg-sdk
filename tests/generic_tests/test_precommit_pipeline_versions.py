@@ -1,6 +1,7 @@
 import unittest
-import yaml
+
 import toml
+import yaml
 
 
 class BlackFlake8VersionsTest(unittest.TestCase):
@@ -8,6 +9,13 @@ class BlackFlake8VersionsTest(unittest.TestCase):
     Make sure that pre-commit and bitbucket pipeline library versions are
     kept consistent
     """
+
+    def test_isort_version_consistency(self):
+        precommit_ver = self.get_precommit_ver(
+            "https://github.com/pycqa/isort"
+        )
+        pipfile_ver = self.get_pipfile_ver("isort")
+        self.assertEqual(precommit_ver, pipfile_ver)
 
     def test_black_version_consistency(self):
         precommit_ver = self.get_precommit_ver("https://github.com/ambv/black")

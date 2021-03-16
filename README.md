@@ -46,9 +46,14 @@ games, check Pipfile for more scripts.
 
 ### Code style
 
-We're following PEP8, and have the formatter `black` and linter `flake8` setup.
-These tools are run in Bitbucket to ensure properly formatted code, but
-use of pre-commit hooks is highly recommended.
+We're following [PEP8](https://www.python.org/dev/peps/pep-0008/),
+and have the formatter `black` and linter `flake8` setup. Imports are ordered
+following
+[PEP8's import recommendations](https://www.python.org/dev/peps/pep-0008/#imports)
+with `isort`.
+
+These tools are run in Bitbucket pipelines and Githubs Actions to ensure properly
+formatted code, but the use of pre-commit hooks is highly recommended.
 
 #### Installing pre-commit hooks
 
