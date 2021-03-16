@@ -1,8 +1,9 @@
+import asyncio
 import logging
 import struct
-import asyncio
-from . import UdpInput
+
 from ...inputs import LinearActuator
+from .udp_input import UdpInput
 
 
 class UdpActuator(LinearActuator, UdpInput):

@@ -1,6 +1,6 @@
 import logging
-from time import time
 from collections import deque
+from time import time
 
 
 class SpamFilter:
@@ -49,6 +49,7 @@ class SpamFilter:
 
 if __name__ == "__main__":
     import sys
+
     from pynput import keyboard
 
     if len(sys.argv) != 3:

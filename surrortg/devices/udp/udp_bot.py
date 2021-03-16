@@ -1,5 +1,6 @@
 import asyncio
 import logging
+
 from .udp_protocol import open_remote_endpoint
 
 BOT_UDP_PORT = 31337
@@ -7,8 +8,7 @@ set_file_name = "/var/lib/srtg/current_set"
 
 
 class UdpBot:
-    """Base class for all bots that are controlled with udp commands
-    """
+    """Base class for all bots that are controlled with udp commands"""
 
     def __init__(self):
         self.inputs = {}
@@ -31,7 +31,7 @@ class UdpBot:
         try:
             bot_config = config["robots"]
         except KeyError:
-            logging.warning(f"Failed to parse robot configs")
+            logging.warning("Failed to parse robot configs")
             return (0, {})
 
         if "currentSet" in config:
@@ -39,11 +39,11 @@ class UdpBot:
                 self.current_set = int(config["currentSet"])
                 set_reading_succeeded = True
             except ValueError:
-                logging.warning(f"Failed to cast current set number to int")
+                logging.warning("Failed to cast current set number to int")
 
         if not set_reading_succeeded:
             self.current_set = await self.select_set()
-            logging.info(f"Reading current set from file")
+            logging.info("Reading current set from file")
 
         self.bots = {}
         self.endpoints = {}

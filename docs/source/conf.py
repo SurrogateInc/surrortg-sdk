@@ -12,6 +12,7 @@
 
 import os
 import sys
+from unittest.mock import Mock
 
 sys.path.insert(0, os.path.abspath("../../"))
 sys.path.insert(0, os.path.abspath("../../game_templates"))
@@ -86,9 +87,6 @@ html_js_files = [
 ]
 
 # -- Custom -----------------------------------------------------------------
-
-import sys  # noqa:E402
-from unittest.mock import Mock  # noqa:E402
 
 
 def import_mock_modules(names):

@@ -1,6 +1,7 @@
 import logging
 from abc import abstractmethod
-from . import Input
+
+from .input import Input
 
 
 class Switch(Input):

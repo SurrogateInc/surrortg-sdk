@@ -1,12 +1,12 @@
 import logging
 import math
 from enum import Enum, auto
-from . import Input
+
+from .input import Input
 
 
 class Directions(Enum):
-    """Emun for Joystick.get_direction_8() and get_direction_4() results
-    """
+    """Emun for Joystick.get_direction_8() and get_direction_4() results"""
 
     MIDDLE = auto()
     TOP = auto()

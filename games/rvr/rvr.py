@@ -1,8 +1,9 @@
+import asyncio
 import logging
 import os
 import sys
-from surrortg.inputs import Joystick, Directions
-import asyncio
+
+from surrortg.inputs import Directions, Joystick
 
 sys.path.append(
     os.path.abspath(
@@ -11,9 +12,9 @@ sys.path.append(
         )
     )
 )
-from sphero_sdk import SpheroRvrAsync  # noqa:E402
-from sphero_sdk import SerialAsyncDal  # noqa: E402
 from sphero_sdk import RawMotorModesEnum  # noqa:E402
+from sphero_sdk import SerialAsyncDal  # noqa: E402
+from sphero_sdk import SpheroRvrAsync  # noqa:E402
 
 # valid speed values are 0-255
 # this is used when driving straight or turning on place

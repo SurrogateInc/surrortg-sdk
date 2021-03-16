@@ -1,5 +1,5 @@
-from surrortg import Game
 from games.rvr.rvr import RVR
+from surrortg import Game
 
 
 class RVRGame(Game):

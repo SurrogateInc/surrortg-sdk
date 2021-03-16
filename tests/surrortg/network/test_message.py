@@ -1,4 +1,5 @@
 import unittest
+
 from surrortg.network import Message, MessageValidationError
 
 

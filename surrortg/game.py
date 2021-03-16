@@ -1,10 +1,10 @@
-import logging
 import asyncio
 import functools
+import logging
 from enum import Enum
 from signal import SIGINT, SIGTERM, SIGUSR1
-from .game_io import GameIO
 
+from .game_io import GameIO
 
 # Reason codes are passed to the user as an on_exit parameter.
 # Code and description is also logged.
@@ -200,8 +200,7 @@ class Game:
         pass
 
     async def on_prepare(self):
-        """Do some preparations before the players connect
-        """
+        """Do some preparations before the players connect"""
         pass
 
     async def on_pre_game(self):
@@ -218,8 +217,7 @@ class Game:
         pass
 
     async def on_countdown(self):
-        """Do things during the game countdown
-        """
+        """Do things during the game countdown"""
         pass
 
     async def on_start(self):
@@ -386,7 +384,7 @@ class Game:
             self._current_ge_task is not None
             and not self._current_ge_task.done()
         ):
-            logging.info(f"Cancelling previous GE task due to program exit")
+            logging.info("Cancelling previous GE task due to program exit")
             self._current_ge_task.cancel()
 
         # log the exit reason

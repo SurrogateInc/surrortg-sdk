@@ -1,8 +1,9 @@
-import socketio
-import logging
-import sys
 import asyncio
 import functools
+import logging
+import sys
+
+import socketio
 
 SOCKETIO_NAMESPACE = "/api"
 

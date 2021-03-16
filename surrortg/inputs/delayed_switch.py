@@ -1,11 +1,11 @@
 import logging
 from abc import abstractmethod
-from . import Input
+
+from .input import Input
 
 
 class DelayedSwitch(Input):
-    """A class for using a switch with a delay
-    """
+    """A class for using a switch with a delay"""
 
     async def _on_input(self, command, seat):
         """DelayedSwitch input functionality

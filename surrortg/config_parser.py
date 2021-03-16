@@ -1,7 +1,8 @@
+import logging
 import os
 import socket
+
 import toml
-import logging
 
 REQUIRED_CONFIG_KEYS = ["device_id", "game_engine"]
 REQUIRED_CONFIG_GE_KEYS = ["url", "token"]

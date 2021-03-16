@@ -5,7 +5,6 @@ import pigpio
 from surrortg import Game
 from surrortg.inputs import Switch
 
-
 LED_PIN = 17
 
 

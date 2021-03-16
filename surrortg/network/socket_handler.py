@@ -1,14 +1,15 @@
 import asyncio
-import sys
-import socket
-import logging
 import json
-import traceback
-import socketio
+import logging
 import os
+import socket
+import sys
+import traceback
+from dataclasses import asdict, dataclass, field
 from signal import SIGINT
-from dataclasses import dataclass, field, asdict
 from typing import Any, Dict, Optional
+
+import socketio
 
 # Socketio sleep when connecting fails.
 # Starting from MIN_SLEEP, sleep always doubles with a connection failure,
@@ -142,7 +143,8 @@ class SocketioNamespace(socketio.AsyncClientNamespace):
             )
             logging.info("Sending SIGINT to exit program.")
             asyncio.run_coroutine_threadsafe(
-                self.send_sigint(), asyncio.get_event_loop(),
+                self.send_sigint(),
+                asyncio.get_event_loop(),
             )
 
     async def send_sigint(self):
@@ -183,6 +185,7 @@ class SocketioNamespace(socketio.AsyncClientNamespace):
                     reconnection=False,
                 )
                 # register connect_error handler
+
                 @self.sio.event(namespace=SOCKETIO_NAMESPACE)
                 def connect_error(msg):
                     logging.error(f"GE socketio connection error: {msg}")
@@ -516,7 +519,7 @@ if __name__ == "__main__":
         else:
             await asyncio.create_task(send_msg_and_request_event())
             if is_config(message):
-                logging.info(f"Event: CONFIG")
+                logging.info("Event: CONFIG")
                 return "CONFIG"
             logging.info(f"Event: {message.event}")
 

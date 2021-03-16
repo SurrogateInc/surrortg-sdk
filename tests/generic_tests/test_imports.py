@@ -1,5 +1,5 @@
-import unittest
 import sys
+import unittest
 from unittest.mock import Mock
 
 
@@ -16,6 +16,8 @@ class ImportTest(unittest.TestCase):
         """
 
         # DEVICES
+        # ROOT
+        from surrortg import Game, GameIO  # noqa:F401
         from surrortg.devices.udp import (  # noqa:F401
             UdpActuator,
             UdpBot,
@@ -23,27 +25,23 @@ class ImportTest(unittest.TestCase):
             UdpInput,
         )
         from surrortg.devices.udp.udp_protocol import (  # noqa:F811,F401
-            open_remote_endpoint,
             open_local_endpoint,
             open_remote_endpoint,
         )
 
         # INPUTS
         from surrortg.inputs import (  # noqa:F401
-            Input,
-            Switch,
             DelayedSwitch,
-            Joystick,
             Directions,
+            Input,
+            Joystick,
             LinearActuator,
+            Switch,
         )
 
         # NETWORK
         from surrortg.network import (  # noqa:F401
-            SocketHandler,
             MessageRouter,
             MultiSeatMessageRouter,
+            SocketHandler,
         )
-
-        # ROOT
-        from surrortg import Game, GameIO  # noqa:F401

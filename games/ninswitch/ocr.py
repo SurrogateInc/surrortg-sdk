@@ -148,15 +148,17 @@ The tests make sure that
         )
         sys.exit(0)
 
-    import cv2
     import pathlib
-    from surrortg.image_recognition import get_pixel_detector
+
+    import cv2
+
     from games.ninswitch.game_irlkart import (
         POS_1_PIXELS,
         POS_2_PIXELS,
         POS_3_PIXELS,
         POS_4_PIXELS,
     )
+    from surrortg.image_recognition import get_pixel_detector
 
     position_detectors = {
         1: get_pixel_detector(POS_1_PIXELS),
@@ -242,7 +244,7 @@ The tests make sure that
         for frame, name in succesfull_frames():
             position = int(name[-19])
             if position == pos and name[index] == value:
-                print(f"\t\tFound!. Press any key to continue.")
+                print("\t\tFound!. Press any key to continue.")
                 cv2.imshow("frame", frame)
                 cv2.waitKey(0)
                 return True

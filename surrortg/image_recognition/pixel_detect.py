@@ -1,6 +1,6 @@
 import sys
-import cv2
 
+import cv2
 
 CLOSE = 25
 

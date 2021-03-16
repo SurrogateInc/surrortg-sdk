@@ -1,14 +1,16 @@
 import asyncio
 import logging
+
 import pigpio
-from surrortg.inputs import Switch
-from surrortg.inputs.input_filters import SpamFilter
+
 from games.arcade_pinball.config import (
     BUTTON_PRESS_TIME,
     MAX_HOLD_TIME,
     MAX_INPUTS_PER_INPUT,
     PER_SECONDS,
 )
+from surrortg.inputs import Switch
+from surrortg.inputs.input_filters import SpamFilter
 
 
 class ArcadeMultiButton(Switch):
@@ -91,10 +93,10 @@ class ArcadeButton(ArcadeMultiButton):
 if __name__ == "__main__":
     from games.arcade_pinball.config import (
         LEFT_FLIPPER_PIN,
-        RIGHT_FLIPPER_PINS,
         MAGNET_BUTTON_PIN,
-        START_BUTTON_PIN,
+        RIGHT_FLIPPER_PINS,
         SERVICE_BUTTON_PIN,
+        START_BUTTON_PIN,
     )
 
     async def test_buttons():

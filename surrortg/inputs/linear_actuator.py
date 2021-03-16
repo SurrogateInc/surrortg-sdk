@@ -1,12 +1,12 @@
 import logging
 import traceback
 from abc import abstractmethod
+
 from .input import Input
 
 
 class LinearActuator(Input):
-    """A class for moving linear actuators
-    """
+    """A class for moving linear actuators"""
 
     async def _on_input(self, command, seat):
         """LinearActuator input functionality

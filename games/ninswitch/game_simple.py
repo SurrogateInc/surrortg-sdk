@@ -1,12 +1,12 @@
 import pigpio
 
-from surrortg import Game
-from games.ninswitch.ns_gamepad_serial import NSGamepadSerial, NSButton, NSDPad
-from games.ninswitch.ns_switch import NSSwitch
-from games.ninswitch.ns_dpad_switch import NSDPadSwitch
-from games.ninswitch.ns_joystick import NSJoystick
-from games.ninswitch.trinket_reset_switch import TrinketResetSwitch
 from games.ninswitch.config import RESET_TRINKET_EACH_LOOP
+from games.ninswitch.ns_dpad_switch import NSDPadSwitch
+from games.ninswitch.ns_gamepad_serial import NSButton, NSDPad, NSGamepadSerial
+from games.ninswitch.ns_joystick import NSJoystick
+from games.ninswitch.ns_switch import NSSwitch
+from games.ninswitch.trinket_reset_switch import TrinketResetSwitch
+from surrortg import Game
 
 
 class NinSwitchSimpleGame(Game):
@@ -53,7 +53,8 @@ class NinSwitchSimpleGame(Game):
 
         # register admin controls
         self.io.register_inputs(
-            {"trinket_reset": self.trinket_reset_switch}, admin=True,
+            {"trinket_reset": self.trinket_reset_switch},
+            admin=True,
         )
 
     """

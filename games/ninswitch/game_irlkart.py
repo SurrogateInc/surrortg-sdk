@@ -1,21 +1,22 @@
 import asyncio
 import logging
-from time import time
+import sys
+import traceback
 from pathlib import Path
+from time import time
 
 import cv2
 import pigpio
 
+from games.ninswitch.config import RESET_TRINKET_EACH_LOOP
+from games.ninswitch.ns_dpad_switch import NSDPadSwitch
+from games.ninswitch.ns_gamepad_serial import NSButton, NSDPad, NSGamepadSerial
+from games.ninswitch.ns_joystick import NSJoystick
+from games.ninswitch.ns_switch import NSSwitch
+from games.ninswitch.ocr import get_time_ms
+from games.ninswitch.trinket_reset_switch import TrinketResetSwitch
 from surrortg import Game
 from surrortg.image_recognition import AsyncVideoCapture, get_pixel_detector
-from games.ninswitch.ns_gamepad_serial import NSGamepadSerial, NSButton, NSDPad
-from games.ninswitch.ns_switch import NSSwitch
-from games.ninswitch.ns_dpad_switch import NSDPadSwitch
-from games.ninswitch.ns_joystick import NSJoystick
-from games.ninswitch.trinket_reset_switch import TrinketResetSwitch
-from games.ninswitch.ocr import get_time_ms
-from games.ninswitch.config import RESET_TRINKET_EACH_LOOP
-
 
 # limit the processor use
 cv2.setNumThreads(1)
@@ -368,7 +369,7 @@ class NinSwitchIRLKart(Game):
                         f"{time_string}"
                     )
                     if self.failed_score_reads == MAX_FAILED_SCORE_READS:
-                        logging.info(f"FAILED SCORE SENT")
+                        logging.info("FAILED SCORE SENT")
                         self._send_score(FAILED_SCORE_READ_SCORE)
             else:  # if time reading succeeded
                 if not self.has_finished:
@@ -385,21 +386,22 @@ class NinSwitchIRLKart(Game):
         timestamp = int(time() * 1000.0)
         filename = f"{prefix}{cleaned_time}_{pos}_{timestamp}.jpg"
         cv2.imwrite(
-            f"{SAVE_POS_DIR_PATH}/{filename}", frame,
+            f"{SAVE_POS_DIR_PATH}/{filename}",
+            frame,
         )
         logging.info(f"SAVED {prefix}POS FRAME: {filename}")
 
     def _send_score(self, score):
         for seat in self.io._message_router.get_all_seats():
             self.io.send_score(
-                score=score, seat=seat, seat_final_score=True,
+                score=score,
+                seat=seat,
+                seat_final_score=True,
             )
 
     def image_rec_done_cb(self, fut):
         # make program end if image_rec_task raises error
         if not fut.cancelled() and fut.exception() is not None:
-            import traceback, sys  # noqa: E401
-
             e = fut.exception()
             logging.error(
                 "".join(traceback.format_exception(None, e, e.__traceback__))

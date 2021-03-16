@@ -21,9 +21,10 @@ SOFTWARE.
 """
 import array
 import threading
-import serial
-from struct import pack
 from enum import IntEnum
+from struct import pack
+
+import serial
 
 
 # Direction pad names

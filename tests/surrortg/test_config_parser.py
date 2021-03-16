@@ -1,5 +1,7 @@
 import unittest
+
 import toml
+
 from surrortg import get_config
 from surrortg.config_parser import (
     _get_current_ge_config_path,
@@ -13,7 +15,8 @@ class GameIOTest(unittest.TestCase):
 
         # test that finds the default one
         self.assertEqual(
-            get_config("./tests/test_data/test_config.toml"), test_config,
+            get_config("./tests/test_data/test_config.toml"),
+            test_config,
         )
 
         # test that fails for non-existent config

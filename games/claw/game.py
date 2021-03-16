@@ -1,30 +1,30 @@
-import logging
 import asyncio
+import logging
 
 import pigpio
 
-from surrortg import Game
-from surrortg.inputs import Directions
-from games.claw.claw_joystick import ClawJoystick
 from games.claw.claw_button import ClawButton
-from games.claw.claw_toy_sensor import ClawToySensor
-from games.claw.claw_toy_reset_solenoid import ClawSolenoid
 from games.claw.claw_coin_generator import ClawCoinGenerator
+from games.claw.claw_joystick import ClawJoystick
 from games.claw.claw_joystick_splitter import ClawJoystickSplitter
+from games.claw.claw_toy_reset_solenoid import ClawSolenoid
+from games.claw.claw_toy_sensor import ClawToySensor
 from games.claw.config import (
-    USE_JOYSTICK_SPLITTER,
-    USE_TOY_RESET_SOLENOID,
-    USE_COIN_GENERATOR,
+    AUTOMATIC_MOVE_TIME,
     BLOCK_GAME_LOOP_IF_SENSOR_BLOCKED,
-    WAIT_TIME_AFTER_SENSOR_CLEARED,
-    TOY_WAIT_TIME,
-    CLAW_PICK_CYCLE_TIME,
     CLAW_CORNER_TO_CORNER_TIME,
     CLAW_GAME_LENGTH,
-    STOP_TIME_BEFORE_BTN_PRESS,
-    AUTOMATIC_MOVE_TIME,
+    CLAW_PICK_CYCLE_TIME,
     GE_GAME_LENGTH,
+    STOP_TIME_BEFORE_BTN_PRESS,
+    TOY_WAIT_TIME,
+    USE_COIN_GENERATOR,
+    USE_JOYSTICK_SPLITTER,
+    USE_TOY_RESET_SOLENOID,
+    WAIT_TIME_AFTER_SENSOR_CLEARED,
 )
+from surrortg import Game
+from surrortg.inputs import Directions
 
 
 class ClawGame(Game):
@@ -61,7 +61,10 @@ class ClawGame(Game):
 
         # Register claw machine inputs
         self.io.register_inputs(
-            {"joystick_main": self.joystick, "button_main": self.button,}
+            {
+                "joystick_main": self.joystick,
+                "button_main": self.button,
+            }
         )
 
     async def on_prepare(self):

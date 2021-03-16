@@ -1,10 +1,12 @@
 import time
-import pigpio
 from enum import Enum, auto
 from threading import RLock
+
+import pigpio
+
 from games.arcade_pinball.config import (
-    REQUIRED_BLINKING_TIME,
     MAX_BLINKING_INTERVAL,
+    REQUIRED_BLINKING_TIME,
     REQUIRED_TIME_TO_REGISTER_STATE,
 )
 
@@ -27,7 +29,9 @@ class StartLED:
 
         # setup pigpio callback for start button led sensor
         self.led_cb = self.pi.callback(
-            pin, pigpio.EITHER_EDGE, self.led_cb_fn,
+            pin,
+            pigpio.EITHER_EDGE,
+            self.led_cb_fn,
         )
         now_ts = time.time()
         self.falling_edge_ts = now_ts

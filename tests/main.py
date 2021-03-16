@@ -1,6 +1,6 @@
+import inspect
 import os
 import pkgutil
-import inspect
 import unittest
 
 """This is a custom runner to find all of the tests in subdirectories

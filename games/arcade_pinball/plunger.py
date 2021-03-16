@@ -1,16 +1,18 @@
 import asyncio
 import logging
 import time
+
 import pigpio
-from surrortg.inputs import Switch
+
 from games.arcade_pinball.arcade_button import ArcadeButton
 from games.arcade_pinball.config import (
-    PLUNGER_PRESS_TIME,
-    PLUNGER_MIN_FREQ,
     AUTO_PLUNGE_TIME,
-    WAIT_FOR_BALL_SAVE,
     BALL_SAVE_PLUNGE_TIME,
+    PLUNGER_MIN_FREQ,
+    PLUNGER_PRESS_TIME,
+    WAIT_FOR_BALL_SAVE,
 )
+from surrortg.inputs import Switch
 
 
 class Plunger(Switch):
@@ -197,7 +199,7 @@ class Plunger(Switch):
 
 
 if __name__ == "__main__":
-    from games.arcade_pinball.config import PLUNGER_PIN, BALL_SENSOR_PIN
+    from games.arcade_pinball.config import BALL_SENSOR_PIN, PLUNGER_PIN
 
     pi = pigpio.pi()
     if not pi.connected:

@@ -1,4 +1,4 @@
-from surrortg.inputs import Joystick, Directions
+from surrortg.inputs import Directions, Joystick
 
 DIRECTION_TO_JOYSTICK_VALS = {
     Directions.TOP: (128, 0),
