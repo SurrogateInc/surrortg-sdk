@@ -3,8 +3,6 @@
 This section explains more in-depth configuration of watcherstream. For installation
 and basic usage, see [Getting Started](getting_started.html#installing-surrogate-watcher-stream).
 
-## Modes
-
 The srtg-watcherstream can operate in multiple modes, depending on the users'
 needs. Following modes are supported:
 
@@ -15,11 +13,13 @@ needs. Following modes are supported:
 The mode can be selected by adding `watcherstream_mode = <mode>` to the top-level
 of `/etc/srtg/srtg.toml`
 
-### Default mode
+## Default mode
 
 The `default` mode uploads the player view as-is to Surrogate.tv.
 
-### OBS mode
+## OBS mode
+
+### Setup
 
 If you want to customize your stream further, `obs` mode can be used. In this mode,
 the `srtg-watcherstream` does not generate the stream but instead only uploads a
@@ -61,7 +61,45 @@ Surrogate.tv at the same time, OBS supports recording and streaming simultaneous
 In that case, setup streaming settings for whichever service you are using according
 to their instructions.
 
-### RTSP mode
+### Scene switching
+
+#### OBS setup
+
+OBS scene switching is supported using [OBS's Advanced Scene Switcher](https://obsproject.com/forum/resources/advanced-scene-switcher.395/).
+The switching works based on contents of a file, and a python script can be used
+to write the file contents and trigger a scene switch.
+
+To setup scene switching, first install the Advanced Scene Switcher plugin according
+to the instructions.
+
+To setup your Advanced Scene Switcher,
+
+1. Open Advanced Scene Switcher settings from tools->Advanced Scene Switcer
+2. Go to File tab in the settings
+3. Check the "Enable switching of scenes based on file input"
+4. Enter a file to the "Read scene name to be switched to from this file".
+   Take a note which file you are using, as you need to input the same file to
+   the python script which writes to it.
+
+```{image} _static/images/obs_scene_switcher.png
+:alt: obs-scene-1
+:width: 100%
+:align: center
+```
+
+#### Python setup
+
+The python class for writing scene files can be found in [utils/obs_scene_switcher.py](modules/surrortg.utils.html#module-surrortg.utils.obs_scene_switcher).
+If you are running controller and OBS on the same machine, you can include
+OBSSceneSwitcher in your controller implementation. The scene switcher is very
+simple: you initialize the class with the *same path that you entered to OBS*.
+After that you can call *change_scene* with the scene name you want to activate.
+
+If you are running OBS on a separate machine or you do not want to modify controller
+code, you can run the scene switcher in a standalone mode. See the bottom of
+obs_scene_switcher.py for an example.
+
+## RTSP mode
 
 The RTSP mode can be used when the watcherstream is needed on another machine,
 e.g. if you are running multiple Raspberry Pi based robots and want to create
@@ -91,13 +129,13 @@ do the following
 
 Then you need to setup the stream uploading. The steps for this depend on your platform
 
-#### Linux
+### Linux
 
 On a (Debian based, e.g. Ubuntu, Mint, Debian) Linux, install srtg-watcherstream
 by running `sudo apt install srtg-watcherstream`. Refer to [OBS mode](#obs-mode)
 on the setup.
 
-#### Windows
+### Windows
 
 On a Windows 10 machine, first install [Windows Subsystem for Linux 2](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 Run a Ubuntu 20.04 virtual machine in WSL2 according to the instructions.
