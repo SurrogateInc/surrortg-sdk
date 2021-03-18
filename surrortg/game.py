@@ -1,6 +1,7 @@
 import logging
 import asyncio
 import functools
+from enum import Enum
 from signal import SIGINT, SIGTERM, SIGUSR1
 from .game_io import GameIO
 
@@ -56,6 +57,11 @@ ROBOT_LOG_METHODS = {
 
 # custom Game messages to GE:
 APPROVE_START = "robotApproveStart"
+
+
+class RobotType(Enum):
+    ROBOT = "robot"
+    LOGICAL = "logical"
 
 
 class Game:
@@ -136,6 +142,7 @@ class Game:
         socketio_logging_level=logging.WARNING,
         start_games_inputs_enabled=True,
         robot_type="robot",
+        device_id=None,
     ):
         """Connect to the game engine and start the Game loop
 
@@ -153,7 +160,10 @@ class Game:
         :param robot_type: Decides whether the python unit is a controllable
             robot unit, or a logical unit. Defaults to "robot", for logical,
             use "logical". Logical robot type is for advanced use only.
-        :type robot_type: string, optional
+        :type robot_type: RobotType, optional
+        :param device_id: Overrides device_id from config file. Note: config
+            file device_id is mandatory field even when this parameter is used
+        :type device_id: str/None, optional
         """
 
         if logging_level is not None:
@@ -167,7 +177,9 @@ class Game:
         self.start_games_inputs_enabled = start_games_inputs_enabled
 
         # this structure makes testing easier
-        self._pre_run(config_path, socketio_logging_level, robot_type)
+        self._pre_run(
+            config_path, socketio_logging_level, robot_type, device_id
+        )
         self._run()
         self._post_run()
 
@@ -262,7 +274,9 @@ class Game:
     def _run_not_called(self):
         return not hasattr(self, "_io")
 
-    def _pre_run(self, config_path, socketio_logging_level, robot_type):
+    def _pre_run(
+        self, config_path, socketio_logging_level, robot_type, device_id
+    ):
         # log info if certain methods not implemented
         for method_name in CHECK_IMPLEMENTATION:
             if self._not_implemented(method_name):
@@ -275,6 +289,7 @@ class Game:
             config_path,
             socketio_logging_level,
             robot_type,
+            device_id,
         )
 
         # set flag for updates between games

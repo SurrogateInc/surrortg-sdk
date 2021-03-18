@@ -31,6 +31,7 @@ class GameTest(unittest.TestCase):
                     "./tests/test_data/test_config.toml",
                     socketio_logging_level=logging.WARNING,
                     robot_type="robot",
+                    device_id=None,
                 )
                 self.io._socket_handler.run = self.raise_error
                 self._run()
@@ -97,6 +98,7 @@ class GameTest(unittest.TestCase):
                     "./tests/test_data/test_config.toml",
                     socketio_logging_level=logging.WARNING,
                     robot_type="robot",
+                    device_id=None,
                 )
                 self.io._socket_handler.run = self.wait
                 self._run()
@@ -154,6 +156,7 @@ class GameTest(unittest.TestCase):
                 "./tests/test_data/test_config.toml",
                 socketio_logging_level=logging.WARNING,
                 robot_type="robot",
+                device_id=None,
             )  # this simulates run(), really only part of it
             self.assertEqual(
                 cm.output,
@@ -186,6 +189,7 @@ class GameTest(unittest.TestCase):
                 "./tests/test_data/test_config.toml",
                 socketio_logging_level=logging.WARNING,
                 robot_type="robot",
+                device_id=None,
             )  # this simulates run(), really only part of it
             self.assertEqual(
                 cm.output,
@@ -215,6 +219,7 @@ class GameTest(unittest.TestCase):
             "./tests/test_data/test_config.toml",
             socketio_logging_level=logging.WARNING,
             robot_type="robot",
+            device_id=None,
         )  # this simulates run(), really only part of it
         with self.assertRaises(RuntimeError):
             g.io.register_inputs({})
@@ -225,6 +230,7 @@ class GameTest(unittest.TestCase):
             "./tests/test_data/test_config.toml",
             socketio_logging_level=logging.WARNING,
             robot_type="robot",
+            device_id=None,
         )  # this simulates run(), really only part of it
         g.io._can_register_inputs = True
         try:
@@ -250,6 +256,7 @@ class GameTest(unittest.TestCase):
             "./tests/test_data/test_config.toml",
             socketio_logging_level=logging.WARNING,
             robot_type="robot",
+            device_id=None,
         )  # this simulates run(), really only part of it
         try:
             g.io
