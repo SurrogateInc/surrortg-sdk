@@ -45,6 +45,12 @@ requirements:
 4. An official [Raspberry Pi Camera](https://www.raspberrypi.org/products/camera-module-v2/)
    or some USB camera (UVC compliant), check the [support list](camera_support)
 
+OR
+
+1. A laptor or desktop PC with a Debian-based Linux installed (e.g. Ubuntu
+  or Debian)
+2. UVC compliant USB camera ([supported cameras](camera_support))
+
 ## Create a game instance on Surrogate.tv
 
 Your own game can be controlled from the game's dashboard.
@@ -276,7 +282,12 @@ Raspberry Pi, you need to do the following:
 
 ### Method 2: Manual installation
 
-#### Setting up Raspberry Pi
+The manual installation is supported on Raspberry Pi and on any Debian based
+distro on x64 (desktop or laptop). These distributions include e.g. Debian and
+Ubuntu. If you are using a x64 machine, we assume you have installed the
+operating system successfully already.
+
+#### Setting up Raspberry Pi (skip if not using Raspberry Pi)
 
 First either:
 
@@ -458,6 +469,8 @@ page after a short delay.
 The watcherview components creates a systemd unit `srtg-watcherstream`, which
 you can [control](#controlling-systemd-units) similarly to other systemd units.
 
+For more advanced watcher stream configuration, see [watcherstream page](watcherstream.html#watcherstream)
+
 #### Configuration file
 
 When you installed the streamer or used the Surrogate image, it added a configuration
@@ -523,6 +536,10 @@ width = 1280
 height = 720
 framerate = 30
 v4l2_encoded_loopback_dev = 20
+# v4l2_loopback_devs = [ 20,]
+# The v4l2_encoded_loopback_dev needs to be commented out, and the v4l2_loopback_devs
+# uncommented when running watcherstream on x64 machines
+
 # Optional, used to specify which camera to use if you have multiple cameras connected
 # Using the /dev/v4l/by-id/ path is recommended.
 # Use /dev/video49 for CSI cameras (e.g. Raspberry Pi camera)
@@ -545,6 +562,10 @@ v4l2_encoded_loopback_dev = 20
 #audio_capture_dev_idx = 1
 
 ```
+
+**If you are using a x64-based computer:** Note that you have to change
+`v4l2_encoded_loopback_dev = 20` to `v4l2_loopback_devs = [ 20,]` to make
+the watcherstream work.
 
 To get a list of available cameras you can run the following command (you may
 have to install v4l-utils: (`sudo apt install v4l-utils`)):
