@@ -4,7 +4,7 @@ from .config_parser import get_config
 from .network.message_router import MultiSeatMessageRouter
 from .network.socket_handler import SocketHandler
 
-SURRORTG_VERSION = "0.2.1"
+SURRORTG_VERSION = "0.2.2"
 
 
 class GameIO:
@@ -50,7 +50,6 @@ class GameIO:
                 self._message_router.handle_message,
             ],
             response_callbacks={self._is_config_message: ge_message_handler},
-            socketio_connect_callback=self.provide_inputs,
             socketio_logging_level=socketio_logging_level,
         )
         self._can_register_inputs = False
@@ -58,13 +57,11 @@ class GameIO:
     def _is_config_message(self, message):
         return message.src == "gameEngine" and message.event == "config"
 
-    def provide_inputs(self):
-        # NOTE: this is called only after game.on_init has been awaited
-        # so it should have the necessary input_bindings
+    def _get_inputs(self):
         bindings = []
         for command_id, obj in self.input_bindings.items():
             bindings.append({"commandId": command_id, **obj})
-        self._send_threadsafe("robotInputs", payload=bindings)
+        return bindings
 
     def register_inputs(self, inputs, admin=False, bindable=True):
         """Registers inputs
