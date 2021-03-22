@@ -1,7 +1,7 @@
 import logging
 import argparse
 
-from surrortg import Game
+from surrortg import Game, RobotType
 
 
 class OBSSceneSwitcher:
@@ -64,5 +64,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     SceneSwitcherGame().run(
-        config_path=args.conf, robot_type="logical", device_id=args.device_id
+        config_path=args.conf,
+        robot_type=RobotType.LOGICAL,
+        device_id=args.device_id,
     )

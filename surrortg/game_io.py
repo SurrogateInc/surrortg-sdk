@@ -27,6 +27,12 @@ class GameIO:
             self._config["device_id"] = device_id
         self.input_bindings = {}
         self._message_router = MultiSeatMessageRouter(robot_log_handler)
+
+        # If type is not string (deprecated old interface), assume type is
+        # RobotType. Not testing it directly because of circlar imports
+        if type(robot_type) is not str:
+            robot_type = robot_type.value
+
         self._socket_handler = SocketHandler(
             self._config["game_engine"]["url"],
             query={

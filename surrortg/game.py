@@ -141,7 +141,7 @@ class Game:
         logging_level=logging.INFO,
         socketio_logging_level=logging.WARNING,
         start_games_inputs_enabled=True,
-        robot_type="robot",
+        robot_type=RobotType.ROBOT,
         device_id=None,
     ):
         """Connect to the game engine and start the Game loop

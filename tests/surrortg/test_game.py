@@ -5,7 +5,7 @@ import time
 import logging
 from signal import SIGINT, SIGTERM, SIGUSR1
 from threading import Thread
-from surrortg import Game
+from surrortg import Game, RobotType
 
 
 class GameTest(unittest.TestCase):
@@ -30,7 +30,7 @@ class GameTest(unittest.TestCase):
                 self._pre_run(
                     "./tests/test_data/test_config.toml",
                     socketio_logging_level=logging.WARNING,
-                    robot_type="robot",
+                    robot_type=RobotType.ROBOT,
                     device_id=None,
                 )
                 self.io._socket_handler.run = self.raise_error
@@ -97,7 +97,7 @@ class GameTest(unittest.TestCase):
                 self._pre_run(
                     "./tests/test_data/test_config.toml",
                     socketio_logging_level=logging.WARNING,
-                    robot_type="robot",
+                    robot_type=RobotType.ROBOT,
                     device_id=None,
                 )
                 self.io._socket_handler.run = self.wait
@@ -155,7 +155,7 @@ class GameTest(unittest.TestCase):
             g._pre_run(
                 "./tests/test_data/test_config.toml",
                 socketio_logging_level=logging.WARNING,
-                robot_type="robot",
+                robot_type=RobotType.ROBOT,
                 device_id=None,
             )  # this simulates run(), really only part of it
             self.assertEqual(
@@ -188,7 +188,7 @@ class GameTest(unittest.TestCase):
             g._pre_run(
                 "./tests/test_data/test_config.toml",
                 socketio_logging_level=logging.WARNING,
-                robot_type="robot",
+                robot_type=RobotType.ROBOT,
                 device_id=None,
             )  # this simulates run(), really only part of it
             self.assertEqual(
@@ -218,7 +218,7 @@ class GameTest(unittest.TestCase):
         g._pre_run(
             "./tests/test_data/test_config.toml",
             socketio_logging_level=logging.WARNING,
-            robot_type="robot",
+            robot_type=RobotType.ROBOT,
             device_id=None,
         )  # this simulates run(), really only part of it
         with self.assertRaises(RuntimeError):
@@ -229,7 +229,7 @@ class GameTest(unittest.TestCase):
         g._pre_run(
             "./tests/test_data/test_config.toml",
             socketio_logging_level=logging.WARNING,
-            robot_type="robot",
+            robot_type=RobotType.ROBOT,
             device_id=None,
         )  # this simulates run(), really only part of it
         g.io._can_register_inputs = True
@@ -255,7 +255,7 @@ class GameTest(unittest.TestCase):
         g._pre_run(
             "./tests/test_data/test_config.toml",
             socketio_logging_level=logging.WARNING,
-            robot_type="robot",
+            robot_type=RobotType.ROBOT,
             device_id=None,
         )  # this simulates run(), really only part of it
         try:
