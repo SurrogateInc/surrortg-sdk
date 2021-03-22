@@ -298,6 +298,7 @@ class Game:
         self._configs = None
         self._players = None
         self._current_seat = None
+        self._on_finish_started = False
 
         # set initial exit_reason, this should be different
         # when the program ends
@@ -471,6 +472,9 @@ class Game:
         if self._update_requested:
             self._exit_signal_handler(3)
 
+        # reset between games
+        self._on_finish_started = False
+
         self._configs = self._parse_configs(message)
         set_num = await self.on_config()
         if set_num is not None:
@@ -502,14 +506,22 @@ class Game:
         await self.on_start()
 
     async def _on_finish_handler(self, message):
-        await self.on_finish()
+        if not self._on_finish_started:
+            self._on_finish_started = True
+            await self.on_finish()
 
     async def _on_end_handler(self, message):
         """Called when a 'gameEnded' message is received,
         which happens after grace period ends.
 
-        This is where player inputs are disabled by default.
+        Awaits on_finish if 'gracePeriodStarted' has not been received yet,
+        which is possible. This is where player inputs are disabled by
+        default.
         """
+        if not self._on_finish_started:
+            self._on_finish_started = True
+            await self.on_finish()
+
         self.io.disable_inputs()
         await self.io.reset_inputs()
         self._configs = None
