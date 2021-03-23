@@ -119,3 +119,12 @@ em {
 .rst-content code.literal {
     color: rgb(236, 0, 140);
 }
+
+/*blockquote*/
+.rst-content blockquote {
+    margin-left: 12px;
+    padding-left: 12px;
+    line-height: 24px;
+    margin-bottom: 24px;
+    border-left: 5px solid #ccc;
+}
