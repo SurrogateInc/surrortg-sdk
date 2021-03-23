@@ -151,3 +151,13 @@ Also to serve the docs page in <http://localhost:8000> you can use
 
 After building, the documentation can be found in
 `docs/build/html/index.html` or `docs/build/latex/surrortgsdk.pdf`
+
+### Documentation style
+
+The documentation files and READMEs should use Markdown or reStructuredText
+syntax whenever possible, instead of HTML + CSS. This allows the files to be
+readable and easily editable even when they are not rendered properly.
+
+The global CSS styling rules can be edited at
+`docs/source/_static/css/custom.css`, but this should be done carefully as it
+affects all documentation pages.
