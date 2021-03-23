@@ -1,8 +1,9 @@
 import asyncio
 import logging
 from enum import Enum, auto
-from surrortg.inputs import Switch
+
 from games.ninswitch.ns_gamepad_serial import NSButton, NSDPad
+from surrortg.inputs import Switch
 
 # auto button presses
 PRESS_TIME = 0.1

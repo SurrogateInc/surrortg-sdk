@@ -24,7 +24,6 @@ __all__ = ["open_local_endpoint", "open_remote_endpoint"]
 import asyncio
 import warnings
 
-
 # Datagram protocol
 
 
@@ -149,7 +148,7 @@ class RemoteEndpoint(Endpoint):
         super().send(data, None)
 
     async def receive(self):
-        """ Wait for an incoming datagram from the remote host.
+        """Wait for an incoming datagram from the remote host.
         This method is a coroutine.
         """
         data, addr = await super().receive()

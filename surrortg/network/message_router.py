@@ -1,8 +1,9 @@
 """This module implements different types of message routing strategies."""
-import logging
 import asyncio
-from ..inputs.input import Input
+import logging
 from dataclasses import dataclass
+
+from ..inputs.input import Input
 
 SRC_GAME_ENGINE = "gameEngine"
 EVENT_NEW_PEER = "newPeer"
@@ -76,12 +77,12 @@ class MessageRouter:
         try:
             input_id = msg.payload["id"]
         except KeyError:
-            logging.warning(f"Could not route message: malformed message")
+            logging.warning("Could not route message: malformed message")
             return
 
         if input_id in self.inputs:
             if self.inputs[input_id].admin and not is_admin_msg:
-                logging.warning(f"Non-admin trying to use admin input")
+                logging.warning("Non-admin trying to use admin input")
                 return
             await self.inputs[input_id].dev._on_input(
                 msg.payload["command"], seat

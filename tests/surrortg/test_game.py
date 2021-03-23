@@ -1,10 +1,11 @@
-import unittest
 import asyncio
+import logging
 import os
 import time
-import logging
+import unittest
 from signal import SIGINT, SIGTERM, SIGUSR1
 from threading import Thread
+
 from surrortg import Game, RobotType
 
 

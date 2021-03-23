@@ -1,5 +1,5 @@
-import logging
 import argparse
+import logging
 
 from surrortg import Game, RobotType
 

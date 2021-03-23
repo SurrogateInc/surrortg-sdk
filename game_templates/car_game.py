@@ -1,14 +1,16 @@
+import logging
+
+import pigpio
+
 from surrortg import Game  # First we need import the Game
 from surrortg.inputs import LinearActuator  # and our preferred input(s)
-import pigpio
-import logging
 
 MOTOR_PIN = 16
 SERVO_PIN = 12
 
 
 class PwmActuator(LinearActuator):
-    """ PwmActuator acts as controller for ESC and
+    """PwmActuator acts as controller for ESC and
     steering servo that take standard pwm servo input
 
     It receives values -1 ... 1 and maps that to matching
@@ -36,7 +38,7 @@ class PwmActuator(LinearActuator):
     :var current_delta: Active value that is used to control
         the actuator. Defaults to half of delta_max, and can be
         modified with increase_delta and reduce_delta methods.
-      """
+    """
 
     def __init__(self, pi, pin, delta_max=300, calibration=0):
         self.middle = 1500 + calibration
@@ -108,7 +110,7 @@ class ShiftGear(LinearActuator):
         self.increment = inc
 
     async def drive_actuator(self, val, seat=0):
-        """ Driving this virtual actuator increases the value
+        """Driving this virtual actuator increases the value
         of the connected actuator if the input is positive value,
         and decreases the value if it is negative. Off position
         (0) does nothing."""

@@ -1,10 +1,9 @@
-import logging
 import asyncio
+import logging
+
 import pigpio
-from games.claw.config import (
-    TOY_SENSOR_PIN,
-    TOY_SENSOR_STATE_BLOCKED,
-)
+
+from games.claw.config import TOY_SENSOR_PIN, TOY_SENSOR_STATE_BLOCKED
 
 
 class ClawToySensor:

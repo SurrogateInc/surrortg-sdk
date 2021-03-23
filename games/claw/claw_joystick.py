@@ -1,15 +1,17 @@
 import logging
+
 import pigpio
-from surrortg.inputs import Joystick, Directions
+
 from games.claw.config import (
-    TOP_PIN,
-    LEFT_PIN,
     BOTTOM_PIN,
-    RIGHT_PIN,
-    MIN_AMOUNT,
-    JOYSTICK_STATE_ON,
     JOYSTICK_STATE_OFF,
+    JOYSTICK_STATE_ON,
+    LEFT_PIN,
+    MIN_AMOUNT,
+    RIGHT_PIN,
+    TOP_PIN,
 )
+from surrortg.inputs import Directions, Joystick
 
 DIR_PINS = [TOP_PIN, LEFT_PIN, BOTTOM_PIN, RIGHT_PIN]
 

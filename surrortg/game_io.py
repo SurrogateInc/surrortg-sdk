@@ -1,7 +1,8 @@
 import logging
-from .network.socket_handler import SocketHandler
-from .network.message_router import MultiSeatMessageRouter
+
 from .config_parser import get_config
+from .network.message_router import MultiSeatMessageRouter
+from .network.socket_handler import SocketHandler
 
 SURRORTG_VERSION = "0.2.1"
 
@@ -95,13 +96,11 @@ class GameIO:
                 }
 
     def enable_inputs(self):
-        """Enable all registered inputs
-        """
+        """Enable all registered inputs"""
         self._message_router.set_enabled_all(True)
 
     def disable_inputs(self):
-        """Disable all registered inputs
-        """
+        """Disable all registered inputs"""
         self._message_router.set_enabled_all(False)
 
     def enable_input(self, seat):
@@ -316,8 +315,7 @@ class GameIO:
         self._send_threadsafe("setCurrentPlayer", seat=seat)
 
     def send_playing_ended(self):
-        """Tell the GE that the Game is ready to move to on_finish
-        """
+        """Tell the GE that the Game is ready to move to on_finish"""
         self._send_threadsafe("playingEnded")
 
     def log_admin(self, message, also_log=False):

@@ -1,5 +1,6 @@
 import unittest
-from surrortg.inputs import Joystick, Directions
+
+from surrortg.inputs import Directions, Joystick
 
 
 class TestJoystick(Joystick):
@@ -9,8 +10,7 @@ class TestJoystick(Joystick):
 
 class JoystickTest(unittest.TestCase):
     def test_get_direction_4(self):
-        """Test that the directions are correct in 4 case
-        """
+        """Test that the directions are correct in 4 case"""
         joystick = TestJoystick()
 
         self.assertEqual(joystick.get_direction_4(0, 1), Directions.TOP)
@@ -22,8 +22,7 @@ class JoystickTest(unittest.TestCase):
         self.assertEqual(joystick.get_direction_4(0, 0.09), Directions.MIDDLE)
 
     def test_get_direction_8(self):
-        """Test that the directions are correct in 8 case
-        """
+        """Test that the directions are correct in 8 case"""
         joystick = TestJoystick()
 
         self.assertEqual(joystick.get_direction_8(0, 1), Directions.TOP)

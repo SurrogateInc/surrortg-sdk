@@ -3,8 +3,8 @@ import logging
 
 import pigpio
 
-from surrortg.inputs import Switch
 from games.ninswitch.config import TRINKET_RESET_PIN
+from surrortg.inputs import Switch
 
 
 class TrinketResetSwitch(Switch):

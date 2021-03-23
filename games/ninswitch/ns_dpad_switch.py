@@ -1,5 +1,5 @@
-from surrortg.inputs import Switch
 from games.ninswitch.ns_gamepad_serial import NSDPad
+from surrortg.inputs import Switch
 
 
 class NSDPadSwitch(Switch):

@@ -1,6 +1,8 @@
-import logging
 import asyncio
+import logging
+
 import serial
+
 from games.claw.config import ARDUINO_PATH, BLOCKED_THRESHOLD
 
 
@@ -64,7 +66,7 @@ class ClawArduinoToySensor:
             while True:
                 await asyncio.sleep(1)
 
-        logging.info(f"Toy found!")
+        logging.info("Toy found!")
 
     @staticmethod
     def _get_line(ser):

@@ -1,9 +1,10 @@
+import asyncio
+import logging
+import time
+
 from surrortg import Game  # First we need import the Game
 from surrortg.inputs import Switch  # and our preferred input(s)
 from surrortg.inputs import Joystick
-import logging
-import asyncio
-import time
 
 
 # Create a custom switch, it really can do what ever you want.
@@ -25,7 +26,7 @@ class MyJoystick(Joystick):
         # handle player input here
 
     async def reset(self, seat=0):
-        logging.info(f"reset")
+        logging.info("reset")
 
 
 class SimpleGame(Game):

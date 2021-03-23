@@ -2,7 +2,6 @@ import asyncio  # noqa:F401
 import time  # noqa:F401
 import unittest  # noqa:F401
 
-
 # Run `pip install numpy opencv-contrib-python` tests can be run
 # for AsyncioVideoCapture
 """

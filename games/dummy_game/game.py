@@ -1,5 +1,6 @@
 import argparse
 import logging
+
 from surrortg import Game
 from surrortg.inputs import Joystick
 
@@ -10,7 +11,7 @@ class MyJoystick(Joystick):
         # handle player input here
 
     async def reset(self, seat=0):
-        logging.info(f"reset")
+        logging.info("reset")
 
 
 class DummyGame(Game):

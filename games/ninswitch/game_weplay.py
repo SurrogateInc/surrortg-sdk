@@ -1,27 +1,28 @@
 import asyncio
 import logging
+import sys
+import traceback
 from pathlib import Path
 
 import cv2
 import pigpio
 
-from surrortg import Game
-from surrortg.image_recognition import AsyncVideoCapture, get_pixel_detector
-from games.ninswitch.ns_gamepad_serial import NSGamepadSerial, NSButton, NSDPad
-from games.ninswitch.ns_switch import NSSwitch
+from games.ninswitch.config import RESET_TRINKET_EACH_LOOP
 from games.ninswitch.ns_dpad_switch import NSDPadSwitch
+from games.ninswitch.ns_gamepad_serial import NSButton, NSDPad, NSGamepadSerial
 from games.ninswitch.ns_joystick import NSJoystick
+from games.ninswitch.ns_switch import NSSwitch
 from games.ninswitch.trinket_reset_switch import TrinketResetSwitch
 from games.ninswitch.weplay_switches import (
-    WeplayMinusSwitch,
-    WeplayBSwitch,
-    WeplayXSwitch,
     WeplayASwitch,
+    WeplayBSwitch,
+    WeplayMinusSwitch,
     WeplayTriggerSwitch,
+    WeplayXSwitch,
     single_press,
 )
-from games.ninswitch.config import RESET_TRINKET_EACH_LOOP
-
+from surrortg import Game
+from surrortg.image_recognition import AsyncVideoCapture, get_pixel_detector
 
 # limit the processor use
 cv2.setNumThreads(1)
@@ -208,7 +209,8 @@ class NinSwitchWeplayGame(Game):
 
         # register admin controls
         self.io.register_inputs(
-            {"trinket_reset": self.trinket_reset_switch}, admin=True,
+            {"trinket_reset": self.trinket_reset_switch},
+            admin=True,
         )
 
         self.lock = asyncio.Lock()
@@ -380,8 +382,6 @@ class NinSwitchWeplayGame(Game):
     def image_rec_done_cb(self, fut):
         # make program end if image_rec_task raises error
         if not fut.cancelled() and fut.exception() is not None:
-            import traceback, sys  # noqa: E401
-
             e = fut.exception()
             logging.error(
                 "".join(traceback.format_exception(None, e, e.__traceback__))

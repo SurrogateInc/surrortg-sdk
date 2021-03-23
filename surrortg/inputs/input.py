@@ -2,8 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class Input(ABC):
-    """Base class for all user inputs
-    """
+    """Base class for all user inputs"""
 
     @abstractmethod
     async def _on_input(self, command, seat):

@@ -1,12 +1,12 @@
 import asyncio
+import concurrent.futures
 import logging
 import multiprocessing
-import concurrent.futures
 import time
-import cv2
-import numpy as np
 from enum import Enum, auto
 
+import cv2
+import numpy as np
 
 # VideoCaptureProcess
 MAX_READ_FAILURES_PER_INIT = 3
@@ -156,7 +156,8 @@ class AsyncVideoCapture:
             self._source, self._conn_process, self._apiPreference
         )
         self._cap_process = multiprocessing.Process(
-            target=cap_process.run, daemon=True,
+            target=cap_process.run,
+            daemon=True,
         )
         self._cap_process.start()
         await self._verify_process_start()

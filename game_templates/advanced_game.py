@@ -1,5 +1,5 @@
 from surrortg import Game  # First we need import the Game
-from surrortg.inputs import Joystick, Directions  # and our preferred input(s)
+from surrortg.inputs import Directions, Joystick  # and our preferred input(s)
 
 
 # Create a custom Joystick, it really can do what ever you want.

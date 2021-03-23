@@ -1,5 +1,5 @@
-from .input import Input
-from .switch import Switch
 from .delayed_switch import DelayedSwitch
-from .joystick import Joystick, MouseJoystick, Directions
+from .input import Input
+from .joystick import Directions, Joystick, MouseJoystick
 from .linear_actuator import LinearActuator
+from .switch import Switch

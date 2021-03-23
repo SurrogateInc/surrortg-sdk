@@ -1,6 +1,7 @@
 import asyncio
-from . import UdpBot
-from . import UdpActuator
+
+from .udp_actuator import UdpActuator
+from .udp_bot import UdpBot
 
 
 class UdpCar(UdpBot):
@@ -19,7 +20,10 @@ class UdpCar(UdpBot):
     """
 
     def __init__(
-        self, throttle_mult=1.0, steering_mult=1.0, repeat_commands=False,
+        self,
+        throttle_mult=1.0,
+        steering_mult=1.0,
+        repeat_commands=False,
     ):
         super().__init__()
         self._throttle = UdpActuator(0x01, throttle_mult, repeat_commands)

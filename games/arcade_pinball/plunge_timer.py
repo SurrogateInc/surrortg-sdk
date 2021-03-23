@@ -1,10 +1,12 @@
 import time
-import pigpio
 from threading import RLock
+
+import pigpio
+
 from games.arcade_pinball.config import (
-    PLUNGER_PRESS_TIME,
-    PLUNGER_PIN,
     BALL_SENSOR_PIN,
+    PLUNGER_PIN,
+    PLUNGER_PRESS_TIME,
 )
 
 MAX_ALLOWED_PLUNGE_TIME = 2 * PLUNGER_PRESS_TIME

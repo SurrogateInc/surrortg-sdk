@@ -5,8 +5,8 @@ import pigpio
 
 from games.claw.config import (
     SOLENOID_FIRE_INTERVAL,
-    SOLENOID_PSU_PIN,
     SOLENOID_FIRE_PIN,
+    SOLENOID_PSU_PIN,
 )
 
 

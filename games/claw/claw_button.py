@@ -1,13 +1,15 @@
-import logging
 import asyncio
+import logging
+
 import pigpio
-from surrortg.inputs import Switch
+
 from games.claw.config import (
     BTN_PIN,
     BTN_TIME,
     JOYSTICK_STATE_OFF,
     JOYSTICK_STATE_ON,
 )
+from surrortg.inputs import Switch
 
 
 class ClawButton(Switch):
@@ -24,7 +26,7 @@ class ClawButton(Switch):
     async def on(self, seat=0):
         if self.pre_press_action is not None:
             await self.pre_press_action()
-        logging.info(f"Button pressed")
+        logging.info("Button pressed")
         self.pi.write(BTN_PIN, JOYSTICK_STATE_ON)
         await asyncio.sleep(BTN_TIME)
         self.pi.write(BTN_PIN, JOYSTICK_STATE_OFF)

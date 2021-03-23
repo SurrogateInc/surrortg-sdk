@@ -1,25 +1,27 @@
-import logging
 import asyncio
+import logging
+
 import pigpio
-from surrortg import Game
+
 from games.arcade_pinball.arcade_button import ArcadeButton, ArcadeMultiButton
-from games.arcade_pinball.plunger import Plunger
-from games.arcade_pinball.start_led import StartLED, StartLEDStates
 from games.arcade_pinball.config import (
-    GameModes,
+    ABUSE_SLEEP,
+    BALL_SENSOR_PIN,
     GAME_MODE,
     LEFT_FLIPPER_PIN,
-    RIGHT_FLIPPER_PINS,
     MAGNET_BUTTON_SLAM_TILT_PIN,
-    START_BUTTON_PIN,
+    MAX_BLINKING_START_WAIT_DURING_INIT,
+    MAX_BLINKING_START_WAIT_DURING_PREPARE,
     PLUNGER_PIN,
-    BALL_SENSOR_PIN,
+    RIGHT_FLIPPER_PINS,
     SERVICE_CREDIT_BUTTON_PIN,
     START_BUTTON_LED_PIN,
-    ABUSE_SLEEP,
-    MAX_BLINKING_START_WAIT_DURING_PREPARE,
-    MAX_BLINKING_START_WAIT_DURING_INIT,
+    START_BUTTON_PIN,
+    GameModes,
 )
+from games.arcade_pinball.plunger import Plunger
+from games.arcade_pinball.start_led import StartLED, StartLEDStates
+from surrortg import Game
 
 
 class ArcadePinballGame(Game):
@@ -139,7 +141,7 @@ class ArcadePinballGame(Game):
 
     async def start_game(self):
         self.game_ended_properly = False
-        logging.info(f"Starting new game on the machine")
+        logging.info("Starting new game on the machine")
         self.plunger.reset_ball_counter()
 
         # add credit before start if in paid mode
@@ -152,19 +154,19 @@ class ArcadePinballGame(Game):
     async def end_game(self):
         self.game_ended_properly = True
         self.io.send_score(score=1, final_score=True)
-        logging.info(f"game ended")
+        logging.info("game ended")
 
     async def wait_for_blinking_to_end(self):
-        logging.info(f"waiting for the blinking to end")
+        logging.info("waiting for the blinking to end")
         while self.start_led.get_state() == StartLEDStates.BLINKING:
             await asyncio.sleep(1)
-        logging.info(f"blinking ended")
+        logging.info("blinking ended")
 
     async def wait_for_blinking_to_start(self):
-        logging.info(f"waiting for the blinking to start")
+        logging.info("waiting for the blinking to start")
         while self.start_led.get_state() != StartLEDStates.BLINKING:
             await asyncio.sleep(1)
-        logging.info(f"blinking started")
+        logging.info("blinking started")
 
 
 if __name__ == "__main__":
