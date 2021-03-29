@@ -26,6 +26,7 @@ class GameIO:
 
         if device_id is not None:
             self._config["device_id"] = device_id
+        self.device_id = self._config["device_id"]
         self.input_bindings = {}
         self._message_router = MultiSeatMessageRouter(robot_log_handler)
 

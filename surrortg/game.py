@@ -467,6 +467,29 @@ class Game:
             logging.warning(f"Malformed ROBOT_LOG: {msg}")
         # TODO RD-917 add support for restarting robot from the admin panel
 
+    def _parse_seats(self, configs):
+        # Config types or structure are not enforced
+        # so let's check everything before use
+        seats = []
+        if isinstance(configs, dict) and "robots" in configs:
+            for robot in configs["robots"]:
+                if isinstance(robot, dict) and "id" in robot:
+                    # Leave option to remove 'robot' from
+                    # the id end at some point
+                    if robot["id"].endswith("robot"):
+                        robot_id = robot["id"][: -len("robot")]
+                    else:
+                        robot_id = robot["id"]
+                    if robot_id == self.io.device_id:
+                        if "seat" in robot and isinstance(robot["seat"], int):
+                            seats.append(robot["seat"])
+
+        if len(seats) == 0:
+            logging.warning("No seats could be parsed! Defaulting to seat 0")
+            seats.append(0)
+
+        return seats
+
     async def _on_config_handler(self, message):
         # end execution if update has been requested
         if self._update_requested:
@@ -476,6 +499,7 @@ class Game:
         self._on_finish_started = False
 
         self._configs = self._parse_configs(message)
+        self._seats = self._parse_seats(self._configs)
         set_num = await self.on_config()
         if set_num is not None:
             payload = {"set": set_num}
@@ -491,7 +515,8 @@ class Game:
     async def _on_pre_game_handler(self, message):
         self._players = self._parse_players(message)
         self._current_seat = await self.on_pre_game()
-        self.io.send_pre_game_ready()
+        for seat in self._seats:
+            self.io.send_pre_game_ready(seat=seat)
 
     async def _on_countdown_handler(self, message):
         await self.on_countdown()
