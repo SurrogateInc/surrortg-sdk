@@ -14,6 +14,7 @@ black = "==20.8b1" # if version changed, change also on .pre-commit-config.yaml
 codespell = "==v2.0.0" # if version changed, change also on .pre-commit-config.yaml
 pep8-naming = "==0.11.1" # if version changed, change also on .pre-commit-config.yaml
 isort = "==5.7.0" # if version changed, change also on .pre-commit-config.yaml
+importlib-metadata = "*" # needed by flake8 and listed explicitly to fix dependency issues between Python versions
 
 [packages]
 surrortg = {editable = true, path = "."}
