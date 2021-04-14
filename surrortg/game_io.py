@@ -50,6 +50,7 @@ class GameIO:
                 self._message_router.handle_message,
             ],
             response_callbacks={self._is_config_message: ge_message_handler},
+            socketio_connect_callback=self._send_controller_ready,
             socketio_logging_level=socketio_logging_level,
         )
         self._can_register_inputs = False
@@ -320,6 +321,10 @@ class GameIO:
         self._send_threadsafe("adminLog", payload={"message": message})
         if also_log:
             logging.info(message)
+
+    def _send_controller_ready(self):
+        msg = {"inputs": self._get_inputs()}
+        self._send_threadsafe("controllerReady", payload=msg)
 
     def _send_threadsafe(
         self, event, src=None, seat=0, payload={}, callback=None

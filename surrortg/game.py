@@ -505,7 +505,6 @@ class Game:
         if set_num is not None:
             payload["set"] = set_num
 
-        payload["inputs"] = self.io._get_inputs()
         return payload
 
     async def _on_prepare_handler(self, message):
