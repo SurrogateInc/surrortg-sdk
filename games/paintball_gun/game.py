@@ -5,12 +5,9 @@ import keyboard
 import pigpio
 
 from games.paintball_gun.config import (
-    MAX_GAME_TIME,
     MAX_TRIGGER_PRESSES,
     ON_LEVEL,
     TRIGGER_PIN,
-    WAIT_CONTINUE_DASHBOARD,
-    WAIT_CONTINUE_KEYBOARD,
 )
 from surrortg import Game
 from surrortg.inputs import Switch
@@ -64,8 +61,6 @@ class PaintballGunGame(Game):
         if not self.pi.connected:
             raise RuntimeError("Could not connect to pigpio daemon")
 
-        self.game_ready = None
-
         # Initialize input
         self.trigger = TriggerSwitch(self.pi, TRIGGER_PIN, MAX_TRIGGER_PRESSES)
 
@@ -79,23 +74,6 @@ class PaintballGunGame(Game):
         except (AttributeError, KeyError):
             pass
 
-    async def on_prepare(self):
-        # Wait for approval to continue if necessary
-        if WAIT_CONTINUE_DASHBOARD:
-            logging.info("Press play button to continue to the next game")
-            return False
-        elif WAIT_CONTINUE_KEYBOARD:
-            # Bind game ready handler to key press event
-            self._ready_handler_hook = keyboard.on_press_key(
-                "enter", self._game_ready_handler
-            )
-
-            # Wait until enter is pressed to continue to the next game
-            logging.info("Press 'Enter' to continue to the next game")
-            self.game_ready = False
-            while not self.game_ready:
-                await asyncio.sleep(0)
-
     async def on_pre_game(self):
         # Reset trigger press count
         self.trigger.reset_press_count()
@@ -106,35 +84,24 @@ class PaintballGunGame(Game):
         # Bind game winner handler to key press event
         self._winner_handler_hook = keyboard.on_press(self._winner_handler)
 
-        # Play the game until score is manually selected or the time is up
-        try:
-            await asyncio.sleep(MAX_GAME_TIME)
-            logging.warning("MAX_GAME_TIME passed, ending game")
-            self.io.disable_inputs()
-            self.io.send_score(score=0, final_score=True)
-        except asyncio.CancelledError:
-            logging.info("GE ended playing")
-
     async def on_finish(self):
         # Disable controls
         self.io.disable_inputs()
 
-        # Unbind game winner handler from key press event
         try:
-            keyboard.unhook(self._winner_handler_hook)
-        except (AttributeError, KeyError):
-            pass
+            while True:
+                await asyncio.sleep(0)
+        except asyncio.CancelledError:
+            # Unbind game winner handler from key press event
+            try:
+                keyboard.unhook(self._winner_handler_hook)
+            except (AttributeError, KeyError):
+                pass
 
     async def on_exit(self, reason, exception):
         # Unbind game winner handler from key press event
         try:
             keyboard.unhook(self._winner_handler_hook)
-        except (AttributeError, KeyError):
-            pass
-
-        # Unbind game ready handler from key press event
-        try:
-            keyboard.unhook(self._ready_handler_hook)
         except (AttributeError, KeyError):
             pass
 
@@ -151,10 +118,6 @@ class PaintballGunGame(Game):
 
         self.io.send_score(score=score, final_score=True)
         keyboard.unhook(self._winner_handler_hook)
-
-    def _game_ready_handler(self, key):
-        self.game_ready = True
-        keyboard.unhook(self._ready_handler_hook)
 
 
 if __name__ == "__main__":
