@@ -4,8 +4,7 @@ TO OVERRIDE THESE VALUES, USE config_local.py
 """
 
 """Game"""
-# Defines name and pin number for the trigger switch. Pin number is the
-# Raspberry Pi BCM number.
+# Defines the Raspberry Pi GPIO pin number for the trigger switch.
 TRIGGER_PIN = 14
 # Defines the maximum amount of trigger presses per turn
 MAX_TRIGGER_PRESSES = 1

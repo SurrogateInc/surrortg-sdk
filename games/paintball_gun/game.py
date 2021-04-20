@@ -67,10 +67,10 @@ class PaintballGunGame(Game):
         # Register input
         self.io.register_inputs({"trigger": self.trigger})
 
-    async def on_config(self):
+    async def on_prepare(self):
         # Unbind game winner handler from key press event
         try:
-            keyboard.unhook(self._winner_handler_hook)
+            keyboard.unhook(self.winner_handler_hook)
         except (AttributeError, KeyError):
             pass
 
@@ -82,7 +82,7 @@ class PaintballGunGame(Game):
     async def on_start(self):
         logging.info("Game starts")
         # Bind game winner handler to key press event
-        self._winner_handler_hook = keyboard.on_press(self._winner_handler)
+        self.winner_handler_hook = keyboard.on_press(self.winner_handler)
 
     async def on_finish(self):
         # Disable controls
@@ -94,18 +94,18 @@ class PaintballGunGame(Game):
         except asyncio.CancelledError:
             # Unbind game winner handler from key press event
             try:
-                keyboard.unhook(self._winner_handler_hook)
+                keyboard.unhook(self.winner_handler_hook)
             except (AttributeError, KeyError):
                 pass
 
     async def on_exit(self, reason, exception):
         # Unbind game winner handler from key press event
         try:
-            keyboard.unhook(self._winner_handler_hook)
+            keyboard.unhook(self.winner_handler_hook)
         except (AttributeError, KeyError):
             pass
 
-    def _winner_handler(self, key):
+    def winner_handler(self, key):
         if key.name == "1":
             score = 1
             logging.info("Win selected")
@@ -117,7 +117,7 @@ class PaintballGunGame(Game):
             return
 
         self.io.send_score(score=score, final_score=True)
-        keyboard.unhook(self._winner_handler_hook)
+        keyboard.unhook(self.winner_handler_hook)
 
 
 if __name__ == "__main__":
