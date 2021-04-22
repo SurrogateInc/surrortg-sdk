@@ -1,16 +1,4 @@
-from surrortg.inputs import Directions, Joystick
-
-DIRECTION_TO_JOYSTICK_VALS = {
-    Directions.TOP: (128, 0),
-    Directions.BOTTOM: (128, 255),
-    Directions.LEFT: (0, 128),
-    Directions.RIGHT: (255, 128),
-    Directions.TOP_LEFT: (0, 0),
-    Directions.TOP_RIGHT: (255, 0),
-    Directions.BOTTOM_LEFT: (0, 255),
-    Directions.BOTTOM_RIGHT: (255, 255),
-    Directions.MIDDLE: (128, 128),
-}
+from surrortg.inputs import Joystick
 
 
 class NSJoystick(Joystick):
@@ -19,8 +7,8 @@ class NSJoystick(Joystick):
         self.y_axis = y_axis
 
     async def handle_coordinates(self, x, y, seat=0):
-        direction = self.get_direction_8(x, y)
-        x, y = DIRECTION_TO_JOYSTICK_VALS[direction]
+        y = min(127, max(-128, int(y * -128))) + 128
+        x = max(-128, min(127, int(x * 128))) + 128
         self.x_axis(x)
         self.y_axis(y)
 
