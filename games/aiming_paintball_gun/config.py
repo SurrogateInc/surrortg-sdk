@@ -8,15 +8,13 @@ TO OVERRIDE THESE VALUES, USE config_local.py
 MAX_TRIGGER_PRESSES = 3
 
 """TriggerSwitch"""
-# Defines name and pin number for the trigger switch. Pin number is the
-# Raspberry Pi GPIO number.
+# Defines the Raspberry Pi GPIO pin number for the trigger switch
 TRIGGER_PIN = 14
 # Defines if GPIO ON level is HIGH or LOW
 ON_LEVEL = "LOW"
 
 """Servo"""
-# Defines name and pin number for the servo. Pin number is the
-# Raspberry Pi GPIO number.
+# Defines the Raspberry Pi GPIO pin number for the servo
 SERVO_PIN = 12
 SERVO_MIN_PULSE_WIDTH = 1400
 SERVO_MAX_PULSE_WIDTH = 1650
