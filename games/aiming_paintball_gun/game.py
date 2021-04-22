@@ -7,33 +7,34 @@ import pigpio
 from games.aiming_paintball_gun.config import (
     MAX_TRIGGER_PRESSES,
     ON_LEVEL,
-    TRIGGER_PIN,
-    SERVO_PIN,
-    SERVO_MIN_PULSE_WIDTH,
     SERVO_MAX_PULSE_WIDTH,
     SERVO_MIN_FULL_SWEEP_TIME,
-    SERVO_ROTATION_UPDATE_FREQ
+    SERVO_MIN_PULSE_WIDTH,
+    SERVO_PIN,
+    SERVO_ROTATION_UPDATE_FREQ,
+    TRIGGER_PIN,
 )
 from surrortg import Game
-from surrortg.inputs import Switch
-from surrortg.inputs import Joystick
 from surrortg.devices import Servo
+from surrortg.inputs import Joystick, Switch
+
 
 class ServoJoystick(Joystick):
     def __init__(self, servo):
         self.servo = servo
         self.is_on = False
-    
+
     async def handle_coordinates(self, x, y, seat=0):
         if self.is_on:
             self.servo.rotation_speed = x
 
     async def enable(self):
         self.is_on = True
-    
+
     async def disable(self):
         await self.handle_coordinates(0, 0)
         self.is_on = False
+
 
 class TriggerSwitch(Switch):
     def __init__(self, pi, pin, max_presses, max_press_cb):
@@ -87,15 +88,25 @@ class PaintballGunGame(Game):
             raise RuntimeError("Could not connect to pigpio daemon")
 
         # Initialize input
-        self.trigger = TriggerSwitch(self.pi, TRIGGER_PIN, MAX_TRIGGER_PRESSES, self.max_presses_handler)
-        self.servo = Servo(SERVO_PIN, SERVO_MIN_PULSE_WIDTH, SERVO_MAX_PULSE_WIDTH, SERVO_MIN_FULL_SWEEP_TIME, SERVO_ROTATION_UPDATE_FREQ)
+        self.trigger = TriggerSwitch(
+            self.pi, TRIGGER_PIN, MAX_TRIGGER_PRESSES, self.max_presses_handler
+        )
+        self.servo = Servo(
+            SERVO_PIN,
+            SERVO_MIN_PULSE_WIDTH,
+            SERVO_MAX_PULSE_WIDTH,
+            SERVO_MIN_FULL_SWEEP_TIME,
+            SERVO_ROTATION_UPDATE_FREQ,
+        )
         self.servo_joystick = ServoJoystick(self.servo)
 
         # Register input
-        self.io.register_inputs({
-            "trigger": self.trigger,
-            "aim": self.servo_joystick,
-        })
+        self.io.register_inputs(
+            {
+                "trigger": self.trigger,
+                "aim": self.servo_joystick,
+            }
+        )
 
     def safe_keyboard_unhook(self):
         try:
