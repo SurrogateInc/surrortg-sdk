@@ -69,10 +69,7 @@ class PaintballGunGame(Game):
 
     async def on_prepare(self):
         # Unbind game winner handler from key press event
-        try:
-            keyboard.unhook(self.winner_handler_hook)
-        except (AttributeError, KeyError):
-            pass
+        self.safe_keyboard_unhook()
 
     async def on_pre_game(self):
         # Reset trigger press count
@@ -89,21 +86,16 @@ class PaintballGunGame(Game):
         self.io.disable_inputs()
 
         try:
+            # Wait until the Game Engine ends the game
             while True:
-                await asyncio.sleep(0)
+                await asyncio.sleep(0.1)
         except asyncio.CancelledError:
             # Unbind game winner handler from key press event
-            try:
-                keyboard.unhook(self.winner_handler_hook)
-            except (AttributeError, KeyError):
-                pass
+            self.safe_keyboard_unhook()
 
     async def on_exit(self, reason, exception):
         # Unbind game winner handler from key press event
-        try:
-            keyboard.unhook(self.winner_handler_hook)
-        except (AttributeError, KeyError):
-            pass
+        self.safe_keyboard_unhook()
 
     def winner_handler(self, key):
         if key.name == "1":
@@ -117,7 +109,13 @@ class PaintballGunGame(Game):
             return
 
         self.io.send_score(score=score, final_score=True)
-        keyboard.unhook(self.winner_handler_hook)
+        self.safe_keyboard_unhook()
+
+    def safe_keyboard_unhook(self):
+        try:
+            keyboard.unhook(self.winner_handler_hook)
+        except (AttributeError, KeyError):
+            pass
 
 
 if __name__ == "__main__":
