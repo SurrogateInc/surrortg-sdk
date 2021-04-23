@@ -38,7 +38,7 @@ class ServoJoystick(Joystick):
 
 class TriggerSwitch(Switch):
     def __init__(self, pi, pin, max_presses, max_press_cb):
-        self._pi = pi
+        self.pi = pi
         self.pin = pin
         self.max_presses = max_presses
         self.press_count = 0
@@ -53,22 +53,22 @@ class TriggerSwitch(Switch):
             self.off_level = pigpio.HIGH
 
         # Initialize output pin
-        self._pi.set_mode(self.pin, pigpio.OUTPUT)
-        self._pi.write(self.pin, self.off_level)
+        self.pi.set_mode(self.pin, pigpio.OUTPUT)
+        self.pi.write(self.pin, self.off_level)
 
     async def on(self, seat=0):
         # Press only if max press count is not yet reached
         if self.press_count < self.max_presses:
             self.press_count += 1
-            self._pi.write(self.pin, self.on_level)
+            self.pi.write(self.pin, self.on_level)
+            logging.info("Trigger pressed")
             if self.press_count == self.max_presses:
                 await self.max_press_cb()
-            logging.info("Trigger pressed")
         else:
             logging.info("Max press count reached")
 
     async def off(self, seat=0):
-        self._pi.write(self.pin, self.off_level)
+        self.pi.write(self.pin, self.off_level)
         logging.info("Trigger released")
 
     def reset_press_count(self):
@@ -76,8 +76,8 @@ class TriggerSwitch(Switch):
 
     async def shutdown(self, seat=0):
         # Set pin to input mode to make it safe
-        self._pi.set_pull_up_down(self.pin, pigpio.PUD_OFF)
-        self._pi.set_mode(self.pin, pigpio.INPUT)
+        self.pi.set_pull_up_down(self.pin, pigpio.PUD_OFF)
+        self.pi.set_mode(self.pin, pigpio.INPUT)
 
 
 class PaintballGunGame(Game):
@@ -87,7 +87,7 @@ class PaintballGunGame(Game):
         if not self.pi.connected:
             raise RuntimeError("Could not connect to pigpio daemon")
 
-        # Initialize input
+        # Initialize inputs
         self.trigger = TriggerSwitch(
             self.pi, TRIGGER_PIN, MAX_TRIGGER_PRESSES, self.max_presses_handler
         )
@@ -100,7 +100,7 @@ class PaintballGunGame(Game):
         )
         self.servo_joystick = ServoJoystick(self.servo)
 
-        # Register input
+        # Register inputs
         self.io.register_inputs(
             {
                 "trigger": self.trigger,
@@ -136,7 +136,7 @@ class PaintballGunGame(Game):
 
         try:
             while True:
-                await asyncio.sleep(0)
+                await asyncio.sleep(0.1)
         except asyncio.CancelledError:
             # Unbind game winner handler from key press event
             self.safe_keyboard_unhook()
@@ -157,7 +157,6 @@ class PaintballGunGame(Game):
             return
 
         self.io.send_score(score=score, final_score=True)
-        keyboard.unhook(self.winner_handler_hook)
         self.safe_keyboard_unhook()
 
     async def max_presses_handler(self):
