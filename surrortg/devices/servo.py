@@ -67,6 +67,7 @@ class Servo:
         if not self._pi.connected:
             raise RuntimeError("Could not connect to pigpio daemon")
         self._pi.set_mode(self._pin, pigpio.OUTPUT)
+        self._pi.set_servo_pulsewidth(self._pin, 0)
 
     @property
     def position(self):
