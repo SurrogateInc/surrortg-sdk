@@ -501,10 +501,10 @@ class Game:
         self._configs = self._parse_configs(message)
         self._seats = self._parse_seats(self._configs)
         set_num = await self.on_config()
+        payload = {}
         if set_num is not None:
-            payload = {"set": set_num}
-        else:
-            payload = {}
+            payload["set"] = set_num
+
         return payload
 
     async def _on_prepare_handler(self, message):
