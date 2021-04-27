@@ -15,7 +15,7 @@ from surrortg.inputs import Switch
 
 class TriggerSwitch(Switch):
     def __init__(self, pi, pin, max_presses):
-        self._pi = pi
+        self.pi = pi
         self.pin = pin
         self.max_presses = max_presses
         self.press_count = 0
@@ -29,20 +29,20 @@ class TriggerSwitch(Switch):
             self.off_level = pigpio.HIGH
 
         # Initialize output pin
-        self._pi.set_mode(self.pin, pigpio.OUTPUT)
-        self._pi.write(self.pin, self.off_level)
+        self.pi.set_mode(self.pin, pigpio.OUTPUT)
+        self.pi.write(self.pin, self.off_level)
 
     async def on(self, seat=0):
         # Press only if max press count is not yet reached
         if self.press_count < self.max_presses:
             self.press_count += 1
-            self._pi.write(self.pin, self.on_level)
+            self.pi.write(self.pin, self.on_level)
             logging.info("Trigger pressed")
         else:
             logging.info("Max press count reached")
 
     async def off(self, seat=0):
-        self._pi.write(self.pin, self.off_level)
+        self.pi.write(self.pin, self.off_level)
         logging.info("Trigger released")
 
     def reset_press_count(self):
@@ -50,8 +50,8 @@ class TriggerSwitch(Switch):
 
     async def shutdown(self, seat=0):
         # Set pin to input mode to make it safe
-        self._pi.set_pull_up_down(self.pin, pigpio.PUD_OFF)
-        self._pi.set_mode(self.pin, pigpio.INPUT)
+        self.pi.set_pull_up_down(self.pin, pigpio.PUD_OFF)
+        self.pi.set_mode(self.pin, pigpio.INPUT)
 
 
 class PaintballGunGame(Game):

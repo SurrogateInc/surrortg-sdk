@@ -24,6 +24,6 @@ SERVO_ROTATION_UPDATE_FREQ = 150
 
 # Override values in this file with those found in config_local.py
 try:
-    from games.relay_game.config_local import *  # noqa
+    from games.aiming_paintball_gun.config_local import *  # noqa
 except ModuleNotFoundError:
     pass
