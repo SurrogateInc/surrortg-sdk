@@ -62,6 +62,7 @@ class Servo:
         self._rotation_update_freq = rotation_update_freq
         self._latest_rotation_start_time = None
         self._rotation_speed = 0
+        self._stopped = False
 
         self._pi = pigpio.pi()
         if not self._pi.connected:
@@ -78,6 +79,8 @@ class Servo:
         :rtype: int
         """
 
+        self._check_if_stopped()
+
         pulse_width = self._pi.get_servo_pulsewidth(self._pin)
         if pulse_width == 0:  # Is detached
             return None
@@ -91,6 +94,8 @@ class Servo:
     @position.setter
     def position(self, position):
         assert -1 <= position <= 1, f"Position {position} not inside -1 to 1"
+        self._check_if_stopped()
+
         scaled_pos = (
             -position * (self._mid_pulse_width - self._min_pulse_width)
             + self._mid_pulse_width
@@ -108,6 +113,8 @@ class Servo:
         :return: rotation speed value between -1 and 1
         :rtype: int
         """
+        self._check_if_stopped()
+
         return self._rotation_speed
 
     @rotation_speed.setter
@@ -115,6 +122,7 @@ class Servo:
         assert (
             -1 <= rotation_speed <= 1
         ), f"Rotation speed {rotation_speed} outside -1 to 1"
+        self._check_if_stopped()
 
         # Set rotation speed
         self._rotation_speed = rotation_speed
@@ -136,6 +144,8 @@ class Servo:
             which is changed to the max speed in the correct direction.
         :type rotation_speed: int, optional
         """
+        self._check_if_stopped()
+
         if self.position is None:
             logging.warning("Servo position not known, guessing middle 0")
             self.position = 0
@@ -201,8 +211,14 @@ class Servo:
                 ),
             )
 
+    def _check_if_stopped(self):
+        if self._stopped:
+            raise RuntimeError("Servo already stopped")
+
     def detach(self):
         """Stops servo rotation and releases active servo control"""
+
+        self._check_if_stopped()
 
         self.rotation_speed = 0
         self._pi.set_servo_pulsewidth(self._pin, 0)
@@ -212,6 +228,7 @@ class Servo:
 
         self.detach()
         self._pi.stop()
+        self._stopped = True
 
 
 if __name__ == "__main__":
