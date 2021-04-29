@@ -96,6 +96,10 @@ class Servo:
         assert -1 <= position <= 1, f"Position {position} not inside -1 to 1"
         self._check_if_stopped()
 
+        self.rotation_speed = 0
+        self._position(position)
+
+    def _position(self, position):
         scaled_pos = (
             -position * (self._mid_pulse_width - self._min_pulse_width)
             + self._mid_pulse_width
@@ -148,7 +152,7 @@ class Servo:
 
         if self.position is None:
             logging.warning("Servo position not known, guessing middle 0")
-            self.position = 0
+            self._position(0)
 
         if rotation_speed is None:
             rotation_speed = -1 if position < self.position else 1
@@ -182,7 +186,7 @@ class Servo:
             min_position,
             max_position,
         ):
-            self.position = position
+            self._position(position)
             await asyncio.sleep(1 / self._rotation_update_freq)
 
         # Set the rotation speed to 0
