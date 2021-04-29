@@ -11,7 +11,7 @@ from games.dog_feeder.config import (
 )
 from surrortg import Game
 from surrortg.devices import Servo
-from surrortg.inputs import Joystick, Switch
+from surrortg.inputs import Switch
 
 
 class ServoSwitch(Switch):
@@ -64,6 +64,7 @@ class DogFeederGame(Game):
         logging.info("Game starts")
 
     async def on_finish(self):
+        self.io.send_score(score=1)
         # Disable controls
         self.io.disable_inputs()
 
