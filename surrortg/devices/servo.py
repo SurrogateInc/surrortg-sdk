@@ -61,6 +61,7 @@ class Servo:
         )
         self._rotation_update_freq = rotation_update_freq
         self._latest_rotation_start_time = None
+        self._position = None
         self._rotation_speed = 0
         self._stopped = False
 
@@ -81,15 +82,7 @@ class Servo:
 
         self._check_if_stopped()
 
-        pulse_width = self._pi.get_servo_pulsewidth(self._pin)
-        if pulse_width == 0:  # Is detached
-            return None
-        return (
-            -(pulse_width - self._min_pulse_width)
-            / (self._max_pulse_width - self._min_pulse_width)
-            * 2
-            + 1
-        )
+        return self._position
 
     @position.setter
     def position(self, position):
@@ -97,14 +90,15 @@ class Servo:
         self._check_if_stopped()
 
         self.rotation_speed = 0
-        self._position(position)
+        self._set_position(position)
 
-    def _position(self, position):
+    def _set_position(self, position):
         scaled_pos = (
             -position * (self._mid_pulse_width - self._min_pulse_width)
             + self._mid_pulse_width
         )  # Scale -1 to 1 between min and max pulse width
         self._pi.set_servo_pulsewidth(self._pin, scaled_pos)
+        self._position = position
 
     @property
     def rotation_speed(self):
@@ -172,7 +166,7 @@ class Servo:
 
         if self.position is None:
             logging.warning("Servo position not known, guessing middle 0")
-            self._position(0)
+            self._set_position(0)
 
         if rotation_speed is None:
             rotation_speed = -1 if position < self.position else 1
@@ -202,7 +196,7 @@ class Servo:
             min_position,
             max_position,
         ):
-            self._position(position)
+            self._set_position(position)
             await asyncio.sleep(1 / self._rotation_update_freq)
 
         # Set the rotation speed to 0
@@ -241,6 +235,7 @@ class Servo:
         self._check_if_stopped()
 
         self.rotation_speed = 0
+        self._position = None
         self._pi.set_servo_pulsewidth(self._pin, 0)
 
     def stop(self):
