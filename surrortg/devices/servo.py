@@ -1,5 +1,4 @@
 import asyncio
-import copy
 import logging
 import time
 
@@ -130,15 +129,11 @@ class Servo:
             self._latest_rotation_start_time = None
         else:
             position = -1 if rotation_speed < 0 else 1
-            self._latest_rotation_start_time = time.time()
-            rotation_start_time_copy = copy.copy(
-                self._latest_rotation_start_time
-            )
             asyncio.create_task(
                 self._rotate_to(
                     position,
-                    rotation_start_time_copy,
                     rotation_speed,
+                    time.time(),
                 )
             )
 
@@ -153,20 +148,16 @@ class Servo:
         :type rotation_speed: int, optional
         """
         self._check_if_stopped()
+        await self._rotate_to(position, rotation_speed, time.time())
 
-        self._latest_rotation_start_time = time.time()
-        rotation_start_time_copy = copy.copy(self._latest_rotation_start_time)
-
-        await self._rotate_to(
-            position, rotation_start_time_copy, rotation_speed
-        )
-
-    async def _rotate_to(
-        self, position, rotation_start_time, rotation_speed=None
-    ):
+    async def _rotate_to(self, position, rotation_speed, rotation_start_time):
         # Asyncio task starts after a delay, this handles the case where
-        # stop() is called before the task has started
-        if self._stopped:
+        # stop() is called before the task has started or there was another
+        # _rotate_to call in between
+        if self._stopped or (
+            self._latest_rotation_start_time is not None
+            and self._latest_rotation_start_time > rotation_start_time
+        ):
             return
 
         current_position = self.position
@@ -201,6 +192,7 @@ class Servo:
         if self.position is None:
             self._set_position(0)
 
+        self._latest_rotation_start_time = rotation_start_time
         for position in self._rotation_positions(
             rotation_speed,
             rotation_start_time,
