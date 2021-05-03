@@ -169,31 +169,37 @@ class Servo:
         if self._stopped:
             return
 
+        current_position = self.position
+        # Guess the middle position if the position is not set
         if self.position is None:
             logging.warning("Servo position not known, guessing middle 0")
-            self._set_position(0)
+            current_position = 0
 
         if rotation_speed is None:
-            rotation_speed = -1 if position < self.position else 1
+            rotation_speed = -1 if position < current_position else 1
 
         assert (
             -1 <= rotation_speed <= 1
         ), f"Rotation speed {rotation_speed} outside -1 to 1"
         assert rotation_speed != 0, "Rotation speed cannot be 0"
 
-        if rotation_speed < 0 and position <= self.position:
+        if rotation_speed < 0 and position <= current_position:
             min_position = position
             max_position = 1
-        elif rotation_speed > 0 and position >= self.position:
+        elif rotation_speed > 0 and position >= current_position:
             min_position = -1
             max_position = position
         else:
             logging.warning(
                 f"Rotation speed {rotation_speed} goes away from position "
-                f"{position}, as the current position is {self.position}. "
+                f"{position}, as the current position is {current_position}. "
                 "Not rotating."
             )
             return
+
+        # Use the guessed middle position if it was ok
+        if self.position is None:
+            self._set_position(0)
 
         for position in self._rotation_positions(
             rotation_speed,
