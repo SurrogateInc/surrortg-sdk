@@ -152,6 +152,8 @@ class Servo:
             which is changed to the max speed in the correct direction.
         :type rotation_speed: int, optional
         """
+        self._check_if_stopped()
+
         self._latest_rotation_start_time = time.time()
         rotation_start_time_copy = copy.copy(self._latest_rotation_start_time)
 
@@ -162,7 +164,10 @@ class Servo:
     async def _rotate_to(
         self, position, rotation_start_time, rotation_speed=None
     ):
-        self._check_if_stopped()
+        # Asyncio task starts after a delay, this handles the case where
+        # stop() is called before the task has started
+        if self._stopped:
+            return
 
         if self.position is None:
             logging.warning("Servo position not known, guessing middle 0")
