@@ -136,7 +136,17 @@ class Servo:
             self._latest_rotation_start_time = None
         else:
             position = -1 if rotation_speed < 0 else 1
-            asyncio.create_task(self.rotate_to(position, rotation_speed))
+            self._latest_rotation_start_time = time.time()
+            rotation_start_time_copy = copy.copy(
+                self._latest_rotation_start_time
+            )
+            asyncio.create_task(
+                self._rotate_to(
+                    position,
+                    rotation_start_time_copy,
+                    rotation_speed,
+                )
+            )
 
     async def rotate_to(self, position, rotation_speed=None):
         """Rotate to some position, optionally with a spesific speed
@@ -148,6 +158,16 @@ class Servo:
             which is changed to the max speed in the correct direction.
         :type rotation_speed: int, optional
         """
+        self._latest_rotation_start_time = time.time()
+        rotation_start_time_copy = copy.copy(self._latest_rotation_start_time)
+
+        await self._rotate_to(
+            position, rotation_start_time_copy, rotation_speed
+        )
+
+    async def _rotate_to(
+        self, position, rotation_start_time, rotation_speed=None
+    ):
         self._check_if_stopped()
 
         if self.position is None:
@@ -161,10 +181,6 @@ class Servo:
             -1 <= rotation_speed <= 1
         ), f"Rotation speed {rotation_speed} outside -1 to 1"
         assert rotation_speed != 0, "Rotation speed cannot be 0"
-
-        # This stops all ongoing rotations
-        self._latest_rotation_start_time = time.time()
-        rotation_start_time_copy = copy.copy(self._latest_rotation_start_time)
 
         if rotation_speed < 0 and position <= self.position:
             min_position = position
@@ -182,7 +198,7 @@ class Servo:
 
         for position in self._rotation_positions(
             rotation_speed,
-            rotation_start_time_copy,
+            rotation_start_time,
             min_position,
             max_position,
         ):
@@ -191,7 +207,7 @@ class Servo:
 
         # Set the rotation speed to 0
         # unless a new rotation was started or detached
-        if self._latest_rotation_start_time == rotation_start_time_copy:
+        if self._latest_rotation_start_time == rotation_start_time:
             self.rotation_speed = 0
 
     def _rotation_positions(
