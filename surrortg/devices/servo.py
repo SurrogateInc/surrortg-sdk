@@ -1,5 +1,4 @@
 import asyncio
-import copy
 import logging
 import time
 
@@ -61,6 +60,7 @@ class Servo:
         )
         self._rotation_update_freq = rotation_update_freq
         self._latest_rotation_start_time = None
+        self._position = None
         self._rotation_speed = 0
         self._stopped = False
 
@@ -81,26 +81,23 @@ class Servo:
 
         self._check_if_stopped()
 
-        pulse_width = self._pi.get_servo_pulsewidth(self._pin)
-        if pulse_width == 0:  # Is detached
-            return None
-        return (
-            -(pulse_width - self._min_pulse_width)
-            / (self._max_pulse_width - self._min_pulse_width)
-            * 2
-            + 1
-        )
+        return self._position
 
     @position.setter
     def position(self, position):
         assert -1 <= position <= 1, f"Position {position} not inside -1 to 1"
         self._check_if_stopped()
 
+        self.rotation_speed = 0
+        self._set_position(position)
+
+    def _set_position(self, position):
         scaled_pos = (
             -position * (self._mid_pulse_width - self._min_pulse_width)
             + self._mid_pulse_width
         )  # Scale -1 to 1 between min and max pulse width
         self._pi.set_servo_pulsewidth(self._pin, scaled_pos)
+        self._position = position
 
     @property
     def rotation_speed(self):
@@ -124,15 +121,19 @@ class Servo:
         ), f"Rotation speed {rotation_speed} outside -1 to 1"
         self._check_if_stopped()
 
-        # Set rotation speed
-        self._rotation_speed = rotation_speed
-
         # Stop or start rotation depending on the value
         if rotation_speed == 0:
             self._latest_rotation_start_time = None
+            self._rotation_speed = 0
         else:
             position = -1 if rotation_speed < 0 else 1
-            asyncio.create_task(self.rotate_to(position, rotation_speed))
+            asyncio.create_task(
+                self._rotate_to(
+                    position,
+                    rotation_speed,
+                    time.time(),
+                )
+            )
 
     async def rotate_to(self, position, rotation_speed=None):
         """Rotate to some position, optionally with a spesific speed
@@ -145,49 +146,69 @@ class Servo:
         :type rotation_speed: int, optional
         """
         self._check_if_stopped()
+        await self._rotate_to(position, rotation_speed, time.time())
 
+    async def _rotate_to(self, position, rotation_speed, rotation_start_time):
+        # Asyncio task starts after a delay, this handles the case where
+        # stop() is called before the task has started or there was another
+        # _rotate_to call in between
+        if self._stopped or (
+            self._latest_rotation_start_time is not None
+            and self._latest_rotation_start_time > rotation_start_time
+        ):
+            return
+
+        current_position = self.position
+        # Guess the middle position if the position is not set
         if self.position is None:
             logging.warning("Servo position not known, guessing middle 0")
-            self.position = 0
+            current_position = 0
 
+        # Set the default rotation speed, if not specified
         if rotation_speed is None:
-            rotation_speed = -1 if position < self.position else 1
+            rotation_speed = -1 if position < current_position else 1
 
+        # Make sure that the rotation is possible
         assert (
             -1 <= rotation_speed <= 1
         ), f"Rotation speed {rotation_speed} outside -1 to 1"
         assert rotation_speed != 0, "Rotation speed cannot be 0"
 
-        # This stops all ongoing rotations
-        self._latest_rotation_start_time = time.time()
-        rotation_start_time_copy = copy.copy(self._latest_rotation_start_time)
-
-        if rotation_speed < 0 and position <= self.position:
+        if rotation_speed < 0 and position <= current_position:
             min_position = position
             max_position = 1
-        elif rotation_speed > 0 and position >= self.position:
+        elif rotation_speed > 0 and position >= current_position:
             min_position = -1
             max_position = position
         else:
             logging.warning(
                 f"Rotation speed {rotation_speed} goes away from position "
-                f"{position}, as the current position is {self.position}. "
+                f"{position}, as the current position is {current_position}. "
                 "Not rotating."
             )
             return
 
+        # Use the guessed middle position if it was ok
+        if self.position is None:
+            self._set_position(0)
+
+        # Set rotation speed
+        self._rotation_speed = rotation_speed
+
+        # Rotate until at the wanted position
+        self._latest_rotation_start_time = rotation_start_time
         for position in self._rotation_positions(
             rotation_speed,
-            rotation_start_time_copy,
+            rotation_start_time,
             min_position,
             max_position,
         ):
-            self.position = position
+            self._set_position(position)
             await asyncio.sleep(1 / self._rotation_update_freq)
 
         # Set the rotation speed to 0
         # unless a new rotation was started or detached
-        if self._latest_rotation_start_time == rotation_start_time_copy:
+        if self._latest_rotation_start_time == rotation_start_time:
             self.rotation_speed = 0
 
     def _rotation_positions(
@@ -221,6 +242,7 @@ class Servo:
         self._check_if_stopped()
 
         self.rotation_speed = 0
+        self._position = None
         self._pi.set_servo_pulsewidth(self._pin, 0)
 
     def stop(self):
