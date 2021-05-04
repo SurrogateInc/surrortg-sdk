@@ -121,12 +121,10 @@ class Servo:
         ), f"Rotation speed {rotation_speed} outside -1 to 1"
         self._check_if_stopped()
 
-        # Set rotation speed
-        self._rotation_speed = rotation_speed
-
         # Stop or start rotation depending on the value
         if rotation_speed == 0:
             self._latest_rotation_start_time = None
+            self._rotation_speed = 0
         else:
             position = -1 if rotation_speed < 0 else 1
             asyncio.create_task(
@@ -166,9 +164,11 @@ class Servo:
             logging.warning("Servo position not known, guessing middle 0")
             current_position = 0
 
+        # Set the default rotation speed, if not specified
         if rotation_speed is None:
             rotation_speed = -1 if position < current_position else 1
 
+        # Make sure that the rotation is possible
         assert (
             -1 <= rotation_speed <= 1
         ), f"Rotation speed {rotation_speed} outside -1 to 1"
@@ -192,6 +192,10 @@ class Servo:
         if self.position is None:
             self._set_position(0)
 
+        # Set rotation speed
+        self._rotation_speed = rotation_speed
+
+        # Rotate until at the wanted position
         self._latest_rotation_start_time = rotation_start_time
         for position in self._rotation_positions(
             rotation_speed,
