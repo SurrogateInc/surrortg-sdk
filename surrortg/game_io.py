@@ -1,10 +1,17 @@
 import logging
+from enum import Enum
 
 from .config_parser import get_config
 from .network.message_router import MultiSeatMessageRouter
 from .network.socket_handler import SocketHandler
 
 SURRORTG_VERSION = "0.2.2"
+
+
+class ConfigType(Enum):
+    STRING = "string"
+    NUMBER = "number"
+    BOOLEAN = "boolean"
 
 
 class GameIO:
@@ -28,6 +35,7 @@ class GameIO:
             self._config["device_id"] = device_id
         self.device_id = self._config["device_id"]
         self.input_bindings = {}
+        self._custom_configs = []
         self._message_router = MultiSeatMessageRouter(robot_log_handler)
 
         # If type is not string (deprecated old interface), assume type is
@@ -63,6 +71,60 @@ class GameIO:
         for command_id, obj in self.input_bindings.items():
             bindings.append({"commandId": command_id, **obj})
         return bindings
+
+    def register_config(self, name, value_type, default, is_robot_specific):
+        """Registers custom configs
+
+        Registers a custom config variable which can be edited through the
+        game's settings page in surrogate.tv
+        The config can either be specific for the robot or a game-wide setting.
+        Config names must be unique, and configs can only be registered during
+        on_init stage of the game loop.
+
+        :param name: Name of the config
+        :type name: string
+        :param value_type: Type of the variable
+        :type value_type: ConfigType or "boolean" | "string" | "number"
+        :param default: Initial default value for the variable
+        :type default: Must be of the value_type, e.g. if value_type is string
+            this must be string as well.
+        :param is_robot_specific: True if the config variable is for this robot
+            only, False if this is game-wide variable
+        :type is_robot_specific: boolean
+        """
+        if not self._can_register_inputs:
+            raise RuntimeError("register_config called outside on_init")
+
+        assert isinstance(name, str), "'name' must be a string"
+        assert isinstance(
+            value_type, ConfigType
+        ), "'value_type' must be a valid ConfigType (string | number | bool)"
+        if type(value_type) is not str:
+            value_type = value_type.value
+        assert isinstance(
+            is_robot_specific, bool
+        ), "'is_robot_specific' must be a boolean"
+        if value_type == "string":
+            assert isinstance(
+                default, str
+            ), "'default' must be a string if ConfigType.STRING"
+        elif value_type == "number":
+            assert isinstance(
+                default, (int, float)
+            ), "'default' must be a number if ConfigType.NUMBER"
+        elif value_type == "boolean":
+            assert isinstance(
+                default, bool
+            ), "'default' must be a boolean if ConfigType.BOOLEAN"
+
+        self._custom_configs.append(
+            {
+                "name": name,
+                "valueType": value_type,
+                "isRobotSpecific": is_robot_specific,
+                "default": default,
+            }
+        )
 
     def register_inputs(self, inputs, admin=False, bindable=True):
         """Registers inputs
@@ -323,7 +385,8 @@ class GameIO:
             logging.info(message)
 
     def _send_controller_ready(self):
-        msg = {"inputs": self._get_inputs()}
+        msg = {"inputs": self._get_inputs(), "configs": self._custom_configs}
+        logging.info(f"Sending controller ready: {msg}")
         self._send_threadsafe("controllerReady", payload=msg)
 
     def _send_threadsafe(
