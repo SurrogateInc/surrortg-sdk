@@ -10,8 +10,8 @@ TRIGGER_PIN = 14
 MAX_TRIGGER_PRESSES = 1
 
 """TriggerSwitch"""
-# Defines if GPIO ON level is HIGH or LOW
-ON_LEVEL = "LOW"
+# Defines if GPIO ON level is LOW
+ON_LEVEL_LOW = True
 
 # Override values in this file with those found in config_local.py
 try:
