@@ -2,11 +2,10 @@ import asyncio
 import logging
 
 import keyboard
-import pigpio
 
 from games.aiming_paintball_gun.config import (
     MAX_TRIGGER_PRESSES,
-    ON_LEVEL,
+    ON_LEVEL_LOW,
     SERVO_MAX_PULSE_WIDTH,
     SERVO_MIN_FULL_SWEEP_TIME,
     SERVO_MIN_PULSE_WIDTH,
@@ -15,7 +14,7 @@ from games.aiming_paintball_gun.config import (
     TRIGGER_PIN,
 )
 from surrortg import Game
-from surrortg.devices import Servo
+from surrortg.devices import Relay, Servo
 from surrortg.inputs import Joystick, Switch
 
 
@@ -37,30 +36,17 @@ class ServoJoystick(Joystick):
 
 
 class TriggerSwitch(Switch):
-    def __init__(self, pi, pin, max_presses, max_press_cb):
-        self.pi = pi
-        self.pin = pin
+    def __init__(self, pin, max_presses, max_press_cb, on_level_low):
+        self.relay = Relay(pin, on_level_low)
         self.max_presses = max_presses
         self.press_count = 0
         self.max_press_cb = max_press_cb
-
-        # Set GPIO pin levels according to the configuration
-        if ON_LEVEL == "HIGH":
-            self.on_level = pigpio.HIGH
-            self.off_level = pigpio.LOW
-        else:
-            self.on_level = pigpio.LOW
-            self.off_level = pigpio.HIGH
-
-        # Initialize output pin
-        self.pi.set_mode(self.pin, pigpio.OUTPUT)
-        self.pi.write(self.pin, self.off_level)
 
     async def on(self, seat=0):
         # Press only if max press count is not yet reached
         if self.press_count < self.max_presses:
             self.press_count += 1
-            self.pi.write(self.pin, self.on_level)
+            self.relay.on()
             logging.info("Trigger pressed")
             if self.press_count == self.max_presses:
                 await self.max_press_cb()
@@ -68,28 +54,24 @@ class TriggerSwitch(Switch):
             logging.info("Max press count reached")
 
     async def off(self, seat=0):
-        self.pi.write(self.pin, self.off_level)
+        self.relay.off()
         logging.info("Trigger released")
 
     def reset_press_count(self):
         self.press_count = 0
 
     async def shutdown(self, seat=0):
-        # Set pin to input mode to make it safe
-        self.pi.set_pull_up_down(self.pin, pigpio.PUD_OFF)
-        self.pi.set_mode(self.pin, pigpio.INPUT)
+        self.relay.stop()
 
 
 class PaintballGunGame(Game):
     async def on_init(self):
-        # Connect to pigpio daemon
-        self.pi = pigpio.pi()
-        if not self.pi.connected:
-            raise RuntimeError("Could not connect to pigpio daemon")
-
         # Initialize inputs
         self.trigger = TriggerSwitch(
-            self.pi, TRIGGER_PIN, MAX_TRIGGER_PRESSES, self.max_presses_handler
+            TRIGGER_PIN,
+            MAX_TRIGGER_PRESSES,
+            self.max_presses_handler,
+            ON_LEVEL_LOW,
         )
         self.servo = Servo(
             SERVO_PIN,
