@@ -73,17 +73,20 @@ either by starting to play the game or open admin preview from the game dashboar
 
 ## Game configuration
 
-Some of the games has `config.py` file, which defines various constants. These
+Some of the games have `config.py` file, which defines various constants. These
 are used to make the software more flexible and that way software can adapt for
 example to different hardware configurations. If you want to modify the values
 of these constants, that should be done by creating a `config_local.py` file and
 defining the constants there with the same name and new value.
 
-`GPIO_SWITCHES` is a dictionary where each item corresponds to GPIO pin which controls
-one relay. It is used to define how many relays are used, what are the names for
-the player inputs and what Raspberry Pi GPIO pin is used to control that relay.
+`RELAY_SWITCHES` is a dictionary where each item corresponds to a GPIO pin which
+controls one relay. It is used to define how many relays are used, what are the
+names for the player inputs and what Raspberry Pi GPIO pin is used to control
+that relay.
 
-`ON_LEVEL` defines the logic level for the GPIO pins when those are in active state.
-Some relay modules activates the relay when the inputs are LOW and others when
-the inputs are HIGH. This constant can be used to adapt to that variation and activate
-relays only when the inputs are active.
+`ON_LEVEL_LOW` defines whether the logic level for the GPIO pins is LOW when those
+are in active state. Setting this to True means that the active state GPIO level
+is LOW, and setting this to False means that the GPIO level in active state is
+HIGH. Some relay modules activate the relay when the inputs are LOW and others
+when the inputs are HIGH. This constant can be used to adapt to that variation
+and activate the relays only when the inputs are active.
