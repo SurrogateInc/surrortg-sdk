@@ -2,20 +2,20 @@
 
 This game implementation was used as part of the 30.4.2021 lets do this event.
 In the event players where able to feed dogs using a DIY dog feeder
-device made with servo, cartboard tube and lid of a plastic can.
+device made a servo, a cardboard tube and a lid of a plastic can.
 
 You can check the full event from the
 [surrogate.tv youtube channel](https://www.youtube.com/watch?v=wPxVsZT8h8Q).
 
-## HW
+## Hardware
 
-The feeding device was made with cartboard tube (full of dog treats)
+The feeding device was made with a cardboard tube full of dog treats
 mounted on top of a lid of a plastic can.
 The lid was connected to a servo and was positioned so that
-it blocked the end of the cartboard tube.
-When user wanted to feed the dogs the servo is fastly moved back and forth
+it blocked the end of the cardboard tube.
+When a user wanted to feed the dogs, the servo is fastly moved back and forth
 to release small amount of dog treats.
-The servo is connected to raspberry pi and is controlled by
+The servo is connected to Raspberry Pi and is controlled by
 the game implementation in the [game.py](/games/dog_feeder/game.py).
 
 ![Dog Feeder In Action](./readme-assets/feeding.gif)
@@ -23,12 +23,12 @@ the game implementation in the [game.py](/games/dog_feeder/game.py).
 ## The game implementation
 
 The main functionality of the game is to move the servo back and forth on user action.
-There is couple of existing classes in our SDK to help us create this effect:
+There is couple of existing classes in our SDK to help us create this functionality:
 
 - [Switch](/surrortg/inputs/switch.py) allows us to run code
-  when user presses a key or button on mobile
+  when user presses or releases a key or button on mobile
 - [Servo](/surrortg/devices/servo.py) allows us to easily control
-  a servo between given min_pulse_width and max_pulse_width (the angle of the servo)
+  the angle of the servo between given min_pulse_width and max_pulse_width
 - [Game](/surrortg/game.py) can be used to react to different states
   of the game loop
 
@@ -53,8 +53,9 @@ blocks the treats from dropping at the start of the game (position 1).
 
 In the `on_finish` we send score 1. This is done since the games `Score type` is
 set to `Total Games` from the admin panel.
-Only games with end result of 1 are calculated as validly finished game in
+Only games with end result of 1 are calculated as a valid finished game in
 this mode.
+
 ![Score Type in admin panel](./readme-assets/admin-settings-scoretype.png)
 
 ### ServoSwitch
@@ -62,7 +63,7 @@ this mode.
 The `ServoSwitch` moves the servo back and forth on user input.
 You can find the full implementation from [game.py](/games/dog_feeder/game.py).
 
-Movement it performed in the `on` method by
+Movement is performed in the `on` method with following lines of code
 
 ```
 await self.servo.rotate_to(-1)
