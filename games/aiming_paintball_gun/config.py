@@ -10,8 +10,8 @@ MAX_TRIGGER_PRESSES = 3
 """TriggerSwitch"""
 # Defines the Raspberry Pi GPIO pin number for the trigger switch
 TRIGGER_PIN = 14
-# Defines if GPIO ON level is HIGH or LOW
-ON_LEVEL = "LOW"
+# Defines if GPIO ON level LOW
+ON_LEVEL_LOW = True
 
 """Servo"""
 # Defines the Raspberry Pi GPIO pin number for the servo
