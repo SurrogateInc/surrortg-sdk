@@ -9,27 +9,28 @@ You can check the full event from the
 
 ## Hardware
 
-The wheel was made out of circular wood slap with printed dares
-that was mounted on tripod.
+The wheel was made out of a circular wood slab with printed dares
+taped on the front.
+The wood slab itself was mounted on a tripod.
 We wanted to give the players maximum control over where the wheel
 would land so unlike a normal fortune wheel our wheel would stop
 immediately on user action.
 The stopper was done by attaching a wooden stick to a servo on the
 top of the wheel. The stick was moved up and down during the
 game loop by the servo.
-The servo is connected to Raspberry Pi and is controlled by
+The servo is connected to a Raspberry Pi and is controlled by
 the game implementation in the [game.py](/games/fortune_wheel/game.py).
 
-![Wheel in Action](./coming-soon)
+![Wheel in Action](./readme-assets/wheel.gif)
 
 ## The game implementation
 
 The main functionality of the game is to move the stopper up at the beginning
 of the game and back down on user action.
-There is couple of existing classes in our SDK to help us create this functionality:
+There is a couple of existing classes in our SDK to help us create this functionality:
 
 - [Switch](/surrortg/inputs/switch.py) allows us to run code
-  when user presses or releases a key or button on mobile
+  when a user presses or releases a key or a button on mobile
 - [Servo](/surrortg/devices/servo.py) allows us to easily control
   the angle of the servo between given min_pulse_width and max_pulse_width
 - [Game](/surrortg/game.py) can be used to react to different states
@@ -42,13 +43,14 @@ You can find the full implementation from [game.py](/games/fortune_wheel/game.py
 
 **In the `on_init` method we**:
 
-- Create a instance of Servo class with with configuration
+- Create an instance of Servo class with configuration
   (`SERVO_MIN_PULSE_WIDTH`, `SERVO_MAX_PULSE_WIDTH`, etc)
   coming from [config.py](/games/fortune_wheel/config.py).
 - Rotate the servo initially to position -1 (=`SERVO_MIN_PULSE_WIDTH`).
-- Crete and register `ServoSwitch` input
+- Create and register `ServoSwitch` input
 
 Note: Registered inputs appear in admin panel where you can configure the bindings
+
 ![Keybindings in admin panel](./readme-assets/admin-settings-keybind.png)
 
 **In the `on_prepare` method we** return false to make sure the game loop
@@ -58,14 +60,14 @@ This gives us manual control to let the next person in to the game by clicking
 
 ![Allow start in admin panel](./readme-assets/admin-settings-allow-start.png)
 
-**In the `on_pre_game` method we** move the servo to position 1 witch
+**In the `on_pre_game` method we** move the servo to position 1 which
 allows the wheel to spin.
 
-**In the `stop_cb` method we** send score 1. This is done since the games
+**In the `stop_cb` method we** send score 1. This is done since the game's
 `Score type` is set to `Total Games` from the admin panel.
 Only games with end result of 1 are calculated as a valid finished game in
 this mode.
-We also set the `final_score` to true witch will end the game for current
+We also set the `final_score` to true which will end the game for the current
 player.
 
 ![Score Type in admin panel](./readme-assets/admin-settings-scoretype.png)
@@ -87,11 +89,11 @@ The [config.py](/games/fortune_wheel/config.py) contains settings related to
 the servo configuration
 
 Note: The game is implemented so that `SERVO_MIN_PULSE_WIDTH` is the servo pulse
-width for angle where the stopper should allow the wheel to spin and
-`SERVO_MAX_PULSE_WIDTH` is the angle where stopper should be down blocking the
+width for the angle where the stopper should allow the wheel to spin and
+`SERVO_MAX_PULSE_WIDTH` is the angle where the stopper should be down blocking the
 wheel from spinning.
 You can find the right values for `SERVO_MIN_PULSE_WIDTH` and `SERVO_MAX_PULSE_WIDTH`
-for your physical setup with changing the value and testing the game by
+for your physical setup by changing the value and testing the game by
 trial and error.
 
 ## Links
