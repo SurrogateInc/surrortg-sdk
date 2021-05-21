@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import time
+import keyboard
 
 from games.trivia_game.config import (
     AMOUNT_OF_PLAYERS,
@@ -90,10 +91,14 @@ class TriviaGame(Game):
             # from the admin panel.
             self.io.register_inputs({option: servo_switch})
 
+        self.is_paused = True
+        self.pause_hook = keyboard.on_press(self.pause_handler)
+
     async def on_pre_game(self):
         # Set points to 0 for everyone
         self.points = [0] * AMOUNT_OF_PLAYERS
         self.answer_n = 0
+        self.is_paused = True
 
     async def on_start(self):
         logging.info("Game started")
@@ -104,6 +109,13 @@ class TriviaGame(Game):
         # Disable controls
         self.io.disable_inputs()
     
+    async def on_exit(self, reason, exception):
+        # Unbind pause handler
+        try:
+            keyboard.unhook(self.pause_hook)
+        except (AttributeError, KeyError):
+            pass
+    
     async def question_loop(self):
         while self.answer_n < len(CORRECT_ROW):
             await self.ask_question()
@@ -112,6 +124,7 @@ class TriviaGame(Game):
         self.update_points(True)
 
     async def ask_question(self):
+        await self.wait_pause()
         self.answers = []
         await self.count_down(20, f"Movint servos to start position {self.question_number()} in")
         await self.set_all_servos(1)
@@ -135,6 +148,11 @@ class TriviaGame(Game):
                 logging.info(f"Wrong answer {self.player_username(seat)} - {answer_time}")
         logging.info(f"Correct answers {correct_count}/{AMOUNT_OF_PLAYERS}")
         self.update_points()
+    
+    async def wait_pause(self):
+        while self.is_paused:
+            logging.info(f"game is paused. Press 1 to continue")
+            await asyncio.sleep(1)
 
     async def count_down(self, to, message):
         current = to
@@ -190,6 +208,15 @@ class TriviaGame(Game):
             "correct": self.is_correct_answer(option)
         })
         logging.info(f"Player {seat} answers {option}")
+
+    def pause_handler(self, key):
+        if key.name == "1":
+            self.is_paused = False
+        elif key.name == "0":
+            self.is_paused = True
+        else:
+            logging.info("Wrong key pressed. Press '1' for unpause and '0' for pause")
+            return
 
 if __name__ == "__main__":
     # Start running the game
