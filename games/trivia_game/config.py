@@ -6,18 +6,7 @@ TO OVERRIDE THESE VALUES, USE config_local.py
 """Game"""
 # Correct row of options to the questions
 AMOUNT_OF_PLAYERS = 10
-CORRECT_ROW = [
-    "a",
-    "a",
-    "a",
-    "a",
-    "a",
-    "a",
-    "a",
-    "a",
-    "a",
-    "a"
-]
+CORRECT_ROW = ["a", "a", "a", "a", "a", "a", "a", "a", "a", "a"]
 
 """Servo"""
 # Defines the Raspberry Pi GPIO pin number for the first servo
