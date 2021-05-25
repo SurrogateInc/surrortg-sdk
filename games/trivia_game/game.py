@@ -5,12 +5,10 @@ import time
 import keyboard
 
 from games.trivia_game.config import (
-    A_ANGLE,
     AMOUNT_OF_PLAYERS,
-    B_ANGLE,
-    C_ANGLE,
     CORRECT_ROW,
     FIRST_SERVO_PIN,
+    OPTION_ANGLES,
     RESET_ANGLE,
     SERVO_MAX_PULSE_WIDTH,
     SERVO_MIN_FULL_SWEEP_TIME,
@@ -32,12 +30,13 @@ class ServoSwitch(Switch):
         self.callback = callback
 
     def servo_rotation(self):
-        if self.option == "a":
-            return A_ANGLE
-        elif self.option == "b":
-            return B_ANGLE
-        else:
-            return C_ANGLE
+        try:
+            return OPTION_ANGLES[self.option]
+        except KeyError:
+            logging.warning(
+                f"Servo angle for option {self.option} not defined"
+            )
+            return RESET_ANGLE
 
     async def on(self, seat=0):
         if self.seat_input_enabled[seat]:
@@ -92,8 +91,17 @@ class TriviaGame(Game):
             self.servos.append(servo)
             await servo.rotate_to(RESET_ANGLE)
 
-        # Add switches for options a, b and c
-        for option in ["a", "b", "c"]:
+        # Check that every answer in 'CORRECT_ROW' has
+        # angle set in 'OPTION_ANGLES'
+        for answer in CORRECT_ROW:
+            if answer not in OPTION_ANGLES:
+                raise RuntimeError(
+                    f"CORRECT_ROW includes '{answer}' that doesn't have "
+                    f"angle set in OPTION_ANGLES"
+                )
+
+        # Add switches for all options in OPTION_ANGLES
+        for option in OPTION_ANGLES:
             servo_switch = ServoSwitch(
                 self.servos, option, self.switch_callback
             )

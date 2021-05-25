@@ -4,8 +4,9 @@ TO OVERRIDE THESE VALUES, USE config_local.py
 """
 
 """Game"""
-# Correct row of options to the questions
 AMOUNT_OF_PLAYERS = 10
+# Correct row of options (answers) to the questions
+# Note: All separate options need to have angle set in 'OPTION_ANGLES'
 CORRECT_ROW = ["c", "b", "c", "c", "c", "b", "a", "c", "a", "c"]
 
 """Servo"""
@@ -16,13 +17,16 @@ SERVO_MIN_PULSE_WIDTH = 500
 SERVO_MAX_PULSE_WIDTH = 2500
 SERVO_MIN_FULL_SWEEP_TIME = 0.3
 SERVO_ROTATION_UPDATE_FREQ = 30
-# Angle that points the servo to the A, B or C option
+# Angle that points the servo to the a, b or c option
 # Servo is moved with 'rotate_to' function
 # values should be between -1 and 1
-A_ANGLE = 0.4
-B_ANGLE = 0
-C_ANGLE = -0.4
-# Andle to put the servos to between questions
+# Note: You can add more options than just a, b, c
+OPTION_ANGLES = {
+    "a": 0.4,
+    "b": 0,
+    "c": -0.4,
+}
+# Angle to put the servos to between questions
 RESET_ANGLE = 1
 
 
