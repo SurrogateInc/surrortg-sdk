@@ -5,9 +5,13 @@ import time
 import keyboard
 
 from games.trivia_game.config import (
+    A_ANGLE,
     AMOUNT_OF_PLAYERS,
+    B_ANGLE,
+    C_ANGLE,
     CORRECT_ROW,
     FIRST_SERVO_PIN,
+    RESET_ANGLE,
     SERVO_MAX_PULSE_WIDTH,
     SERVO_MIN_FULL_SWEEP_TIME,
     SERVO_MIN_PULSE_WIDTH,
@@ -29,11 +33,11 @@ class ServoSwitch(Switch):
 
     def servo_rotation(self):
         if self.option == "a":
-            return 0.4
+            return A_ANGLE
         elif self.option == "b":
-            return 0
+            return B_ANGLE
         else:
-            return -0.4
+            return C_ANGLE
 
     async def on(self, seat=0):
         if self.seat_input_enabled[seat]:
@@ -50,12 +54,12 @@ class ServoSwitch(Switch):
     async def off(self, seat=0):
         pass
 
-    def set_all_seats_to(self, b):
-        for k in self.seat_input_enabled:
-            self.seat_input_enabled[k] = b
+    def set_all_seats_to(self, enabled):
+        for seat in self.seat_input_enabled:
+            self.seat_input_enabled[seat] = enabled
 
-    def set_seat_to(self, seat, b):
-        self.seat_input_enabled[seat] = b
+    def set_seat_to(self, seat, enabled):
+        self.seat_input_enabled[seat] = enabled
 
 
 class TriviaGame(Game):
@@ -72,6 +76,10 @@ class TriviaGame(Game):
         self.answers = []
         # The answer the game is currently at
         self.answer_n = 0
+        # Boolean to pause the question loop
+        self.is_paused = True
+        # Keyboard handler for unpausing/pausing the game
+        self.pause_hook = keyboard.on_press(self.pause_handler)
         # Initialize servos
         for i in range(0, AMOUNT_OF_PLAYERS):
             servo = Servo(
@@ -82,7 +90,7 @@ class TriviaGame(Game):
                 SERVO_ROTATION_UPDATE_FREQ,
             )
             self.servos.append(servo)
-            await servo.rotate_to(0)
+            await servo.rotate_to(RESET_ANGLE)
 
         # Add switches for options a, b and c
         for option in ["a", "b", "c"]:
@@ -94,9 +102,6 @@ class TriviaGame(Game):
             # You can bind this input to a key or mobile button
             # from the admin panel.
             self.io.register_inputs({option: servo_switch})
-
-        self.is_paused = True
-        self.pause_hook = keyboard.on_press(self.pause_handler)
 
     async def on_pre_game(self):
         # Set points to 0 for everyone
@@ -131,16 +136,17 @@ class TriviaGame(Game):
         await self.wait_pause()
         self.answers = []
         await self.count_down(
-            20, f"Movint servos to start position {self.question_number()} in"
+            20,
+            f"Moving the servos to start position {self.question_number()} in",
         )
-        await self.set_all_servos(1)
+        await self.set_all_servos(RESET_ANGLE)
         await self.count_down(
-            10, f"starting the question {self.question_number()} in"
+            10, f"Starting the question {self.question_number()} in"
         )
         start_of_question = time.time()
         self.set_all_inputs(True)
         await self.count_down(
-            20, f"closing the question {self.question_number()} in"
+            20, f"Closing the question {self.question_number()} in"
         )
         self.set_all_inputs(False)
         correct_count = 0
@@ -153,20 +159,20 @@ class TriviaGame(Game):
                 correct_count += 1
                 logging.info(
                     f"Correct answer {self.player_username(seat)} - "
-                    + f"{points_by_position} - {answer_time}"
+                    f"{points_by_position} - {answer_time}"
                 )
                 self.points[seat] += points_by_position
             else:
                 logging.info(
                     f"Wrong answer {self.player_username(seat)}"
-                    + f" - {answer_time}"
+                    f" - {answer_time}"
                 )
         logging.info(f"Correct answers {correct_count}/{AMOUNT_OF_PLAYERS}")
         self.update_points()
 
     async def wait_pause(self):
         while self.is_paused:
-            logging.info("game is paused. Press 1 to continue")
+            logging.info("Game is paused. Press 1 to continue")
             await asyncio.sleep(1)
 
     async def count_down(self, to, message):
@@ -188,23 +194,25 @@ class TriviaGame(Game):
             i.set_all_seats_to(to)
 
     def player_username(self, seat):
-        for p in self.players:
-            if p["seat"] == seat:
-                return p["username"]
+        # self.players is an array of current players in the game.
+        # It includes for e.g. username and queue options of the player.
+        for player in self.players:
+            if player["seat"] == seat:
+                return player["username"]
 
     def log_player_seats(self):
-        for p in self.players:
-            seat = p["seat"]
-            username = p["username"]
+        for player in self.players:
+            seat = player["seat"]
+            username = player["username"]
             logging.info(f"seat {seat}: {username}")
 
     def question_number(self):
         return self.answer_n + 1
 
     async def set_all_servos(self, to):
-        for s in self.servos:
-            logging.info(f"set_all_servos to {to} currently at {s._pin}")
-            await s.rotate_to(to)
+        for servo in self.servos:
+            logging.info(f"set_all_servos to {to} currently at {servo._pin}")
+            await servo.rotate_to(to)
 
     def switch_callback(self, seat, option):
         for i in self.inputs:
@@ -218,7 +226,7 @@ class TriviaGame(Game):
                 "correct": self.is_correct_answer(option),
             }
         )
-        logging.info(f"Player {seat} answers {option}")
+        logging.info(f"Player {self.player_username(seat)} answered {option}")
 
     def pause_handler(self, key):
         if key.name == "1":

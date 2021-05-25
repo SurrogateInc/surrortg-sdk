@@ -16,10 +16,18 @@ SERVO_MIN_PULSE_WIDTH = 500
 SERVO_MAX_PULSE_WIDTH = 2500
 SERVO_MIN_FULL_SWEEP_TIME = 0.3
 SERVO_ROTATION_UPDATE_FREQ = 30
+# Angle that points the servo to the A, B or C option
+# Servo is moved with 'rotate_to' function
+# values should be between -1 and 1
+A_ANGLE = 0.4
+B_ANGLE = 0
+C_ANGLE = -0.4
+# Andle to put the servos to between questions
+RESET_ANGLE = 1
 
 
 # Override values in this file with those found in config_local.py
 try:
-    from games.dog_feeder.config_local import *  # noqa
+    from games.trivia_game.config_local import *  # noqa
 except ModuleNotFoundError:
     pass
