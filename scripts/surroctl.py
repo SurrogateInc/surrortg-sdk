@@ -48,11 +48,24 @@ def set_token(token):
         return
 
     # Set token
-    for line in fileinput.input("/etc/srtc/srtg.toml", inplace=True):
-        if line.startswith("token ="):
-            print(f'token = "{token}"')
-        else:
-            print(line, end="")
+    try:
+        token_line_found = False
+        for line in fileinput.input("/etc/srtg/srtg.toml", inplace=True):
+            if line.startswith("token"):
+                print(f'token = "{token}"')
+                token_line_found = True
+            else:
+                print(line, end="")
+    except PermissionError:
+        click.echo(
+            "\nSetting token requires use of sudo, try:\n\n"
+            f"sudo surroctl token {token}"
+        )
+        return
+
+    if not token_line_found:
+        click.echo("Token could not be updated")
+        return
 
     # Restart services
     os.system(f"sudo systemctl restart {TARGETS['all']}")
@@ -72,9 +85,7 @@ def get_path():
 
 def set_path(path):
     # Remove start if path is from the root or if has any leading slashes
-    path = path.lstrip("/")
     path = path.replace("home/pi", "")
-    path = path.lstrip("/")
     path = path.replace("surrortg-sdk/", "")
     path = path.lstrip("/")
 
@@ -83,13 +94,20 @@ def set_path(path):
     path = path.replace("/", ".")
 
     # Replace line in config
+    path_line_found = False
     for line in fileinput.input(
         "/home/pi/surrortg-sdk/scripts/controller-rpi.service", inplace=True
     ):
         if line.startswith("Environment=GAME_MODULE="):
             print(f"Environment=GAME_MODULE={path}")
+            path_line_found = True
         else:
             print(line, end="")
+
+    if not path_line_found:
+        click.echo("Path could not be updated")
+        return
+
     click.echo(f"Using path: {path}")
 
     # Restart the service
