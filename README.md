@@ -42,6 +42,12 @@ Then you can enter the virtual environment with `pipenv shell` (and exit with
 `exit`). There are also scrotps such as `pipenv run arcade` for starting test
 games, check Pipfile for more scripts.
 
+## surroctl command line control software
+
+There is a `surroctl` command line control available for more convenient game
+development. To install run `./scripts/install_surroctl.sh` and afterwards run
+ `surroctl --help` for more info.
+
 ## Development
 
 ### Code style

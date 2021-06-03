@@ -1,3 +1,4 @@
+#!/bin/bash
 if [ ! -d "/usr/lib/systemd/system" ]; then
     sudo mkdir /usr/lib/systemd/system
 fi
