@@ -25,8 +25,7 @@ class RoombaDriverGame(Game):
         # Initialize input
         self.inputs = {}
         for key, pin in PINS.items():
-            switch = RelaySwitch(pin, ON_LEVEL_LOW)
-            self.inputs[key] = switch
+            self.inputs[key] = RelaySwitch(pin, ON_LEVEL_LOW)
 
         # Register input
         self.io.register_inputs(self.inputs)
@@ -36,6 +35,10 @@ class RoombaDriverGame(Game):
 
     async def on_finish(self):
         logging.info("Game ends")
+        # Sending score 1.
+        # This is done since `Score type` is
+        # set to `Total Games` from the admin panel.
+        # In this mode score 1 counts as valid game.
         self.io.send_score(score=1)
 
 
