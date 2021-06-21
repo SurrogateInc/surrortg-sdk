@@ -192,6 +192,7 @@ class GameIO:
                 self.input_bindings[input_id] = {
                     "type": handler_obj.get_name(),
                     "admin": admin,
+                    **handler_obj._get_default_keybinds(),
                 }
 
     def enable_inputs(self):

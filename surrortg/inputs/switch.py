@@ -75,3 +75,28 @@ class Switch(Input):
         :rtype: str
         """
         return "button"
+
+    def _get_default_keybinds(self):
+        binds = self.get_default_keybinds()
+
+        if not isinstance(binds, list):
+            binds = [binds]
+
+        def enum_to_str(item):
+            if type(item) is not str:
+                return item.value
+            return item
+
+        binds = list(map(enum_to_str, binds))
+
+        return {"keys": binds}
+
+    def get_default_keybinds(self):
+        """Returns a single keybind or a list of keybinds.
+
+        Switches are bound to the space key by default.
+
+        To override the defaults, override this method in your switch
+        subclass and return different keybinds.
+        """
+        return ["Space"]

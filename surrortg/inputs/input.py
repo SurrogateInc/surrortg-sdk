@@ -33,6 +33,14 @@ class Input(ABC):
         await self.reset(seat)
 
     @abstractmethod
+    def _get_default_keybinds(self):
+        """Returns the default keybind(s) for the input
+
+        Returns the default inputs in the correct format that the protocol
+        expects. The format depends on the input type.
+        """
+
+    @abstractmethod
     def get_name(self):
         """Returns the name of the input
 

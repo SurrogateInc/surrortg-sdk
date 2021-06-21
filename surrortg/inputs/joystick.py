@@ -3,6 +3,7 @@ import math
 from enum import Enum, auto
 
 from .input import Input
+from .keycodes import KeyCode
 
 
 class Directions(Enum):
@@ -213,6 +214,74 @@ class Joystick(Input):
         :rtype: str
         """
         return "joystick"
+
+    def _stringify_keybinds(self, binds):
+        assert "down" in binds
+        assert "up" in binds
+        assert "left" in binds
+        assert "right" in binds
+
+        def enum_to_str(item):
+            if type(item) is not str:
+                return item.value
+            return item
+
+        for k, v in binds.items():
+            binds[k] = enum_to_str(v)
+
+    def _get_default_keybinds(self):
+        binds = self.get_default_keybinds()
+        up_keys = []
+        down_keys = []
+        left_keys = []
+        right_keys = []
+
+        if isinstance(binds, list):
+            for item in binds:
+                self._stringify_keybinds(item)
+                up_keys.append(item["up"])
+                down_keys.append(item["down"])
+                left_keys.append(item["left"])
+                right_keys.append(item["right"])
+        else:
+            self._stringify_keybinds(binds)
+            up_keys.append(binds["up"])
+            down_keys.append(binds["down"])
+            left_keys.append(binds["left"])
+            right_keys.append(binds["right"])
+
+        key_msg = {
+            "xMinKeys": {"keys": left_keys, "humanReadableName": "left"},
+            "xMaxKeys": {"keys": right_keys, "humanReadableName": "right"},
+            "yMaxKeys": {"keys": up_keys, "humanReadableName": "up"},
+            "yMinKeys": {"keys": down_keys, "humanReadableName": "down"},
+        }
+
+        return key_msg
+
+    def get_default_keybinds(self):
+        """Return a dict or list of dicts with keybinds.
+
+        Joysticks are bound to WASD and arrow keys by default.
+
+        To override the defaults, override this method in your joystick
+        subclass and return different keybinds.
+        """
+
+        return [
+            {
+                "up": KeyCode.KEY_W,
+                "down": KeyCode.KEY_S,
+                "left": KeyCode.KEY_A,
+                "right": KeyCode.KEY_D,
+            },
+            {
+                "up": KeyCode.KEY_ARROW_UP,
+                "down": KeyCode.KEY_ARROW_DOWN,
+                "left": KeyCode.KEY_ARROW_LEFT,
+                "right": KeyCode.KEY_ARROW_RIGHT,
+            },
+        ]
 
 
 class MouseJoystick(Joystick):

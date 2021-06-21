@@ -64,3 +64,58 @@ class LinearActuator(Input):
         :rtype: str
         """
         return "linearActuator"
+
+    def _stringify_keybinds(self, binds):
+        assert "min" in binds
+        assert "max" in binds
+
+        def enum_to_str(item):
+            if type(item) is not str:
+                return item.value
+            return item
+
+        for k, v in binds.items():
+            binds[k] = enum_to_str(v)
+
+    def _get_default_keybinds(self):
+        binds = self.get_default_keybinds()
+        max_keys = []
+        min_keys = []
+
+        if isinstance(binds, list):
+            for item in binds:
+                self._stringify_keybinds(item)
+                min_keys.append(item["min"])
+                max_keys.append(item["max"])
+        else:
+            self._stringify_keybinds(binds)
+            min_keys.append(binds["min"])
+            max_keys.append(binds["max"])
+
+        key_msg = {
+            "minKeys": {
+                "keys": min_keys,
+                "humanReadableName": "min",
+            },
+            "maxKeys": {
+                "keys": max_keys,
+                "humanReadableName": "max",
+            },
+        }
+
+        return key_msg
+
+    def get_default_keybinds(self):
+        """Return a dict or list of dicts with keybinds.
+
+        Linear actuators are bound to W and S keys by default.
+
+        To override the defaults, override this method in your linear actuator
+        subclass and return different keybinds.
+        """
+        return [
+            {
+                "min": "KeyW",
+                "max": "KeyS",
+            }
+        ]
