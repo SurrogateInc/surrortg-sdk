@@ -11,6 +11,7 @@ SURRORTG_VERSION = "0.2.2"
 class ConfigType(Enum):
     STRING = "string"
     NUMBER = "number"
+    INTEGER = "integer"
     BOOLEAN = "boolean"
 
 
@@ -72,7 +73,15 @@ class GameIO:
             bindings.append({"commandId": command_id, **obj})
         return bindings
 
-    def register_config(self, name, value_type, default, is_robot_specific):
+    def register_config(
+        self,
+        name,
+        value_type,
+        default,
+        is_robot_specific,
+        minimum=None,
+        maximum=None,
+    ):
         """Registers custom configs
 
         Registers a custom config variable which can be edited through the
@@ -84,13 +93,20 @@ class GameIO:
         :param name: Name of the config
         :type name: string
         :param value_type: Type of the variable
-        :type value_type: ConfigType or "boolean" | "string" | "number"
+        :type value_type: ConfigType or
+            "boolean" | "string" | "number" | "integer"
         :param default: Initial default value for the variable
         :type default: Must be of the value_type, e.g. if value_type is string
             this must be string as well.
         :param is_robot_specific: True if the config variable is for this robot
             only, False if this is game-wide variable
         :type is_robot_specific: boolean
+        :param minimum: Optional minimum value for numeric configs
+        :type minimum: Number if value_type is number, int if value_type is
+            integer. Otherwise this must be None
+        :param maximum: Optional maximum value for numeric configs
+        :type maximum: Number if value_type is number, int if value_type is
+            integer. Otherwise this must be None
         """
         if not self._can_register_inputs:
             raise RuntimeError("register_config called outside on_init")
@@ -108,14 +124,34 @@ class GameIO:
             assert isinstance(
                 default, str
             ), "'default' must be a string if ConfigType.STRING"
+            assert (
+                minimum is None and maximum is None
+            ), "String config cannot have min/max value"
         elif value_type == "number":
             assert isinstance(
                 default, (int, float)
             ), "'default' must be a number if ConfigType.NUMBER"
+            for val in [minimum, maximum]:
+                assert val is None or isinstance(
+                    val, (int, float)
+                ), "min/max val has to be float, int or None"
+        elif value_type == "integer":
+            assert isinstance(
+                default, int
+            ), "'default' must be an integer if ConfigType.NUMBER"
+            for val in [minimum, maximum]:
+                assert val is None or isinstance(val, int)
+                "min/max val has to be float, int or None"
         elif value_type == "boolean":
             assert isinstance(
                 default, bool
             ), "'default' must be a boolean if ConfigType.BOOLEAN"
+
+        if value_type in ["integer", "number"]:
+            if minimum is not None:
+                assert default >= minimum, "'default' must be at least minimum"
+            if maximum is not None:
+                assert default <= maximum, "'default' must be at most maximum"
 
         self._custom_configs.append(
             {
@@ -123,6 +159,8 @@ class GameIO:
                 "valueType": value_type,
                 "isRobotSpecific": is_robot_specific,
                 "default": default,
+                "minimum": minimum,
+                "maximum": maximum,
             }
         )
 

@@ -6,7 +6,7 @@ import unittest
 from signal import SIGINT, SIGTERM, SIGUSR1
 from threading import Thread
 
-from surrortg import Game, RobotType
+from surrortg import ConfigType, Game, RobotType
 
 
 class GameTest(unittest.TestCase):
@@ -238,6 +238,84 @@ class GameTest(unittest.TestCase):
             g.io.register_inputs({})
         except RuntimeError:
             self.fail("io.register_inputs() raised an unexpected RuntimeError")
+
+    def test_game_io_register_config(self):
+        # test premature calling (run not called)
+        g = Game()
+        with self.assertRaises(RuntimeError):
+            g.io.register_config(
+                "testconfig", ConfigType.STRING, "defaultval", True
+            )
+
+        # test premature calling
+        # (run called, but io._can_register_inputs is not set)
+        g = Game()
+        g._pre_run(
+            "./tests/test_data/test_config.toml",
+            socketio_logging_level=logging.WARNING,
+            robot_type=RobotType.ROBOT,
+            device_id=None,
+        )  # this simulates run(), really only part of it
+        with self.assertRaises(RuntimeError):
+            g.io.register_config(
+                "testconfig", ConfigType.STRING, "defaultval", True
+            )
+
+        # test the correct use
+        g = Game()
+        g._pre_run(
+            "./tests/test_data/test_config.toml",
+            socketio_logging_level=logging.WARNING,
+            robot_type=RobotType.ROBOT,
+            device_id=None,
+        )  # this simulates run(), really only part of it
+        g.io._can_register_inputs = True
+        try:
+            g.io.register_config(
+                "teststring", ConfigType.STRING, "defaultval", True
+            )
+            g.io.register_config("testnumber", ConfigType.NUMBER, 2.1, True)
+            g.io.register_config("testinteger", ConfigType.INTEGER, 3, True)
+            g.io.register_config("testboolean", ConfigType.BOOLEAN, True, True)
+            g.io.register_config("testglobal", ConfigType.BOOLEAN, True, False)
+            g.io.register_config(
+                "testminmaxint",
+                ConfigType.INTEGER,
+                3,
+                False,
+                minimum=1,
+                maximum=5,
+            )
+            g.io.register_config(
+                "testminmaxfloat",
+                ConfigType.NUMBER,
+                4,
+                False,
+                minimum=1.2,
+                maximum=5.3,
+            )
+        except RuntimeError:
+            self.fail("io.register_config() raised an unexpected RuntimeError")
+
+        # test wrong config combinations
+        with self.assertRaises(AssertionError):
+            g.io.register_config(
+                "mismatchingdefault", ConfigType.STRING, 3, True
+            )
+        with self.assertRaises(AssertionError):
+            g.io.register_config(
+                "stringmin", ConfigType.STRING, 3, True, minimum="what?"
+            )
+        with self.assertRaises(AssertionError):
+            g.io.register_config("floatint", ConfigType.INTEGER, 3.2, True)
+        with self.assertRaises(AssertionError):
+            g.io.register_config(
+                "floatintmax", ConfigType.INTEGER, 3, True, maximum=5.1
+            )
+        with self.assertRaises(AssertionError):
+            g.io.register_config(
+                "inttoolarge", ConfigType.INTEGER, 6, True, maximum=5
+            )
 
     def test_game_properties(self):
         """The properties should raise RuntimeError if accessed before run"""
