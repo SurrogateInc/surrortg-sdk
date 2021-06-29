@@ -202,7 +202,7 @@ class NinSwitchWeplayGame(Game):
                 "plus": NSSwitch(self.nsg, NSButton.PLUS),
                 "left_stick": NSSwitch(self.nsg, NSButton.LEFT_STICK),
                 "right_stick": NSSwitch(self.nsg, NSButton.RIGHT_STICK),
-                "home": NSSwitch(self.nsg, NSButton.HOME),
+                "home": NSSwitch(self.nsg, NSButton.HOME, admin = True),        # Define the home button as an admin only control
                 "capture": NSSwitch(self.nsg, NSButton.CAPTURE),
             },
         )
