@@ -153,16 +153,17 @@ class GameIO:
             if maximum is not None:
                 assert default <= maximum, "'default' must be at most maximum"
 
-        self._custom_configs.append(
-            {
-                "name": name,
-                "valueType": value_type,
-                "isRobotSpecific": is_robot_specific,
-                "default": default,
-                "minimum": minimum,
-                "maximum": maximum,
-            }
-        )
+        obj = {
+            "name": name,
+            "valueType": value_type,
+            "isRobotSpecific": is_robot_specific,
+            "default": default,
+        }
+        if minimum is not None:
+            obj["minimum"] = minimum
+        if maximum is not None:
+            obj["maximum"] = maximum
+        self._custom_configs.append(obj)
 
     def register_inputs(self, inputs, admin=False, bindable=True):
         """Registers inputs
