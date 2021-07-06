@@ -6,7 +6,7 @@ verify_ssl = true
 [dev-packages]
 pre-commit = "*"
 numpy = "*"
-myst-parser = "==0.13.5"
+myst-parser = "==0.15.1"
 sphinx = "==3.1.1"
 sphinx-rtd-theme = "==0.4.3"
 flake8 = "==3.9.0" # if version changed, change also on .pre-commit-config.yaml
