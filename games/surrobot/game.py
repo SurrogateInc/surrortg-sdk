@@ -8,20 +8,20 @@ from surrortg import Game
 # Motor driver control pins
 
 # Front left motor
-MOTOR_FL_IN_1 = 26
-MOTOR_FL_IN_2 = 19
+MOTOR_FL_IN_1 = 15
+MOTOR_FL_IN_2 = 14
 # Front right motor
-MOTOR_FR_IN_1 = 5
-MOTOR_FR_IN_2 = 6
+MOTOR_FR_IN_1 = 2
+MOTOR_FR_IN_2 = 3
 # Rear right motor
-MOTOR_RR_IN_1 = 15
-MOTOR_RR_IN_2 = 14
+MOTOR_RR_IN_1 = 5
+MOTOR_RR_IN_2 = 6
 # Rear left motor
-MOTOR_RL_IN_1 = 2
-MOTOR_RL_IN_2 = 3
+MOTOR_RL_IN_1 = 26
+MOTOR_RL_IN_2 = 19
 
-FRONT_MOTORS_SLEEP = 13
-REAR_MOTORS_SLEEP = 4
+FRONT_MOTORS_SLEEP = 4
+REAR_MOTORS_SLEEP = 13
 
 # PWM frequency for motor speed control
 MOTOR_PWM_FREQ = 30000
@@ -251,6 +251,7 @@ class SurrobotGame(Game):
         )
 
     async def on_prepare(self):
+        # ========== TEST CODE FOR MOTORS ========== #
         while True:
             self.motor_controller.rotational_speed = 0.5
             await asyncio.sleep(3)
@@ -269,6 +270,7 @@ class SurrobotGame(Game):
 
             self.motor_controller.rotational_speed = 0
             await asyncio.sleep(10)
+        # ========== TEST CODE FOR MOTORS ========== #
 
 
 if __name__ == "__main__":
