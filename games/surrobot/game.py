@@ -137,7 +137,7 @@ class DRV8833Motor:
         )
 
 
-class DRV8833MotorController:
+class MotorController:
     def __init__(self, motor_fl, motor_fr, motor_rr, motor_rl):
         # Store all motors
         self._motor_fl = motor_fl
@@ -246,7 +246,7 @@ class SurrobotGame(Game):
         )
 
         # Create motor controller for all 4 motors
-        self.motor_controller = DRV8833MotorController(
+        self.motor_controller = MotorController(
             self.motor_fl, self.motor_fr, self.motor_rr, self.motor_rl
         )
 
