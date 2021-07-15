@@ -28,8 +28,7 @@ class UdpCar(UdpBot):
         super().__init__()
         self._throttle = UdpActuator(0x01, throttle_mult, repeat_commands)
         self._steering = UdpActuator(0x02, steering_mult, repeat_commands)
-        self.add_input({"motor": self._throttle})
-        self.add_input({"steering": self._steering})
+        self.add_inputs({"motor": self._throttle, "steering": self._steering})
 
     def threadsafe_throttle(self, val, seat):
         """Threadsafe helper method for using throttle

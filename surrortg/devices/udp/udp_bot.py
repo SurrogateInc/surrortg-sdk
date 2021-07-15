@@ -159,15 +159,15 @@ class UdpBot:
 
         return set_num
 
-    def add_input(self, new_input):
-        """Appends the given input to the bot's input configuration
+    def add_inputs(self, new_inputs):
+        """Appends the given inputs to the bot's input configuration
 
         Does not override previous configurations
 
-        :param new_input: Input to append to the existing ones
-        :type new_input: dict
+        :param new_inputs: Inputs to append to the existing ones
+        :type new_inputs: dict
         """
-        self.inputs.update(new_input)
+        self.inputs.update(new_inputs)
 
     async def shutdown(self):
         """Resets all registered inputs for all bots
