@@ -15,6 +15,7 @@ codespell = "==v2.0.0" # if version changed, change also on .pre-commit-config.y
 pep8-naming = "==0.11.1" # if version changed, change also on .pre-commit-config.yaml
 isort = "==5.7.0" # if version changed, change also on .pre-commit-config.yaml
 importlib-metadata = "*" # needed by flake8 and listed explicitly to fix dependency issues between Python versions
+docutils = "==0.16" # versions above 0.16 break the rendering of lists in docs
 
 [packages]
 surrortg = {editable = true, path = "."}
