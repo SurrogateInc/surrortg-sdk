@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import struct
+
 from .udp_protocol import open_remote_endpoint
 
 BOT_UDP_PORT = 31337
@@ -19,7 +20,10 @@ class UdpBot:
         self._loop = asyncio.get_running_loop()
 
     async def handle_config(  # noqa: C901
-        self, ge_config, local_bot_config={}, bot_listener_cb=None,
+        self,
+        ge_config,
+        local_bot_config={},
+        bot_listener_cb=None,
     ):
         """Handle robot configuration
 

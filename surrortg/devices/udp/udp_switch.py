@@ -1,8 +1,10 @@
+import asyncio
 import logging
 import struct
-import asyncio
-from . import UdpInput
+
 from surrortg.inputs import Switch
+
+from . import UdpInput
 
 
 class UdpSwitch(Switch, UdpInput):
