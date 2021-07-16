@@ -12,3 +12,4 @@ something new.
    easy_games_to_hook_up
    modules/ninswitch
    relay_game
+   tcp_bot_games
