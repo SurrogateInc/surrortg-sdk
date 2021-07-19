@@ -216,11 +216,6 @@ class Joystick(Input):
         return "joystick"
 
     def _stringify_keybinds(self, binds):
-        assert "down" in binds
-        assert "up" in binds
-        assert "left" in binds
-        assert "right" in binds
-
         def enum_to_str(item):
             if type(item) is not str:
                 return item.value
@@ -236,19 +231,23 @@ class Joystick(Input):
         left_keys = []
         right_keys = []
 
+        def append_keys(keys):
+            if "up" in keys:
+                up_keys.append(keys["up"])
+            if "down" in keys:
+                down_keys.append(keys["down"])
+            if "left" in keys:
+                left_keys.append(keys["left"])
+            if "right" in keys:
+                right_keys.append(keys["right"])
+
         if isinstance(binds, list):
             for item in binds:
                 self._stringify_keybinds(item)
-                up_keys.append(item["up"])
-                down_keys.append(item["down"])
-                left_keys.append(item["left"])
-                right_keys.append(item["right"])
+                append_keys(item)
         else:
             self._stringify_keybinds(binds)
-            up_keys.append(binds["up"])
-            down_keys.append(binds["down"])
-            left_keys.append(binds["left"])
-            right_keys.append(binds["right"])
+            append_keys(item)
 
         key_msg = {
             "xMinKeys": {"keys": left_keys, "humanReadableName": "left"},

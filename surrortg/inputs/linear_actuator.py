@@ -66,9 +66,6 @@ class LinearActuator(Input):
         return "linearActuator"
 
     def _stringify_keybinds(self, binds):
-        assert "min" in binds
-        assert "max" in binds
-
         def enum_to_str(item):
             if type(item) is not str:
                 return item.value
@@ -82,15 +79,19 @@ class LinearActuator(Input):
         max_keys = []
         min_keys = []
 
+        def append_keys(keys):
+            if "min" in keys:
+                min_keys.append(keys["min"])
+            if "max" in keys:
+                max_keys.append(keys["max"])
+
         if isinstance(binds, list):
             for item in binds:
                 self._stringify_keybinds(item)
-                min_keys.append(item["min"])
-                max_keys.append(item["max"])
+                append_keys(item)
         else:
             self._stringify_keybinds(binds)
-            min_keys.append(binds["min"])
-            max_keys.append(binds["max"])
+            append_keys(item)
 
         key_msg = {
             "minKeys": {
