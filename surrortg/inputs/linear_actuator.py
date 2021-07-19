@@ -114,9 +114,4 @@ class LinearActuator(Input):
         To override the defaults, override this method in your linear actuator
         subclass and return different keybinds.
         """
-        return [
-            {
-                "min": "KeyW",
-                "max": "KeyS",
-            }
-        ]
+        return []

@@ -3,7 +3,6 @@ import math
 from enum import Enum, auto
 
 from .input import Input
-from .keycodes import KeyCode
 
 
 class Directions(Enum):
@@ -267,20 +266,7 @@ class Joystick(Input):
         subclass and return different keybinds.
         """
 
-        return [
-            {
-                "up": KeyCode.KEY_W,
-                "down": KeyCode.KEY_S,
-                "left": KeyCode.KEY_A,
-                "right": KeyCode.KEY_D,
-            },
-            {
-                "up": KeyCode.KEY_ARROW_UP,
-                "down": KeyCode.KEY_ARROW_DOWN,
-                "left": KeyCode.KEY_ARROW_LEFT,
-                "right": KeyCode.KEY_ARROW_RIGHT,
-            },
-        ]
+        return []
 
 
 class MouseJoystick(Joystick):
