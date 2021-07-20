@@ -88,7 +88,7 @@ or totally different 3x servo device that might want totally different type inpu
     - Clock hz?
     - Reserve some GPIO pins directly from Raspi to be used with servos?
     - Use separate I2C for servo board?
-- How to check if specific I2C device exists without crashing the app?
+- How to check if specific I2C device exists without crashing the app? (d)
 - Test Leevis 2 power solutions (separate motor/servo power vs same motor/servo power)
 - Conditional configs
 - Change inputs after 'on_config'
