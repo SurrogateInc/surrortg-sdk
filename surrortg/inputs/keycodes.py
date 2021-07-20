@@ -64,3 +64,4 @@ class KeyCode(Enum):
     KEY_ARROW_DOWN = "ArrowDown"
     KEY_ARROW_LEFT = "ArrowLeft"
     KEY_ARROW_RIGHT = "ArrowRight"
+    KEY_SPACE = "Space"
