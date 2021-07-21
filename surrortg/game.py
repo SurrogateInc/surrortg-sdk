@@ -341,8 +341,10 @@ class Game:
         # Allow self.io.register_inputs usage and initialize the game.
         # Then forbid all later self.io.register_inputs calls.
         self.io._can_register_inputs = True
+        self.io._can_register_configs = True
         await self.on_init()
         self.io._can_register_inputs = False
+        self.io._can_register_configs = False
 
         # play the game until interrupted, terminated or crashed
         self._main_task = asyncio.create_task(self.io._socket_handler.run())
@@ -500,10 +502,14 @@ class Game:
 
         self._configs = self._parse_configs(message)
         self._seats = self._parse_seats(self._configs)
+        self.io._can_register_inputs = True
         set_num = await self.on_config()
-        payload = {}
+        self.io._can_register_inputs = False
+        payload = {"inputs": self.io._get_inputs()}
         if set_num is not None:
             payload["set"] = set_num
+
+        logging.info(f"Sending inputs in on_config: {self.io._get_inputs()}")
 
         return payload
 

@@ -109,6 +109,13 @@ class MessageRouter:
         """
         self.inputs[dev_id] = InputBinding(dev, admin)
 
+    def unregister_input(self, dev_id):
+        """Unregisters a callback"""
+        del self.inputs[dev_id]
+
+    def has_input(self, dev_id):
+        return dev_id in self.inputs
+
     def trigger_watchdog_reset(self, seat):
         """Resets inputs and clears watchdog for given seat immediately
 
@@ -230,6 +237,12 @@ class MultiSeatMessageRouter:
         :type admin: bool, optional
         """
         self.router.register_input(dev_id, dev, admin)
+
+    def unregister_input(self, dev_id):
+        self.router.unregister_input(dev_id)
+
+    def has_input(self, dev_id):
+        return self.router.has_input(dev_id)
 
     async def handle_routing_messages(self, msg):
         """Handle routing related game engine messages

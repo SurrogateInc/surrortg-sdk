@@ -269,7 +269,7 @@ class GameTest(unittest.TestCase):
             robot_type=RobotType.ROBOT,
             device_id=None,
         )  # this simulates run(), really only part of it
-        g.io._can_register_inputs = True
+        g.io._can_register_configs = True
         try:
             g.io.register_config(
                 "teststring", ConfigType.STRING, "defaultval", True

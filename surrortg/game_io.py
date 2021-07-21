@@ -63,6 +63,7 @@ class GameIO:
             socketio_logging_level=socketio_logging_level,
         )
         self._can_register_inputs = False
+        self._can_register_configs = False
 
     def _is_config_message(self, message):
         return message.src == "gameEngine" and message.event == "config"
@@ -108,7 +109,7 @@ class GameIO:
         :type maximum: Number if value_type is number, int if value_type is
             integer. Otherwise this must be None
         """
-        if not self._can_register_inputs:
+        if not self._can_register_configs:
             raise RuntimeError("register_config called outside on_init")
 
         assert isinstance(name, str), "'name' must be a string"
@@ -183,7 +184,9 @@ class GameIO:
         :raises RuntimeError: if called outside on_init
         """
         if not self._can_register_inputs:
-            raise RuntimeError("register_inputs called outside on_init")
+            raise RuntimeError(
+                "register_inputs called outside on_init|on_config"
+            )
 
         for input_id, handler_obj in inputs.items():
             if input_id in self.input_bindings:
@@ -195,6 +198,32 @@ class GameIO:
                     "admin": admin,
                     **handler_obj._get_default_keybinds(),
                 }
+
+    def unregister_inputs(self, ids):
+        """Unregisters inputs
+
+        Every input listed must be registered
+        :param ids: List of input ids to unregister
+        :type ids: List of strings
+        :raises RuntimeError: if some input ids are not registered
+        """
+        if not self._can_register_inputs:
+            raise RuntimeError(
+                "unregister_inputs called outside on_init|on_config"
+            )
+        assert isinstance(ids, list), "'ids' has to be a list"
+        for input_id in ids:
+            if not self.has_input(input_id):
+                raise RuntimeError(
+                    f"Cannot unregister non-existing input ({input_id})"
+                )
+            self._message_router.unregister_input(input_id)
+            if input_id in self.input_bindings:
+                del self.input_bindings[input_id]
+
+    def has_input(self, id):
+        """Check if the input exists already"""
+        return self._message_router.has_input(id)
 
     def enable_inputs(self):
         """Enable all registered inputs"""
