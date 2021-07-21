@@ -99,4 +99,4 @@ class Switch(Input):
         To override the defaults, override this method in your switch
         subclass and return different keybinds.
         """
-        return ["Space"]
+        return []
