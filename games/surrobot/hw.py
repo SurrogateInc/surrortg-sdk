@@ -99,27 +99,49 @@ class Hw:
 
 class Oled:
     def __init__(self, i2c, addr=0x3C):
-        self.oled = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c, addr=addr)
-        self.addr = hex(addr)
-        # Clear display.
-        self.oled.fill(0)
-        self.safe_oled_show()
+        self.oled_working = False
+        self.i2c = i2c
+        self.addr = addr
+        self.safe_oled_init()
         self.last_text_writen = ""
+
+        # Show empty display if working
+        if self.oled_working:
+            self.oled.fill(0)
+            self.safe_oled_show()
 
     def write(self, text, x=0, y=0, fill=255):
         if text is not self.last_text_writen:
-            image = Image.new("1", (self.oled.width, self.oled.height))
-            draw = ImageDraw.Draw(image)
-            draw.text((x, y), text, fill=fill)
-            self.oled.image(image)
-            self.safe_oled_show()
-            self.last_text_writen = text
+            # Try re-init if broken
+            if not self.oled_working:
+                self.safe_oled_init()
+
+            # Try writing only if in a working state
+            if self.oled_working:
+                image = Image.new("1", (self.oled.width, self.oled.height))
+                draw = ImageDraw.Draw(image)
+                draw.text((x, y), text, fill=fill)
+                self.oled.image(image)
+                self.safe_oled_show()
+                self.last_text_writen = text
+
+    def safe_oled_init(self):
+        try:
+            self.oled = adafruit_ssd1306.SSD1306_I2C(
+                128, 64, self.i2c, addr=self.addr
+            )
+            self.oled_working = True
+        except (OSError, ValueError):
+            logging.error(f"Oled init failing at address {hex(self.addr)}")
+            self.oled_working = False
 
     def safe_oled_show(self):
         try:
             self.oled.show()
+            self.oled_working = True
         except OSError:
-            logging.error(f"Oled show failing at address {self.addr}")
+            logging.error(f"Oled show() failing at address {hex(self.addr)}")
+            self.oled_working = False
 
 
 class PCA9685Servo(Servo):
