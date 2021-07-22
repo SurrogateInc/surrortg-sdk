@@ -100,9 +100,10 @@ class Hw:
 class Oled:
     def __init__(self, i2c, addr=0x3C):
         self.oled = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c, addr=addr)
+        self.addr = hex(addr)
         # Clear display.
         self.oled.fill(0)
-        self.oled.show()
+        self.safe_oled_show()
         self.last_text_writen = ""
 
     def write(self, text, x=0, y=0, fill=255):
@@ -111,8 +112,14 @@ class Oled:
             draw = ImageDraw.Draw(image)
             draw.text((x, y), text, fill=fill)
             self.oled.image(image)
-            self.oled.show()
+            self.safe_oled_show()
             self.last_text_writen = text
+
+    def safe_oled_show(self):
+        try:
+            self.oled.show()
+        except OSError:
+            logging.error(f"Oled show failing at address {self.addr}")
 
 
 class PCA9685Servo(Servo):
