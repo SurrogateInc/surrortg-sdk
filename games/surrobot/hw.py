@@ -1,18 +1,15 @@
-import time
+import logging
 
-from board import SCL, SDA
-import busio
-
-from games.surrobot.DRV8833 import DRV8833, DRV8833Motor, MotorController
-from adafruit_motor import servo as AdafruitServo
-from adafruit_pca9685 import PCA9685
 import adafruit_ssd1306
 import adafruit_tcs34725
-from surrortg.devices import Servo
+import busio
+from adafruit_motor import servo as AdafruitServo  # noqa:N812
+from adafruit_pca9685 import PCA9685
+from board import SCL, SDA
+from PIL import Image, ImageDraw
 
-import board
-import digitalio
-from PIL import Image, ImageDraw, ImageFont
+from games.surrobot.DRV8833 import DRV8833, DRV8833Motor, MotorController
+from surrortg.devices import Servo, i2c_connected
 
 # Motor driver control pins
 
@@ -32,9 +29,21 @@ MOTOR_RL_IN_2 = 19
 FRONT_MOTORS_SLEEP = 4
 REAR_MOTORS_SLEEP = 13
 
-class Hw:
+I2C_DEVICES = {
+    "right oled": "0x3d",
+    "left oled": "0x3c",
+    "servo board": "0x40",
+    "color sensor": "0x29",
+}
 
+
+class Hw:
     def __init__(self):
+        for name, address in I2C_DEVICES.items():
+            logging.info(
+                f"{name} at {address} connected: {i2c_connected(address)}"
+            )
+
         self.i2c = busio.I2C(SCL, SDA)
         self.pca = PCA9685(self.i2c)
         self.pca.frequency = 50
@@ -82,14 +91,13 @@ class Hw:
         self.motor_controller = MotorController(
             self.motor_fl, self.motor_fr, self.motor_rr, self.motor_rl
         )
-    
+
     def reset_eyes(self):
         self.left_eye.write("left eye")
         self.right_eye.write("right eye")
 
 
 class Oled:
-
     def __init__(self, i2c, addr=0x3C):
         self.oled = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c, addr=addr)
         # Clear display.
@@ -105,7 +113,7 @@ class Oled:
             self.oled.image(image)
             self.oled.show()
             self.last_text_writen = text
-    
+
 
 class PCA9685Servo(Servo):
     def __init__(
@@ -172,7 +180,7 @@ class PCA9685Servo(Servo):
             -position * (self._mid_pulse_width - self._min_pulse_width)
             + self._mid_pulse_width
         )  # Scale -1 to 1 between min and max pulse width
-        #self._pwm.set_servo_pulse(self._channel, int(scaled_pos))
+        # self._pwm.set_servo_pulse(self._channel, int(scaled_pos))
         fraction = (scaled_pos - 500.0) / 2000.0
         self.servo.fraction = fraction
         self._position = position
