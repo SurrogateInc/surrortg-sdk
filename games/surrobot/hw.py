@@ -54,8 +54,7 @@ class Hw:
         self.left_eye = Oled(self.i2c)
         self.right_eye = Oled(self.i2c, addr=0x3D)
         # These should be lazy generated?
-        self.color_sensor = adafruit_tcs34725.TCS34725(self.i2c)
-        self.color_sensor.active = False
+        self.color_sensor = ColorSensor(self.i2c)
 
         # Create motor drivers, one for front and one for rear
         self.motor_driver_front = DRV8833(
@@ -97,51 +96,111 @@ class Hw:
         self.right_eye.write("right eye")
 
 
+class ColorSensor:
+    def __init__(self, i2c, integration_time=150):
+        self.working = False
+        self.i2c = i2c
+        self._integration_time = integration_time
+        self._active = False
+        self.safe_init()
+
+    def safe_init(self):
+        try:
+            self.color_sensor = adafruit_tcs34725.TCS34725(self.i2c)
+            self.color_sensor.integration_time = self._integration_time
+            self.color_sensor.active = self._active
+            self.working = True
+        except (OSError, ValueError):
+            logging.error("ColorSensor init failed")
+            self.working = False
+
+    @property
+    def lux(self):
+        # Try re-init if broken
+        if not self.working:
+            self.safe_init()
+        # Try only if in a working state
+        if self.working:
+            try:
+                return self.color_sensor.lux
+            except OSError:
+                logging.error("ColorSensor lux failed")
+                self.working = False
+                return None
+
+    @property
+    def active(self):
+        # Try re-init if broken
+        if not self.working:
+            self.safe_init()
+        # Try only if in a working state
+        if self.working:
+            try:
+                return self.color_sensor.active
+            except OSError:
+                return None
+        else:
+            return None
+
+    @active.setter
+    def active(self, active):
+        self._active = active
+        # Try re-init if broken
+        if not self.working:
+            self.safe_init()
+        # Try only if in a working state
+        if self.working:
+            try:
+                self.color_sensor.active = self._active
+            except OSError:
+                pass
+
+
 class Oled:
     def __init__(self, i2c, addr=0x3C):
-        self.oled_working = False
+        self.working = False
         self.i2c = i2c
         self.addr = addr
-        self.safe_oled_init()
+        self.safe_init()
         self.last_text_writen = ""
 
         # Show empty display if working
-        if self.oled_working:
+        if self.working:
             self.oled.fill(0)
-            self.safe_oled_show()
+            self.safe_show()
 
     def write(self, text, x=0, y=0, fill=255):
         if text is not self.last_text_writen:
             # Try re-init if broken
-            if not self.oled_working:
-                self.safe_oled_init()
+            if not self.working:
+                self.safe_init()
 
             # Try writing only if in a working state
-            if self.oled_working:
+            if self.working:
                 image = Image.new("1", (self.oled.width, self.oled.height))
                 draw = ImageDraw.Draw(image)
                 draw.text((x, y), text, fill=fill)
                 self.oled.image(image)
-                self.safe_oled_show()
+                self.safe_show()
                 self.last_text_writen = text
 
-    def safe_oled_init(self):
+    def safe_init(self):
         try:
             self.oled = adafruit_ssd1306.SSD1306_I2C(
                 128, 64, self.i2c, addr=self.addr
             )
-            self.oled_working = True
+            self.working = True
         except (OSError, ValueError):
-            logging.error(f"Oled init failing at address {hex(self.addr)}")
-            self.oled_working = False
+            logging.error(f"Oled init failed at address {hex(self.addr)}")
+            self.working = False
 
-    def safe_oled_show(self):
+    def safe_show(self):
         try:
             self.oled.show()
-            self.oled_working = True
+            self.working = True
         except OSError:
-            logging.error(f"Oled show() failing at address {hex(self.addr)}")
-            self.oled_working = False
+            logging.error(f"Oled show() failed at address {hex(self.addr)}")
+            self.working = False
 
 
 class PCA9685Servo(Servo):
