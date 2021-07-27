@@ -117,11 +117,9 @@ class SurrobotGame(Game):
         )
         self.inputs["movement"] = motor_joystick
 
-        self.servos = self.hw.servos
-
         camera = ServoJoystick(
-            self.servos[0],
-            self.servos[1],
+            self.hw.servos[0],
+            self.hw.servos[1],
             [
                 {
                     "up": KeyCode.KEY_ARROW_UP,
@@ -134,7 +132,7 @@ class SurrobotGame(Game):
         self.inputs["top-slot-1-camera"] = camera
 
         claw = ServoActuator(
-            self.servos[2],
+            self.hw.servos[2],
             [
                 {
                     "min": "KeyN",
@@ -162,7 +160,7 @@ class SurrobotGame(Game):
     async def on_finish(self):
         logging.info("Game ends")
         # if reset during previous game self.template might not exist
-        if self.template:
+        if hasattr(self, "template"):
             await self.template.on_finish()
 
 
