@@ -45,11 +45,12 @@ class Hw:
             )
 
         self.i2c = busio.I2C(SCL, SDA)
-        self.pca = SafePCA9685(self.i2c)
+        self.pca = SafePCA9685(self.i2c, 50)
         self.servos = []
         for i in range(16):
             servo = PCA9685Servo(self.pca, i)
             self.servos.append(servo)
+        self.servos.append(Servo(22))
         self.left_eye = Oled(self.i2c)
         self.right_eye = Oled(self.i2c, addr=0x3D)
         # These should be lazy generated?
