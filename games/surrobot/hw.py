@@ -1,4 +1,6 @@
+import asyncio
 import logging
+import time
 
 import adafruit_ssd1306
 import adafruit_tcs34725
@@ -157,12 +159,15 @@ class ColorSensor:
 
 
 class Oled:
-    def __init__(self, i2c, addr=0x3C):
+    def __init__(self, i2c, addr=0x3C, max_update_interval=0.5):
         self.working = False
         self.i2c = i2c
         self.addr = addr
+        self.max_update_interval = max_update_interval
+        self.last_update_ts = time.time()
         self.safe_init()
         self.last_text_writen = ""
+        self.write_task = None
 
         # Show empty display if working
         if self.working:
@@ -177,12 +182,33 @@ class Oled:
 
             # Try writing only if in a working state
             if self.working:
-                image = Image.new("1", (self.oled.width, self.oled.height))
-                draw = ImageDraw.Draw(image)
-                draw.text((x, y), text, fill=fill)
-                self.oled.image(image)
-                self.safe_show()
-                self.last_text_writen = text
+                time_now = time.time()
+                # Try writing now only if enough time has passed
+                if time_now - self.last_update_ts > self.max_update_interval:
+                    self.draw(text, x, y, fill)
+                # If not, create a task to write later
+                else:
+                    if self.write_task is not None:
+                        self.write_task.cancel()
+                    wait_time = self.max_update_interval - (
+                        time_now - self.last_update_ts
+                    )
+                    self.write_task = asyncio.create_task(
+                        self.draw_after_wait(text, x, y, fill, wait_time)
+                    )
+
+    async def draw_after_wait(self, text, x, y, fill, wait_time):
+        await asyncio.sleep(wait_time)
+        self.draw(text, x, y, fill)
+
+    def draw(self, text, x, y, fill):
+        image = Image.new("1", (self.oled.width, self.oled.height))
+        draw = ImageDraw.Draw(image)
+        draw.text((x, y), text, fill=fill)
+        self.oled.image(image)
+        self.safe_show()
+        self.last_text_writen = text
+        self.last_update_ts = time.time()
 
     def safe_init(self):
         try:
