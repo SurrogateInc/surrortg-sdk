@@ -447,41 +447,16 @@ class ArucoGrid:
         bottom_left_m = self.calibration_coords[self.bottom_left]
 
         max_x = (
-            min(
-                top_right_m[top_l][0],
-                top_right_m[bot_l][0],
-                bottom_right_m[top_l][0],
-                bottom_right_m[bot_l][0],
-            )
-            + CROP_MARGIN
+            min(top_right_m[top_l][0], bottom_right_m[bot_l][0]) + CROP_MARGIN
         )
         min_x = (
-            max(
-                top_left_m[top_r][0],
-                top_left_m[bot_r][0],
-                bottom_left_m[top_r][0],
-                bottom_left_m[bot_r][0],
-            )
-            - CROP_MARGIN
+            max(top_left_m[top_r][0], bottom_left_m[bot_r][0]) - CROP_MARGIN
         )
         max_y = (
-            min(
-                bottom_right_m[bot_l][1],
-                bottom_right_m[bot_r][1],
-                bottom_left_m[bot_l][1],
-                bottom_left_m[bot_r][1],
-            )
+            min(bottom_right_m[bot_l][1], bottom_left_m[bot_r][1])
             + CROP_MARGIN
         )
-        min_y = (
-            max(
-                top_left_m[top_l][1],
-                top_left_m[top_r][1],
-                top_right_m[top_l][1],
-                top_right_m[top_r][1],
-            )
-            - CROP_MARGIN
-        )
+        min_y = max(top_left_m[top_r][1], top_right_m[top_l][1]) - CROP_MARGIN
 
         self.crop_params = (max_x, min_x, max_y, min_y)
         self.aruco_source.set_crop(self.crop_params)
