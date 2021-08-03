@@ -19,6 +19,8 @@ docutils = "==0.16" # versions above 0.16 break the rendering of lists in docs
 
 [packages]
 surrortg = {editable = true, path = "."}
+pillow = "*"
+rpi-ws281x = "*"
 
 [scripts]
 tests = "python tests/main.py"
