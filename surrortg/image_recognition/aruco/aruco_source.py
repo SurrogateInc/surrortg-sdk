@@ -14,7 +14,7 @@ LOOPBACK_DEV_PATH = "/dev/video21"
 
 
 class CapComm(Enum):
-    """For communication between AsyncVideoCapture and VideoCaptureProcess"""
+    """For communication between ArucoDetectionProcess and ArucoDetect"""
 
     INIT_SUCCESS = auto()
     INIT_FAILURE = auto()

@@ -39,19 +39,20 @@ class ArucoFinder:
         racing type game, set in_order to True.
 
         Short example of how to integrate the class into game logic:
-        -----------------------------------------------------------------------
-        from surrortg.image_recognition.aruco import ArucoFinder
 
-        YourGame(Game):
-        async def on_init(self):
-            self.finder = await ArucoFinder.create(self.io)
+        .. code-block:: python
 
-        async def on_config(self):
-            self.finder.on_config(self.configs)
+            from surrortg.image_recognition.aruco import ArucoFinder
 
-        async def on_start(self):
-            self.finder.on_start()
-        -----------------------------------------------------------------------
+            YourGame(Game):
+            async def on_init(self):
+                self.finder = await ArucoFinder.create(self.io)
+
+            async def on_config(self):
+                self.finder.on_config(self.configs)
+
+            async def on_start(self):
+                self.finder.on_start()
 
         :param io: GameIO instance, used to register configs and send scores
             to the game engine
@@ -116,8 +117,9 @@ class ArucoFinder:
         return self
 
     def on_config(self, configs):
-        """Parses the configs object for configs from web interface. MUST BE
-            CALLED every time at the on_config part of the game loop.
+        """Parses the configs object for configs from web interface.
+
+        MUST BE CALLED every time at the on_config part of the game loop.
 
         :param configs: self.configs from the Game object which owns this
             instance

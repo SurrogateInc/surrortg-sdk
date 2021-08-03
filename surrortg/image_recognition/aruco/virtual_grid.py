@@ -58,59 +58,52 @@ def point_estimate(point, corners):
 
 
 class ArucoGrid:
-    # IDs must be in the order: top left, top right, bottom right, bottom left
-    def __init__(
-        self,
-        grid_size,
-        aruco_source,
-        ids=[46, 47, 48, 49],
-        loc_slack=LOC_SLACK_PARAM,
-        crop_frame=True,
-    ):
-        """Creates virtual grid of squares based on four aruco markers
+    """Creates virtual grid of squares based on four aruco markers
 
-        Why use this system:
+    Why use this system:
 
         - If you need to have the game area divided into squares, you can use
-        this system to automatically calibrate and create a virtual grid for
-        you with the help of aruco markers.
+          this system to automatically calibrate and create a virtual grid for
+          you with the help of aruco markers.
         - No need to hardcode the grid using manually obtained pixel values.
         - The grid is generated every time a new game starts, so the grid will
-        be correct even if the camera or game area is moved slightly; with
-        hardcoded values even small misalignment can make the game unplayable.
+          be correct even if the camera or game area is moved slightly; with
+          hardcoded values even small misalignment can make the game unplayable
 
+    How to use this system:
 
-        How to use this system:
+    1. Position four aruco markers at the corners of the physical game area::
 
-        1. Position four aruco markers at the corners of the physical game area
-                ------------------------------------
-                |      |                   |       |
-                |  1   |                   |   2   | <-- aruco marker
-                |------|    GAME           |-------|
-                       |    AREA           |
-                |------|                   |-------|
-                |   4  |                   |   3   |
-                |      |                   |       |
-                ------------------------------------
+         ------------------------------------
+         |      |                   |       |
+         |  1   |                   |   2   | <-- aruco marker
+         |------|    GAME           |-------|
+                |    AREA           |
+         |------|                   |-------|
+         |   4  |                   |   3   |
+         |      |                   |       |
+         ------------------------------------
 
-        2. Create an ArucoGrid and pass the grid size (how many squares
-            per side), an ArucoDetect instance, and the IDs of the corner
-            markers (in order: top left, top right, bottom right, bottom left)
-            to the ArucoGrid constructor.
+    2. Create an ArucoGrid and pass the grid size (how many squares
+        per side), an ArucoDetect instance, and the IDs of the corner
+        markers (in order: top left, top right, bottom right, bottom left)
+        to the ArucoGrid constructor.
 
-        3. Call the generate_grid method (remember to use await). Once the
-            method returns, the grid had been successfully generated. To
-            prevent issues from camera misalignment, it's best to call
-            calibrate always before game starts.
+    3. Call the generate_grid method (remember to use await). Once the
+        method returns, the grid had been successfully generated. To
+        prevent issues from camera misalignment, it's best to call
+        calibrate always before game starts.
 
-        4. Get position of the target(s) you wish to track, and use the
-            point_in_rect method (or function) to detect whether the point is
-            inside a specific square in the grid. (You can use the ArucoFinder
-            class to track aruco markers in the game, or create your own logic,
-            or even use the position of something other than an aruco marker)
+    4. Get position of the target(s) you wish to track, and use the
+        point_in_rect method (or function) to detect whether the point is
+        inside a specific square in the grid. (You can use the ArucoFinder
+        class to track aruco markers in the game, or create your own logic,
+        or even use the position of something other than an aruco marker)
 
-        Short example of how to integrate the system into game logic:
-        -----------------------------------------------------------------------
+    Short example of how to integrate the system into game logic:
+
+    .. code-block:: python
+
         from surrortg.image_recognition.aruco import ArucoGrid
 
         YourGame(Game):
@@ -137,42 +130,51 @@ class ArucoGrid:
                     # point is inside currently active square: do something
                     # - increase score?
                     # - choose new square idx?
-        -----------------------------------------------------------------------
 
-        Some notes about the system:
+    Some notes about the system:
 
-        - Three markers would be enough to provide full functionality, but we
-        include a fourth marker so we know that the grid hasn't moved even when
-        one of the markers is not visible. This way the calibration step can
-        be concluded with one marker occluded, once the initial calibration has
-        been done with four markers. This keeps the downtime low for games
-        where the corner markers can be covered by cables etc.
-        - The system may not work well if exact location data is needed with
-        pixel presition. It is built with gameplay logic as the main priority.
-        The detection accuracy parameter exists to make gameplay feel smooth
-        even though the tracked target may not be exactly at the target
-        location.
+    - Three markers would be enough to provide full functionality, but we
+      include a fourth marker so we know that the grid hasn't moved even when
+      one of the markers is not visible. This way the calibration step can
+      be concluded with one marker occluded, once the initial calibration has
+      been done with four markers. This keeps the downtime low for games
+      where the corner markers can be covered by cables etc.
+    - The system may not work well if exact location data is needed with
+      pixel presition. It is built with gameplay logic as the main priority.
+      The detection accuracy parameter exists to make gameplay feel smooth
+      even though the tracked target may not be exactly at the target
+      location.
 
-        :param grid_size: Number of squares per side (i.e. 3 -> 3x3 grid)
-        :type grid_size: Int
-        :param aruco_source: An ArucoDetect which the ArucoGrid subscribes to
-            in order to receive detected aruco markers
-        :type aruco_source: ArucoDetect
-        :param ids: The IDs of the four corner markers. Must be given in the
-            order: top left, top right, bottom right, bottom left
-        :type ids: list of ints
-        :param loc_slack: Detection accuracy. Used when checking if a point is
-            inside a square. Higher number increases the probability a point is
-            considered to be inside a square. This can be changed in the web
-            configuration interface if generate_configs() and handle_configs()
-            are called. (A value of ~3000 has been OK in testing)
-        :type loc_slack: int
-        :param crop_frame: Frames used to detect aruco markers are cropped
-            so that the corner markers are left out of the frame after the grid
-            has been generated. This imnproves performance, but may be unwanted
-            in some cases.
-        :type crop_frame: bool, optional
-        """
+    :param grid_size: Number of squares per side (i.e. 3 -> 3x3 grid)
+    :type grid_size: Int
+    :param aruco_source: An ArucoDetect which the ArucoGrid subscribes to
+        in order to receive detected aruco markers
+    :type aruco_source: ArucoDetect
+    :param ids: The IDs of the four corner markers. Must be given in the
+        order: top left, top right, bottom right, bottom left
+    :type ids: list of ints
+    :param loc_slack: Detection accuracy. Used when checking if a point is
+        inside a square. Higher number increases the probability a point is
+        considered to be inside a square. This can be changed in the web
+        configuration interface if generate_configs() and handle_configs()
+        are called. (A value of ~3000 has been OK in testing)
+    :type loc_slack: int
+    :param crop_frame: Frames used to detect aruco markers are cropped
+        so that the corner markers are left out of the frame after the grid
+        has been generated. This imnproves performance, but may be unwanted
+        in some cases.
+    :type crop_frame: bool, optional
+    """
+
+    # IDs must be in the order: top left, top right, bottom right, bottom left
+    def __init__(
+        self,
+        grid_size,
+        aruco_source,
+        ids=[46, 47, 48, 49],
+        loc_slack=LOC_SLACK_PARAM,
+        crop_frame=True,
+    ):
         self.area_dim = grid_size
         self.calibration_done = False
         self._set_ids(ids)

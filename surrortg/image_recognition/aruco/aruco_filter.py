@@ -3,26 +3,20 @@ import time
 
 
 class ArucoFilter:
-    def __init__(
-        self,
-        callback,
-        aruco_source,
-        ids=[],
-        detect_distance=0,
-        detection_cooldown=0,
-    ):
-        """Helper class for filtering detected Aruco markers.
+    """Helper class for filtering detected Aruco markers.
 
-        Use this helper class to receive callbacks only for aruco markers that
-        fulfill the filter criteria. Built-in filters exist for ID, distance,
-        and time interval. This class can be useful if you use aruco markers
-        for several types of game logic, or just to skip writing boilerplate
-        code.
+    Use this helper class to receive callbacks only for aruco markers that
+    fulfill the filter criteria. Built-in filters exist for ID, distance,
+    and time interval. This class can be useful if you use aruco markers
+    for several types of game logic, or just to skip writing boilerplate
+    code.
 
-        Extra filters can also be added via the add_filter method.
+    Extra filters can also be added via the add_filter method.
 
-        Short example of how to integrate the class into game logic:
-        -----------------------------------------------------------------------
+    Short example of how to integrate the class into game logic:
+
+    .. code-block:: python
+
         from surrortg.image_recognition.aruco import ArucoFilter
 
         YourGame(Game):
@@ -38,25 +32,33 @@ class ArucoFilter:
             # implement logic for marker that passed filter
             # if final_score:
             #     self.filter.stop()
-        -----------------------------------------------------------------------
 
-        :param callback: Function to call if marker passes filters
-        :type callback: Function with one ArucoMarker as the only parameter
-        :param aruco_source: An ArucoDetect which the filter subscribes to
-            in order to receive detected aruco markers
-        :type aruco_source: ArucoDetect
-        :param ids: Aruco marker IDs which the filter will accept. If this is
-            an empty list, all IDs will be accepted.
-        :type ids: list of ints, optional
-        :param detect_distance: Distance threshold for accepting an aruco
-            marker. Must be between 0 and 1, as the distance is really the
-            relative size of the marker in the video frame. If zero, markers
-            at any distance are accepted.
-        :type detect_distance: float between 0 and 1, optional
-        :param detection_cooldown: If set above zero, a marker can only be
-            detected once within the specified cooldown time.
-        :type detection_cooldown: number, optional
-        """
+    :param callback: Function to call if marker passes filters
+    :type callback: Function with one ArucoMarker as the only parameter
+    :param aruco_source: An ArucoDetect which the filter subscribes to
+        in order to receive detected aruco markers
+    :type aruco_source: ArucoDetect
+    :param ids: Aruco marker IDs which the filter will accept. If this is
+        an empty list, all IDs will be accepted.
+    :type ids: list of ints, optional
+    :param detect_distance: Distance threshold for accepting an aruco
+        marker. Must be between 0 and 1, as the distance is really the
+        relative size of the marker in the video frame. If zero, markers
+        at any distance are accepted.
+    :type detect_distance: float between 0 and 1, optional
+    :param detection_cooldown: If set above zero, a marker can only be
+        detected once within the specified cooldown time.
+    :type detection_cooldown: number, optional
+    """
+
+    def __init__(
+        self,
+        callback,
+        aruco_source,
+        ids=[],
+        detect_distance=0,
+        detection_cooldown=0,
+    ):
         self.callback = callback
         self.ids = ids
         self.min_dist = detect_distance
