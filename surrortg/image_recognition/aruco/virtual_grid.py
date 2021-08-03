@@ -255,6 +255,7 @@ class ArucoGrid:
                 "ArucoGrid.generate_configs at on_init(). Unable to use custom"
                 " calibration IDs!"
             )
+            return
         ids = []
         ids.append(configs[CUSTOM_KEY][CALIBR_TOP_LEFT_KEY])
         ids.append(configs[CUSTOM_KEY][CALIBR_TOP_RIGHT_KEY])
