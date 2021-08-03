@@ -146,7 +146,7 @@ class ColorCatcher(Game):
     def _aruco_coord_cb(self, markers):
         for marker in markers:
             if not self.in_game or marker.id != self.bot_aruco_id:
-                return
+                continue
             if self.grid.point_in_sq(marker.get_location(), self.cur_area_idx):
                 self._handle_score()
 
