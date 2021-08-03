@@ -129,7 +129,7 @@ class ArucoFilter:
 
     def _detect_cb(self, found_markers):
         for marker in found_markers:
-            if self._filter_marker(marker):
+            if self._passes_filters(marker):
                 self.callback(marker)
 
     def _filter_by_id(self, marker):
@@ -147,5 +147,5 @@ class ArucoFilter:
         self.det_times[marker.id] = time.time()
         return True
 
-    def _filter_marker(self, marker):
+    def _passes_filters(self, marker):
         return all([f(marker) for f in self.filters])
