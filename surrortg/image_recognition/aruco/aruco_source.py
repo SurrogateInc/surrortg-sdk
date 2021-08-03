@@ -76,7 +76,7 @@ class ArucoDetectionProcess:
                 break
 
     def _create_cap(self):
-        self._cap = cv2.VideoCapture(self._source, cv2.CAP_V4L2)
+        self._cap = cv2.VideoCapture(self._source, self._apiPreference)
         self._cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         # When not using loopback device, default resolution can be 1080p
         # which is too much for raspi to handle with streamer also running
