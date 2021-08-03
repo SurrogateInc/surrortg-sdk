@@ -32,7 +32,7 @@ BG_COLOR_G_KEY = "Background color blue value"
 BG_COLOR_B_KEY = "Background color green value"
 LED_BRIGHTNESS_KEY = "Led brightness"
 
-BACKGROUND_COLOR = Color(135, 21, 158)
+BACKGROUND_COLOR = Color(65, 10, 79)
 
 # TODO: use relative path
 IMAGE_DIR_PATH = "/home/pi/surrortg-sdk/surrortg/devices/led_matrix/images/"
@@ -80,8 +80,11 @@ class LedMatrix:
 
     :param io: GameIO instance, used to register configs
     :type io: GameIO
-    :param size: number of squares per side. Only tested with size=4
+    :param size: number of squares per side. Only tested with default size: 4.
     :type size: int, optional
+    :param led_count: total number of LEDs in the strip/matrix. Defaults to
+        1024. Must match the size of the physical LED matrix.
+    :type led_count: int, optional
     """
 
     def __init__(self, io, size=4, led_count=LED_COUNT):
@@ -161,12 +164,13 @@ class LedMatrix:
             parameter
         :param timeout: duration of the complete color sequence
         :type timeout: number
-        :param begin_blinking: amount of time left when starting to blink
-        :type begin_blinking: number
-        :param blink_interval: frequency of blinking
-        :type blink_interval: number
+        :param begin_blinking: amount of time left when starting to blink,
+            defaults to 3 seconds
+        :type begin_blinking: number, optional
+        :param blink_interval: frequency of blinking, defaults to 0.3 seconds
+        :type blink_interval: number, optional
         :param bg_color: color the area will be set to at the end
-        :type bg_color: Color()
+        :type bg_color: Color(), optional
         """
 
         def __init__(
