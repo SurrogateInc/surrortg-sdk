@@ -39,6 +39,51 @@ IMAGE_DIR_PATH = "/home/pi/surrortg-sdk/surrortg/devices/led_matrix/images/"
 
 
 class LedMatrix:
+    """Class for controlling an LED strip that forms a matrix.
+
+    So far only tested with a 32x32, 1024 LED strip/matrix. Should work for
+    other sizes as well with some customization.
+
+    Provides methods for setting pixel color, as well as a method for
+
+    Provides configuration parameters to the web interface.
+
+    Short example of how to integrate the class into game logic:
+
+    .. code-block:: python
+
+        from surrortg.image_recognition.aruco import ArucoFinder
+
+        YourGame(Game):
+        async def on_init(self):
+            self.led_matrix = LedMatrix(self.io, DEF_GAME_AREA_SIZE)
+
+        async def on_config(self):
+            self.led_matrix.handle_config(self.configs)
+
+        async def on_countdown(self):
+            await self.led_matrix.countdown()
+
+        async def on_start(self):
+            self.finder.on_start()
+
+        async def end_game(self):
+            self.led_matrix.end_game()
+
+        async def on_exit(self, reason, exception):
+            self.led_matrix.on_exit()
+
+        def _set_new_area(self):
+            self.cur_area_idx = self._next_area_idx()
+            self.led_matrix.set_timed_area(self.cur_area_idx, self.time)
+
+
+    :param io: GameIO instance, used to register configs
+    :type io: GameIO
+    :param size: number of squares per side. Only tested with size=4
+    :type size: int, optional
+    """
+
     class TimedColorChange:
         def __init__(
             self,
@@ -194,48 +239,6 @@ class LedMatrix:
         self.increase_image_saturation(pixels)
 
     def __init__(self, io, size=4, led_count=LED_COUNT):
-        """Class for controlling an LED strip that forms a matrix.
-
-        So far only tested with a 32x32, 1024 LED strip/matrix. Should work for
-        other sizes as well with some customization.
-
-        Provides methods for setting pixel color, as well as a method for
-
-        Provides configuration parameters to the web interface.
-
-        Short example of how to integrate the class into game logic:
-        -----------------------------------------------------------------------------
-        from surrortg.image_recognition.aruco import ArucoFinder
-
-        YourGame(Game):
-        async def on_init(self):
-            self.led_matrix = LedMatrix(self.io, DEF_GAME_AREA_SIZE)
-
-        async def on_config(self):
-            self.led_matrix.handle_config(self.configs)
-
-        async def on_countdown(self):
-            await self.led_matrix.countdown()
-
-        async def on_start(self):
-            self.finder.on_start()
-
-        async def end_game(self):
-            self.led_matrix.end_game()
-
-        async def on_exit(self, reason, exception):
-            self.led_matrix.on_exit()
-
-        def _set_new_area(self):
-            self.cur_area_idx = self._next_area_idx()
-            self.led_matrix.set_timed_area(self.cur_area_idx, self.time)
-        -----------------------------------------------------------------------------
-
-        :param io: GameIO instance, used to register configs
-        :type io: GameIO
-        :param size: number of squares per side. Only tested with size=4
-        :type size: int, optional
-        """
         self.io = io
         self.io.register_config(
             BLINK_TIME_KEY, ConfigType.INTEGER, 3, False, minimum=1, maximum=10
