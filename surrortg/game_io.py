@@ -82,6 +82,7 @@ class GameIO:
         is_robot_specific,
         minimum=None,
         maximum=None,
+        enum=None,
     ):
         """Registers custom configs
 
@@ -108,51 +109,73 @@ class GameIO:
         :param maximum: Optional maximum value for numeric configs
         :type maximum: Number if value_type is number, int if value_type is
             integer. Otherwise this must be None
+        :param enum: Optional set of accepted values. Results in a dropdown
+            menu with these values in the frontend.
+        :type enum: A list with values of the value_type
         """
         if not self._can_register_configs:
             raise RuntimeError("register_config called outside on_init")
 
         assert isinstance(name, str), "'name' must be a string"
-        assert isinstance(
-            value_type, ConfigType
-        ), "'value_type' must be a valid ConfigType (string | number | bool)"
+        assert isinstance(value_type, ConfigType), (
+            "'value_type' must be a valid ConfigType ",
+            "(string | number | integer | bool)",
+        )
         if type(value_type) is not str:
             value_type = value_type.value
         assert isinstance(
             is_robot_specific, bool
         ), "'is_robot_specific' must be a boolean"
+        types_to_check = ()
         if value_type == "string":
-            assert isinstance(
-                default, str
-            ), "'default' must be a string if ConfigType.STRING"
+            types_to_check = (str,)
             assert (
                 minimum is None and maximum is None
             ), "String config cannot have min/max value"
         elif value_type == "number":
-            assert isinstance(
-                default, (int, float)
-            ), "'default' must be a number if ConfigType.NUMBER"
+            types_to_check = (int, float)
             for val in [minimum, maximum]:
                 assert val is None or isinstance(
                     val, (int, float)
                 ), "min/max val has to be float, int or None"
         elif value_type == "integer":
-            assert isinstance(
-                default, int
-            ), "'default' must be an integer if ConfigType.NUMBER"
+            types_to_check = (int,)
             for val in [minimum, maximum]:
                 assert val is None or isinstance(val, int)
                 "min/max val has to be float, int or None"
         elif value_type == "boolean":
-            assert isinstance(
-                default, bool
-            ), "'default' must be a boolean if ConfigType.BOOLEAN"
+            types_to_check = (bool,)
 
-        if value_type in ["integer", "number"]:
-            if minimum is not None:
-                assert default >= minimum, "'default' must be at least minimum"
-            if maximum is not None:
-                assert default <= maximum, "'default' must be at most maximum"
+        assert isinstance(
+            default, types_to_check
+        ), f"'default' must be a {value_type}"
+
+        minmax_values = tuple(
+            set(types_to_check).intersection(set([int, float]))
+        )
+        for val in [minimum, maximum]:
+            assert val is None or isinstance(val, minmax_values)
+            "min/max val has to be float, int or None"
+
+        if enum is not None:
+            assert (
+                isinstance(enum, list) and len(enum) > 0
+            ), "Enum must be a non-empty list"
+            for val in enum:
+                assert isinstance(
+                    val, types_to_check
+                ), f"enum values must be of {value_type}"
+            assert default in enum, "Default value must be one of enum values"
+
+        if minimum is not None:
+            assert default >= minimum, "'default' must be at least minimum"
+        if maximum is not None:
+            assert default <= maximum, "'default' must be at most maximum"
+
+        if enum is not None:
+            assert (
+                minimum is None and maximum is None
+            ), "enum and min/max are mutually exclusive"
 
         obj = {
             "name": name,
@@ -164,6 +187,8 @@ class GameIO:
             obj["minimum"] = minimum
         if maximum is not None:
             obj["maximum"] = maximum
+        if enum is not None:
+            obj["enum"] = enum
         self._custom_configs.append(obj)
 
     def register_inputs(self, inputs, admin=False, bindable=True):

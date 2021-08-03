@@ -294,6 +294,20 @@ class GameTest(unittest.TestCase):
                 minimum=1.2,
                 maximum=5.3,
             )
+            g.io.register_config(
+                "testenumint",
+                ConfigType.INTEGER,
+                3,
+                False,
+                enum=[1, 5, 2, 3],
+            )
+            g.io.register_config(
+                "testenumstring",
+                ConfigType.STRING,
+                "defaultval",
+                True,
+                enum=["defaultval", "otherval"],
+            )
         except RuntimeError:
             self.fail("io.register_config() raised an unexpected RuntimeError")
 
@@ -315,6 +329,31 @@ class GameTest(unittest.TestCase):
         with self.assertRaises(AssertionError):
             g.io.register_config(
                 "inttoolarge", ConfigType.INTEGER, 6, True, maximum=5
+            )
+        with self.assertRaises(AssertionError):
+            g.io.register_config(
+                "minmaxandenum",
+                ConfigType.INTEGER,
+                6,
+                True,
+                maximum=5,
+                enum=[5, 6],
+            )
+        with self.assertRaises(AssertionError):
+            g.io.register_config(
+                "enumwrongtype", ConfigType.INTEGER, 6, True, enum=["string"]
+            )
+        with self.assertRaises(AssertionError):
+            g.io.register_config(
+                "enummixedtypes",
+                ConfigType.INTEGER,
+                6,
+                True,
+                enum=[6, 5, "string"],
+            )
+        with self.assertRaises(AssertionError):
+            g.io.register_config(
+                "defaultnotinenum", ConfigType.INTEGER, 6, True, enum=[3, 5]
             )
 
     def test_game_properties(self):
