@@ -59,7 +59,8 @@ class ArucoFinder:
         :type io: GameIO
         :param source: Video capture device used for detecting aruco markers.
             By default uses a loopback device from the main camera used by the
-            streamer. (No action necessary when using the Surrogate image)
+            streamer ("/dev/video21"). (No action necessary when using the
+            Surrogate image)
         :type source: string, optional
         :param num_markers: number of aruco IDs to use. IDs will be generated
             from 0 to num_markers-1. Defaults to 5.

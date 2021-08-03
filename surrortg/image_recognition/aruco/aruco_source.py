@@ -144,7 +144,8 @@ class ArucoDetector:
     ):
         """Factory method for ArucoDetector, use this instead of __init__
 
-        :param source: Camera id or path
+        :param source: Camera id or path. Defaults to streamer main camera
+            loopback device on Surrogate image ("/dev/video21").
         :type source: String/Int
         :param init_timeout: Max time to wait for VideoCapture init,
             otherwise RuntimeError will be raised, defaults to 2
