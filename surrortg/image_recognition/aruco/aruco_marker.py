@@ -55,7 +55,6 @@ class ArucoMarker:
         )
         return distance
 
-    # Experimental feature. Requires camera hardware parameters to function.
     def get_real_distance(self, marker_size, sensor_height, focal_length):
         """Calculates physical distance to marker.
 
