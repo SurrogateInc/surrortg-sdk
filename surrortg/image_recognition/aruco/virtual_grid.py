@@ -85,7 +85,7 @@ class ArucoGrid:
          ------------------------------------
 
     2. Create an ArucoGrid and pass the grid size (how many squares
-        per side), an ArucoDetect instance, and the IDs of the corner
+        per side), an ArucoDetector instance, and the IDs of the corner
         markers (in order: top left, top right, bottom right, bottom left)
         to the ArucoGrid constructor.
 
@@ -111,7 +111,7 @@ class ArucoGrid:
             self.grid_size = 4
             self.player_id = 0
             self.num_squares = self.grid_size**2
-            self.aruco_source = await ArucoDetect().create()
+            self.aruco_source = await ArucoDetector().create()
             corners = [1, 2, 3, 4]
             self.grid = ArucoGrid(self.grid_size, self.aruco_source, corners)
 
@@ -147,9 +147,9 @@ class ArucoGrid:
 
     :param grid_size: Number of squares per side (i.e. 3 -> 3x3 grid)
     :type grid_size: Int
-    :param aruco_source: An ArucoDetect which the ArucoGrid subscribes to
+    :param aruco_source: An ArucoDetector which the ArucoGrid subscribes to
         in order to receive detected aruco markers
-    :type aruco_source: ArucoDetect
+    :type aruco_source: ArucoDetector
     :param ids: The IDs of the four corner markers. Must be given in the
         order: top left, top right, bottom right, bottom left
     :type ids: list of ints

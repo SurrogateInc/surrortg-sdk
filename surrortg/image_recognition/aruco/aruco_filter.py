@@ -21,7 +21,7 @@ class ArucoFilter:
 
         YourGame(Game):
         async def on_init(self):
-            self.aruco_source = await ArucoDetect.create()
+            self.aruco_source = await ArucoDetector.create()
             self.filter = ArucoFilter(self.score_logic, self.aruco_source,
                 [0,1,2,3,4], 0, 2)
 
@@ -35,9 +35,9 @@ class ArucoFilter:
 
     :param callback: Function to call if marker passes filters
     :type callback: Function with one ArucoMarker as the only parameter
-    :param aruco_source: An ArucoDetect which the filter subscribes to
+    :param aruco_source: An ArucoDetector which the filter subscribes to
         in order to receive detected aruco markers
-    :type aruco_source: ArucoDetect
+    :type aruco_source: ArucoDetector
     :param ids: Aruco marker IDs which the filter will accept. If this is
         an empty list, all IDs will be accepted.
     :type ids: list of ints, optional

@@ -14,7 +14,7 @@ LOOPBACK_DEV_PATH = "/dev/video21"
 
 
 class CapComm(Enum):
-    """For communication between ArucoDetectionProcess and ArucoDetect"""
+    """For communication between ArucoDetectionProcess and ArucoDetector"""
 
     INIT_SUCCESS = auto()
     INIT_FAILURE = auto()
@@ -123,13 +123,13 @@ class ArucoDetectionProcess:
         return markers
 
 
-class ArucoDetect:
+class ArucoDetector:
     """Non-blocking aruco detector
 
-    Only one ArucoDetect instance can exist per camera. If aruco markers are
-    used in more than one location, subscribe the users to the same ArucoDetect
-    instance. Use factory method 'await ArucoDetect.create(source, ...)'
-    instead of __init__.
+    Only one ArucoDetector instance can exist per camera. If aruco markers are
+    used in more than one location, subscribe the users to the same
+    ArucoDetector instance. Use factory method
+    'await ArucoDetector.create(source, ...)' instead of __init__.
     """
 
     @classmethod
@@ -142,7 +142,7 @@ class ArucoDetect:
         process_class=ArucoDetectionProcess,
         apiPreference=cv2.CAP_V4L2,  # noqa: N803
     ):
-        """Factory method for ArucoDetect, use this instead of __init__
+        """Factory method for ArucoDetector, use this instead of __init__
 
         :param source: Camera id or path
         :type source: String/Int
@@ -269,7 +269,7 @@ class ArucoDetect:
         while not self._released:
             if self._released:
                 logging.info(
-                    "ArucoDetect has been released, stopping detection"
+                    "ArucoDetector has been released, stopping detection"
                 )
                 break
             # TODO: This isn't efficient. Fix the system to safely create and

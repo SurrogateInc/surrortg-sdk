@@ -3,7 +3,7 @@ import logging
 from surrortg.game_io import ConfigType
 
 from .aruco_filter import ArucoFilter
-from .aruco_source import ArucoDetect
+from .aruco_source import ArucoDetector
 
 DEFAULT_CAMERA = "/dev/video21"
 
@@ -31,7 +31,7 @@ class ArucoFinder:
         """Class for creating treasure hunt and racing games with aruco markers
 
         This class is an easy way to incorporate aruco markers into a game. The
-        class creates its own ArucoDetect instance and has built-in game
+        class creates its own ArucoDetector instance and has built-in game
         logic, so only a few lines of code are required to use the class.
 
         The class sends configuration options to the dashboard Game Engine
@@ -107,7 +107,7 @@ class ArucoFinder:
         self.io.register_config(
             IN_ORDER_KEY, ConfigType.BOOLEAN, in_order, bot_specific
         )
-        self.aruco_source = await ArucoDetect.create(source)
+        self.aruco_source = await ArucoDetector.create(source)
         self.filter = ArucoFilter(
             self._score_logic,
             self.aruco_source,

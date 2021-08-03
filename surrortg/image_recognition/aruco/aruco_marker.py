@@ -8,7 +8,7 @@ class ArucoMarker:
 
         This class is the main way to pass information about detected aruco
         markers. ArucoMarker instances are created in ArucoDetectProcess. New
-        markers can be accessed by registering as an observer to ArucoDetect.
+        markers can be accessed by registering as an observer to ArucoDetector.
 
         :param id: Aruco marker ID
         :type id: Int

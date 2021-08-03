@@ -6,7 +6,7 @@ from games.m5_rover.m5_rover import M5Rover
 from surrortg import Game
 from surrortg.devices.led_matrix import LedMatrix
 from surrortg.game_io import ConfigType
-from surrortg.image_recognition.aruco import ArucoDetect, ArucoGrid
+from surrortg.image_recognition.aruco import ArucoDetector, ArucoGrid
 
 INITIAL_GAME_TIME = 32
 
@@ -96,7 +96,9 @@ class ColorCatcher(Game):
             self.io, throttle_mult=0.3, steering_mult=0.5, sideways_mult=0.25
         )
         self.io.register_inputs(self.m5_rover.inputs)
-        self.aruco_source = await ArucoDetect.create(source=ARUCO_CAMERA_PATH)
+        self.aruco_source = await ArucoDetector.create(
+            source=ARUCO_CAMERA_PATH
+        )
         self.grid = ArucoGrid(
             DEF_GAME_AREA_SIZE, self.aruco_source, [46, 47, 48, 49]
         )
