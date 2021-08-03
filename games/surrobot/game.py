@@ -52,6 +52,12 @@ class ServoActuator(LinearActuator):
         return super().get_default_keybinds()
 
 
+class ServosActuator(ServoActuator):
+    async def drive_actuator(self, val, seat=0):
+        for servo in self.servo:
+            servo.rotation_speed = val
+
+
 class SurrobotGame(Game):
     async def on_init(self):
         # Game Type Enum (Racing-Game, Free-Roam, Tag)
@@ -131,8 +137,8 @@ class SurrobotGame(Game):
         )
         self.inputs["top-slot-1-camera"] = camera
 
-        claw = ServoActuator(
-            self.hw.servos[16],
+        claw = ServosActuator(
+            [self.hw.servos[i] for i in range(2, 10)],
             [
                 {
                     "min": "KeyN",
