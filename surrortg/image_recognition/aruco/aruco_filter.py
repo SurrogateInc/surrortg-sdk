@@ -39,15 +39,15 @@ class ArucoFilter:
         in order to receive detected aruco markers
     :type aruco_source: ArucoDetector
     :param ids: Aruco marker IDs which the filter will accept. If this is
-        an empty list, all IDs will be accepted.
+        an empty list, all IDs will be accepted. Defaults to an empty list.
     :type ids: list of ints, optional
     :param detect_distance: Distance threshold for accepting an aruco
         marker. Must be between 0 and 1, as the distance is really the
         relative size of the marker in the video frame. If zero, markers
-        at any distance are accepted.
+        at any distance are accepted. By default any distance is accepted.
     :type detect_distance: float between 0 and 1, optional
     :param detection_cooldown: If set above zero, a marker can only be
-        detected once within the specified cooldown time.
+        detected once within the specified cooldown time. Defaults to zero.
     :type detection_cooldown: number, optional
     """
 

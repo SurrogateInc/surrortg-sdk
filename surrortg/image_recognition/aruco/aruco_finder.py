@@ -57,24 +57,27 @@ class ArucoFinder:
         :param io: GameIO instance, used to register configs and send scores
             to the game engine
         :type io: GameIO
-        :param source: Video capture device used for detecting aruco markers
+        :param source: Video capture device used for detecting aruco markers.
+            By default uses a loopback device from the main camera used by the
+            streamer. (No action necessary when using the Surrogate image)
         :type source: string, optional
         :param num_markers: number of aruco IDs to use. IDs will be generated
-            from 0 to num_markers-1
+            from 0 to num_markers-1. Defaults to 5.
         :type num_markers: int
         :param min_distance: Distance threshold for detecting an aruco
             marker. This class uses an arbitrary unit of distance between 0 and
-            500
+            500. Defaults to 100.
         :type min_distance: float between 0 and 500, optional
         :param in_order: Whether markers must be detected in ascending
-            numerical order. Useful for racing games
+            numerical order. Useful for racing games. Defaults to False.
         :type in_order: bool, optional
-        :param num_laps: Number of laps in one game
+        :param num_laps: Number of laps in one game. Defaults to 1.
         :type num_laps: int, optional
         :param bot_specific: Whether the configuration options in the web
-            interface are in effect for all bots, or just this bot
+            interface are in effect for all bots, or just this bot. Defaults
+            to False.
         :type bot_specific: bool, optional
-        :param seat: Seat number of the bot
+        :param seat: Seat number of the bot. Defaults to 0.
         :type seat: int, optional
         """
         self = cls()
