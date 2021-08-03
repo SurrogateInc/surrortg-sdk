@@ -51,11 +51,9 @@ def point_estimate(point, corners):
     a = corners[1].tolist()
     b = corners[2].tolist()
     c = corners[3].tolist()
-    area = (
-        abs(a[0] * (b[1] - c[1]) + b[0] * (c[1] - a[1]) + c[0] * (a[1] - b[1]))
-        / 2
+    area_of_rect = abs(
+        a[0] * (b[1] - c[1]) + b[0] * (c[1] - a[1]) + c[0] * (a[1] - b[1])
     )
-    area_of_rect = area * 2
     return tot_area_w_point - area_of_rect
 
 
