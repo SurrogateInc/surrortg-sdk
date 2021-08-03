@@ -90,7 +90,7 @@ class ArucoFilter:
             self.filters.remove(filter_fun)
         except ValueError as e:
             logging.warning(
-                f"Warning: error in removing filter from aruco filters: {e}"
+                f"error in removing filter from aruco filters: {e}"
             )
             pass
 
