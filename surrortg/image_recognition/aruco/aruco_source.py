@@ -7,7 +7,7 @@ from enum import Enum, auto
 
 import cv2
 
-from surrortg.image_recognition.aruco import ArucoMarker
+from .aruco_marker import ArucoMarker
 
 MAX_READ_FAILURES_PER_INIT = 3
 LOOPBACK_DEV_PATH = "/dev/video21"

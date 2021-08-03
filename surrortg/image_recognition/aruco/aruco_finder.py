@@ -1,7 +1,9 @@
 import logging
 
 from surrortg.game_io import ConfigType
-from surrortg.image_recognition.aruco import ArucoDetect, ArucoFilter
+
+from .aruco_filter import ArucoFilter
+from .aruco_source import ArucoDetect
 
 DEFAULT_CAMERA = "/dev/video21"
 
