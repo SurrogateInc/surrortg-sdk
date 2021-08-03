@@ -109,8 +109,7 @@ class ColorCatcher(Game):
 
     async def on_config(self):
         # We omit checking if these exists as the game will not work without
-        # the configs anyway. TBD whether the error message from incorrect
-        # access is informative enough.
+        # the configs anyway.
         self.area_dim = self.configs[CUSTOM_KEY][GAME_AREA_SIZE_KEY]
         self.led_matrix.set_size(self.area_dim)
         self.num_squares = self.area_dim ** 2
@@ -130,42 +129,42 @@ class ColorCatcher(Game):
         await self.led_matrix.countdown()
 
     async def on_start(self):
-        self.aruco_source.register_observer(self._aruco_coord_cb)
+        self.aruco_source.register_observer(self.aruco_coord_cb)
         self.time = self.configs[CUSTOM_KEY][INITIAL_GAME_TIME_KEY]
         self.prev_success_time = time.time()
         self.score = 0
-        self._set_new_area()
+        self.set_new_area()
         self.in_game = True
 
-    async def _end_game(self):
+    async def end_game(self):
         if not self.in_game:
             return
         self.in_game = False
         self.io.send_score(score=self.score, seat=0, final_score=True)
         self.led_matrix.end_game()
-        self.aruco_source.unregister_observer(self._aruco_coord_cb)
+        self.aruco_source.unregister_observer(self.aruco_coord_cb)
 
-    def _aruco_coord_cb(self, markers):
+    def aruco_coord_cb(self, markers):
         for marker in markers:
             if not self.in_game or marker.id != self.bot_aruco_id:
                 continue
             if self.grid.point_in_sq(marker.get_location(), self.cur_area_idx):
-                self._handle_score()
+                self.handle_score()
 
-    def _next_area_idx(self, cur_idx, area_count):
+    def next_area_idx(self, cur_idx, area_count):
         next_idx = cur_idx
         while next_idx == cur_idx:
             next_idx = random.randint(0, area_count - 1)
         return next_idx
 
-    def _set_new_area(self):
-        self.cur_area_idx = self._next_area_idx(
+    def set_new_area(self):
+        self.cur_area_idx = self.next_area_idx(
             self.cur_area_idx, self.num_squares
         )
         self.led_matrix.set_timed_area(self.cur_area_idx, self.time)
-        self.timer = Timer(self._end_game, self.time)
+        self.timer = Timer(self.end_game, self.time)
 
-    def _handle_score(self):
+    def handle_score(self):
         if not self.in_game:
             return
         self.timer.cancel()
@@ -179,14 +178,14 @@ class ColorCatcher(Game):
             self.time = self.lower_time_limit
         self.score += 1
         self.io.send_score(score=self.score, seat=0, final_score=False)
-        self._set_new_area()
+        self.set_new_area()
 
     async def on_exit(self, reason, exception):
         self.in_game = False
         if self.timer is not None:
             self.timer.cancel()
         self.led_matrix.on_exit()
-        self.aruco_source.unregister_observer(self._aruco_coord_cb)
+        self.aruco_source.unregister_observer(self.aruco_coord_cb)
 
 
 # And now you are ready to play!
