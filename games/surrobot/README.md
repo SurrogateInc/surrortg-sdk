@@ -6,23 +6,23 @@
 
 Good
 
-+ Uses the current abstraction for different game types
-+ Clear separation between game-templates and needed configs
+- Uses the current abstraction for different game types
+- Clear separation between game-templates and needed configs
 
 Bad
 
 - Have to implement logic to change current game.py from FE?
 - How to make sure all robots in same game type?
 - How does robot configs react when there is robot with new settings?
-  - Does it still show old ones?
+    - Does it still show old ones?
 
 ### Same game.py implementation, selection for game type is just robot config:
 
 Good
 
-+ Configs always same (user conditional part on the JSON schema form)
-+ No need to create new logic for change game.py from FE
-+ All robots listen to same "game-template" shared config
+- Configs always same (user conditional part on the JSON schema form)
+- No need to create new logic for change game.py from FE
+- All robots listen to same "game-template" shared config
 
 Bad
 
@@ -55,10 +55,10 @@ Implementation wise these areas are the same for all game modes.
 For ex: Someone selects "Movement" option "4 Motors", we offer Joystick "WASD", but
 if we also have option "1 Motor" we could just offer actuator with "WS".
 
-Other option is always offer "Movement" "WASD" and just use the WS if its single motor mode,
-but this might be more limiting in other cases (like 3x servos on top where it can be robot arm
-or totally different 3x servo device that might want totally different type inputs)
-
+Other option is always offer "Movement" "WASD" and just use the WS if its single
+motor mode, but this might be more limiting in other cases (like 3x servos on top
+where it can be robot arm or totally different 3x servo device that might want
+totally different type inputs)
 
 ## TODO:
 
@@ -81,9 +81,9 @@ or totally different 3x servo device that might want totally different type inpu
     - Generate QR code in admin panel (FE)
     - Shortened Robot-Token (FE, BE)?
 - Multiple I2C devices testing
-    - Currently I have connected 2 Oled screens, servo board and I2C light sensor to bot.
-      There is issues if for ex. moving servo + change Oled image at same time (writing)
-      the image takes time.
+    - Currently I have connected 2 Oled screens, servo board and I2C light sensor
+      to the bot. There are issues if for ex. moving servo + change Oled image
+      at same time (writing the image takes time).
     - Logic to only change Oled screen image max every 0.5 sec?
     - Clock hz?
     - Reserve some GPIO pins directly from Raspi to be used with servos?
@@ -107,13 +107,14 @@ or totally different 3x servo device that might want totally different type inpu
 - Effect of magnets?
 - Game types, extensions, etc ...
 
-
 ## Old notes
+
 - LCD panel eyes
     - Use also when not connected to GE (indicate status)
 - Light sensor
 - Game template python design architecture
-- Design different pre-configured "input/function groups" (4 wheel drive vs 4 individual motors)
+- Design different pre-configured "input/function groups" (4 wheel drive vs
+  4 individual motors)
     - Driving mode (side 4x motors, 4x servos)
         - 4 wheel drive
         - 2 wheel drive

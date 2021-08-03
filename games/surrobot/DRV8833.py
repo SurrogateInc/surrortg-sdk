@@ -1,9 +1,10 @@
+import logging
 
 import pigpio
-import logging
 
 # PWM frequency for motor speed control
 MOTOR_PWM_FREQ = 30000
+
 
 class DRV8833:
     def __init__(self, *, ain1, ain2, bin1, bin2, sleep):

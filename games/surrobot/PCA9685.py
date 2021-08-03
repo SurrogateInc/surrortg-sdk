@@ -2,8 +2,10 @@
 
 import math
 import time
-from surrortg.devices import Servo
+
 import smbus
+
+from surrortg.devices import Servo
 
 # ============================================================================
 # Raspi PCA9685 16-Channel PWM Servo Driver
@@ -32,7 +34,7 @@ class PCA9685:
         self.address = address
         self.debug = debug
         if self.debug:
-            print("Reseting PCA9685")
+            print("Resetting PCA9685")
         self.write(self.__MODE1, 0x00)
 
     def write(self, reg, value):
@@ -158,6 +160,7 @@ class PCA9685Servo(Servo):
         )  # Scale -1 to 1 between min and max pulse width
         self._pwm.set_servo_pulse(self._channel, int(scaled_pos))
         self._position = position
+
 
 if __name__ == "__main__":
 
