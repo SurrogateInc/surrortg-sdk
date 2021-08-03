@@ -147,6 +147,13 @@ class ArucoFinder:
         self.cur_lap = 1
         self.filter.start()
 
+    def stop(self):
+        """Call this at the on_exit part of the game loop.
+
+        This ensures that the program exits correctly.
+        """
+        self.filter.stop()
+
     def _score_logic(self, marker):
         is_final = False
         if not self.in_order or (
