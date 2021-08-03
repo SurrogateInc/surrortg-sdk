@@ -84,7 +84,91 @@ class LedMatrix:
     :type size: int, optional
     """
 
+    def __init__(self, io, size=4, led_count=LED_COUNT):
+        self.io = io
+        self.io.register_config(
+            BLINK_TIME_KEY, ConfigType.INTEGER, 3, False, minimum=1, maximum=10
+        )
+        self.io.register_config(
+            BLINK_INTERVAL_KEY,
+            ConfigType.NUMBER,
+            0.3,
+            False,
+            minimum=0.05,
+            maximum=3,
+        )
+        self.io.register_config(
+            BG_COLOR_R_KEY,
+            ConfigType.INTEGER,
+            0,
+            False,
+            minimum=0,
+            maximum=255,
+        )
+        self.io.register_config(
+            BG_COLOR_G_KEY,
+            ConfigType.INTEGER,
+            0,
+            False,
+            minimum=0,
+            maximum=255,
+        )
+        self.io.register_config(
+            BG_COLOR_B_KEY,
+            ConfigType.INTEGER,
+            0,
+            False,
+            minimum=0,
+            maximum=255,
+        )
+        self.io.register_config(
+            LED_BRIGHTNESS_KEY,
+            ConfigType.INTEGER,
+            20,
+            False,
+            minimum=0,
+            maximum=255,
+        )
+
+        self.strip = PixelStrip(
+            led_count,
+            LED_PIN,
+            LED_FREQ_HZ,
+            LED_DMA,
+            LED_INVERT,
+            LED_BRIGHTNESS,
+            LED_CHANNEL,
+        )
+        self.bg_color = BACKGROUND_COLOR
+
+        self.strip.begin()
+
+        self.color_timer = None
+        self.area_dim = size
+        if self.strip.numPixels() == 1024:
+            self.img_one = self.read_image_file(IMAGE_DIR_PATH + "32/1.jpg")
+            self.img_two = self.read_image_file(IMAGE_DIR_PATH + "32/2.jpg")
+            self.img_three = self.read_image_file(IMAGE_DIR_PATH + "32/3.jpg")
+
     class TimedColorChange:
+        """Calls color changes at regular intervals for given duration.
+        Color sequence is green, yellow, red. The area will start blinking
+        when time left equals begin_blinking. The color of the area is set
+        to background color at the end of the sequence or when cancelled.
+
+        :param callback: callback which will set the color of the square
+        :type callback: function that takes color=Color() as its only
+            parameter
+        :param timeout: duration of the complete color sequence
+        :type timeout: number
+        :param begin_blinking: amount of time left when starting to blink
+        :type begin_blinking: number
+        :param blink_interval: frequency of blinking
+        :type blink_interval: number
+        :param bg_color: color the area will be set to at the end
+        :type bg_color: Color()
+        """
+
         def __init__(
             self,
             callback,
@@ -93,23 +177,6 @@ class LedMatrix:
             blink_interval=0.3,
             bg_color=BACKGROUND_COLOR,
         ):
-            """Calls color changes at regular intervals for given duration.
-            Color sequence is green, yellow, red. The area will start blinking
-            when time left equals begin_blinking. The color of the area is set
-            to background color at the end of the sequence or when cancelled.
-
-            :param callback: callback which will set the color of the square
-            :type callback: function that takes color=Color() as its only
-                parameter
-            :param timeout: duration of the complete color sequence
-            :type timeout: number
-            :param begin_blinking: amount of time left when starting to blink
-            :type begin_blinking: number
-            :param blink_interval: frequency of blinking
-            :type blink_interval: number
-            :param bg_color: color the area will be set to at the end
-            :type bg_color: Color()
-            """
             self.callback = callback
             self.begin_blinking = begin_blinking
             self.blink_interval = blink_interval
@@ -237,72 +304,6 @@ class LedMatrix:
     def increase_contrast(self, pixels, bg_color):
         self.set_empty_pixels_to_bg(pixels, bg_color)
         self.increase_image_saturation(pixels)
-
-    def __init__(self, io, size=4, led_count=LED_COUNT):
-        self.io = io
-        self.io.register_config(
-            BLINK_TIME_KEY, ConfigType.INTEGER, 3, False, minimum=1, maximum=10
-        )
-        self.io.register_config(
-            BLINK_INTERVAL_KEY,
-            ConfigType.NUMBER,
-            0.3,
-            False,
-            minimum=0.05,
-            maximum=3,
-        )
-        self.io.register_config(
-            BG_COLOR_R_KEY,
-            ConfigType.INTEGER,
-            0,
-            False,
-            minimum=0,
-            maximum=255,
-        )
-        self.io.register_config(
-            BG_COLOR_G_KEY,
-            ConfigType.INTEGER,
-            0,
-            False,
-            minimum=0,
-            maximum=255,
-        )
-        self.io.register_config(
-            BG_COLOR_B_KEY,
-            ConfigType.INTEGER,
-            0,
-            False,
-            minimum=0,
-            maximum=255,
-        )
-        self.io.register_config(
-            LED_BRIGHTNESS_KEY,
-            ConfigType.INTEGER,
-            20,
-            False,
-            minimum=0,
-            maximum=255,
-        )
-
-        self.strip = PixelStrip(
-            led_count,
-            LED_PIN,
-            LED_FREQ_HZ,
-            LED_DMA,
-            LED_INVERT,
-            LED_BRIGHTNESS,
-            LED_CHANNEL,
-        )
-        self.bg_color = BACKGROUND_COLOR
-
-        self.strip.begin()
-
-        self.color_timer = None
-        self.area_dim = size
-        if self.strip.numPixels() == 1024:
-            self.img_one = self.read_image_file(IMAGE_DIR_PATH + "32/1.jpg")
-            self.img_two = self.read_image_file(IMAGE_DIR_PATH + "32/2.jpg")
-            self.img_three = self.read_image_file(IMAGE_DIR_PATH + "32/3.jpg")
 
     def set_size(self, size):
         self.area_dim = size
