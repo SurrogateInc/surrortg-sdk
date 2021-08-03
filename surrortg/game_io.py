@@ -15,6 +15,19 @@ class ConfigType(Enum):
     BOOLEAN = "boolean"
 
 
+def _get_config_types(value_type):
+    types_to_check = ()
+    if value_type == "string":
+        types_to_check = (str,)
+    elif value_type == "number":
+        types_to_check = (int, float)
+    elif value_type == "integer":
+        types_to_check = (int,)
+    elif value_type == "boolean":
+        types_to_check = (bool,)
+    return types_to_check
+
+
 class GameIO:
     """For communication between Python and the game engine
 
@@ -74,7 +87,7 @@ class GameIO:
             bindings.append({"commandId": command_id, **obj})
         return bindings
 
-    def register_config(
+    def register_config(  # noqa: C901
         self,
         name,
         value_type,
@@ -83,6 +96,9 @@ class GameIO:
         minimum=None,
         maximum=None,
         enum=None,
+        group=None,
+        condition_config=None,
+        condition_value=None,
     ):
         """Registers custom configs
 
@@ -121,30 +137,29 @@ class GameIO:
             "'value_type' must be a valid ConfigType ",
             "(string | number | integer | bool)",
         )
+        assert group is None or isinstance(
+            group, str
+        ), "Group must be a string"
+
         if type(value_type) is not str:
             value_type = value_type.value
         assert isinstance(
             is_robot_specific, bool
         ), "'is_robot_specific' must be a boolean"
-        types_to_check = ()
-        if value_type == "string":
-            types_to_check = (str,)
+        types_to_check = _get_config_types(value_type)
+        if value_type == "string" or value_type == "boolean":
             assert (
                 minimum is None and maximum is None
             ), "String config cannot have min/max value"
         elif value_type == "number":
-            types_to_check = (int, float)
             for val in [minimum, maximum]:
                 assert val is None or isinstance(
                     val, (int, float)
                 ), "min/max val has to be float, int or None"
         elif value_type == "integer":
-            types_to_check = (int,)
             for val in [minimum, maximum]:
                 assert val is None or isinstance(val, int)
                 "min/max val has to be float, int or None"
-        elif value_type == "boolean":
-            types_to_check = (bool,)
 
         assert isinstance(
             default, types_to_check
@@ -177,6 +192,29 @@ class GameIO:
                 minimum is None and maximum is None
             ), "enum and min/max are mutually exclusive"
 
+        if condition_config is not None:
+            assert isinstance(
+                condition_config, str
+            ), "Condition conf name must be string"
+
+            other_conf = [
+                x
+                for x in self._custom_configs
+                if x["name"] == condition_config
+            ]
+
+            assert (
+                len(other_conf) == 1
+            ), "Condition conf must be registered before"
+
+            other_conf_check_types = _get_config_types(
+                other_conf[0]["valueType"]
+            )
+
+            assert condition_value is not None and isinstance(
+                condition_value, other_conf_check_types
+            ), "Condition value must be correct type"
+
         obj = {
             "name": name,
             "valueType": value_type,
@@ -189,6 +227,14 @@ class GameIO:
             obj["maximum"] = maximum
         if enum is not None:
             obj["enum"] = enum
+        if group is not None:
+            obj["group"] = group
+        if condition_config is not None:
+            obj["condition"] = {
+                "config": condition_config,
+                "value": condition_value,
+            }
+
         self._custom_configs.append(obj)
 
     def register_inputs(self, inputs, admin=False, bindable=True):
