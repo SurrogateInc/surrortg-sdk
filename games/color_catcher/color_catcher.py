@@ -8,7 +8,7 @@ from surrortg.devices.led_matrix import LedMatrix
 from surrortg.game_io import ConfigType
 from surrortg.image_recognition.aruco import ArucoDetector, ArucoGrid
 
-INITIAL_GAME_TIME = 32
+INITIAL_GAME_TIME = 25
 
 GAME_AREA_SIZE_KEY = "Game area side length (number of squares)"
 INITIAL_GAME_TIME_KEY = "Initial game time"
@@ -54,7 +54,7 @@ class ColorCatcher(Game):
         self.io.register_config(
             INITIAL_GAME_TIME_KEY,
             ConfigType.INTEGER,
-            32,
+            INITIAL_GAME_TIME,
             False,
             minimum=6,
             maximum=60,
