@@ -150,3 +150,31 @@ totally different type inputs)
 - 2 wheel drive
 - 4 wheel drive
 
+## GPIO Layout
+
+- GPIO 2 - I2C SDA
+- GPIO 3 - I2C SCL
+- GPIO 4 - Front motors sleep
+- GPIO 5 - Motor RR 1
+- GPIO 6 - Motor RR 2
+- GPIO 7 - Servo 10
+- GPIO 8 - Servo 9
+- GPIO 9 - Servo 3
+- GPIO 10 - Servo 2
+- GPIO 11 - Servo 4
+- GPIO 12 - LED Strip / Matrix
+- GPIO 13 - Rear motors sleep
+- GPIO 14 - Motor FL 1
+- GPIO 15 - Motor FL 2
+- GPIO 16
+- GPIO 17 - Motor FR 1
+- GPIO 18 - Servo 5
+- GPIO 19 - Motor RL 2
+- GPIO 20
+- GPIO 21
+- GPIO 22 - Servo 1
+- GPIO 23 - Servo 6
+- GPIO 24 - Servo 7
+- GPIO 25 - Servo 8
+- GPIO 26 - Motor RL 1
+- GPIO 27 - Motor FR 2
