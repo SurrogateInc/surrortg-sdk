@@ -30,6 +30,8 @@ Aruco markers can also be used to:
 - Implement checkpoints for a racing game
 - A million other things!
 
+![ColorCatcher, our first game using aruco markers](_static/images/colorcatcher.png)
+
 ## Sounds great! How do I use them
 
 1. Generate some markers. Use your favorite search engine and look for
@@ -73,7 +75,7 @@ number of laps.
 Right now the aruco detection features are still a work in progress. If you
 want to see
 a working example, check out the
-[source code for our ColorCatcher game](https://github.com/SurrogateInc/surrortg-sdk/)
+[source code for our ColorCatcher game](https://github.com/SurrogateInc/surrortg-sdk/tree/main/games/color_catcher)
 . There is also the easy-to-use ArucoFinder class that can be used to integrate
 treasure hunt and racing game logic into a game with only a few lines of code.
 Of course, it's always possible to code your own logic for aruco markers using

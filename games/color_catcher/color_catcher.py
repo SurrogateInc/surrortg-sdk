@@ -93,7 +93,7 @@ class ColorCatcher(Game):
         self.led_matrix = LedMatrix(self.io, DEF_GAME_AREA_SIZE)
 
         self.m5_rover = M5Rover(
-            self.io, throttle_mult=0.3, steering_mult=0.5, sideways_mult=0.25
+            self.io, throttle_mult=0.3, steering_mult=1, sideways_mult=0.5
         )
         self.io.register_inputs(self.m5_rover.inputs)
         self.aruco_source = await ArucoDetector.create(
