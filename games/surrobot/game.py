@@ -1,7 +1,7 @@
 import logging
 
 from games.surrobot.hw import Hw
-from games.surrobot.template_games import Game1, Game3, RacingGame
+from games.surrobot.surrobot_templates import Game1, Game3, RacingGame
 from surrortg import ConfigType, Game
 from surrortg.inputs import Joystick, KeyCode, LinearActuator
 
