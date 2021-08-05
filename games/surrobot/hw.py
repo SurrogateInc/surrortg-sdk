@@ -5,8 +5,6 @@ import time
 import adafruit_ssd1306
 import adafruit_tcs34725
 import busio
-from adafruit_motor import servo as AdafruitServo  # noqa:N812
-from adafruit_pca9685 import PCA9685
 from board import SCL, SDA
 from PIL import Image, ImageDraw
 
@@ -49,7 +47,6 @@ class Hw:
             )
 
         self.i2c = busio.I2C(SCL, SDA)
-        self.pca = SafePCA9685(self.i2c, 50)
         self.servos = [Servo(pin) for pin in SERVO_PINS]
         self.left_eye = Oled(self.i2c)
         self.right_eye = Oled(self.i2c, addr=0x3D)
@@ -230,114 +227,3 @@ class Oled:
         except OSError:
             logging.error(f"Oled show() failed at address {hex(self.addr)}")
             self.working = False
-
-
-class SafePCA9685:
-    def __init__(self, i2c, frequency):
-        self.working = False  # NOTE: this will be changed from outside also
-        self.i2c = i2c
-        self.frequency = frequency
-        self.safe_init()
-
-    def safe_init(self):
-        try:
-            self.pca = PCA9685(self.i2c)
-            self.pca.frequency = self.frequency
-            self.working = True
-        except (OSError, ValueError):
-            logging.error("PCA9685 init failed")
-            self.working = False
-
-    @property
-    def safe_channels(self):
-        # Try re-init if broken
-        if not self.working:
-            self.safe_init()
-        # Try only if in a working state
-        if self.working:
-            # try ... except here
-            return self.pca.channels
-        else:
-            return None
-
-
-class PCA9685Servo(Servo):
-    def __init__(
-        self,
-        pca,
-        index,
-        min_pulse_width=500,
-        max_pulse_width=2500,
-        min_full_sweep_time=0.5,
-        rotation_update_freq=25,
-    ):
-        """Simple to use servo class implemented with pigpio
-
-        position property handles immediate position changes.
-        rotation_speed property handles rotation with a spesific speed
-        in the background.
-        Also has rotate_to, detach and stop methods.
-
-        :param pin: GPIO pin number
-        :type pin: int
-        :param min_pulse_width: between 500 and 2500, defaults to 500
-        :type min_pulse_width: int, optional
-        :param max_pulse_width: between 500 and 2500, defaults to 2500
-        :type max_pulse_width: int, optional
-        :param min_full_sweep_time: full sweep time in seconds,
-            defaults to 0.5
-        :type min_full_sweep_time: float, optional
-        :param rotation_update_freq: rotation position update frequenzy,
-            defaults to 25
-        :type rotation_update_freq: int, optional
-        :raises RuntimeError: If cannot connect to pigpio daemon
-        """
-        assert (
-            500 <= min_pulse_width <= 2500
-        ), "min_pulse_width should be between 500 and 2500"
-        assert (
-            500 <= max_pulse_width <= 2500
-        ), "max_pulse_width should be between 500 and 2500"
-        assert (
-            min_pulse_width < max_pulse_width
-        ), "min_pulse_width should be less than max_pulse_width"
-        assert (
-            min_full_sweep_time > 0
-        ), "min_full_sweep_time should be positive"
-        assert (
-            rotation_update_freq > 0
-        ), "rotation_update_freq should be positive"
-
-        self._min_pulse_width = min_pulse_width
-        self._max_pulse_width = max_pulse_width
-        self._mid_pulse_width = (max_pulse_width + min_pulse_width) / 2
-        self._max_pos_change_per_update = 2 / (
-            rotation_update_freq * min_full_sweep_time
-        )
-        self._rotation_update_freq = rotation_update_freq
-        self._latest_rotation_start_time = None
-        self._position = None
-        self._rotation_speed = 0
-        self._stopped = False
-
-        self.pca = pca
-        self.index = index
-
-    def _set_position(self, position):
-        scaled_pos = (
-            -position * (self._mid_pulse_width - self._min_pulse_width)
-            + self._mid_pulse_width
-        )  # Scale -1 to 1 between min and max pulse width
-        # self._pwm.set_servo_pulse(self._channel, int(scaled_pos))
-        channels = self.pca.safe_channels
-        if channels:
-            try:
-                fraction = (scaled_pos - 500.0) / 2000.0
-                # TODO save previous servo somehow?
-                AdafruitServo.Servo(channels[self.index]).fraction = fraction
-                self._position = position
-            except OSError:
-                logging.error(
-                    f"Servo {self.index} set position to {position} failed"
-                )
-                self.pca.working = False
