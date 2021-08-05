@@ -35,7 +35,11 @@ def get_token():
 def set_token(token):
     # Verify token lengths
     uuids = token.split("/")
-    if len(uuids) != 2 or len(uuids[0]) != 36 or len(uuids[1]) != 8 * 36:
+    if (
+        len(uuids) != 2
+        or len(uuids[0]) != 36
+        or (len(uuids[1]) != 8 * 36 and len(uuids[1]) != 36)
+    ):
         click.echo("Not a valid token")
         return
 
