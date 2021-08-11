@@ -16,20 +16,22 @@ from surrortg.devices import Servo, i2c_connected
 # Motor driver control pins
 
 # Front left motor
-MOTOR_FL_IN_1 = 15
-MOTOR_FL_IN_2 = 14
+MOTOR_FL_IN_1 = 22
+MOTOR_FL_IN_2 = 23
 # Front right motor
 MOTOR_FR_IN_1 = 17
 MOTOR_FR_IN_2 = 27
 # Rear right motor
-MOTOR_RR_IN_1 = 5
-MOTOR_RR_IN_2 = 6
+MOTOR_RR_IN_1 = 26
+MOTOR_RR_IN_2 = 19
 # Rear left motor
-MOTOR_RL_IN_1 = 26
-MOTOR_RL_IN_2 = 19
+MOTOR_RL_IN_1 = 5
+MOTOR_RL_IN_2 = 6
 
-FRONT_MOTORS_SLEEP = 4
+FRONT_MOTORS_SLEEP = 24
 REAR_MOTORS_SLEEP = 13
+
+SERVO_PINS = [21, 20, 16, 13, 12, 25]
 
 I2C_DEVICES = {
     "right oled": "0x3d",
@@ -48,9 +50,7 @@ class Hw:
 
         self.i2c = busio.I2C(SCL, SDA)
         self.pca = SafePCA9685(self.i2c, 50)
-        self.servos = []
-        for i in [22, 10, 9, 11, 18, 23, 24, 25, 8, 7]:
-            self.servos.append(Servo(i))
+        self.servos = [Servo(pin) for pin in SERVO_PINS]
         self.left_eye = Oled(self.i2c)
         self.right_eye = Oled(self.i2c, addr=0x3D)
         # These should be lazy generated?
@@ -80,10 +80,10 @@ class Hw:
             drv8833=self.motor_driver_front, motor_number=2, direction="-"
         )
         self.motor_rr = DRV8833Motor(
-            drv8833=self.motor_driver_rear, motor_number=1, direction="-"
+            drv8833=self.motor_driver_rear, motor_number=1, direction="+"
         )
         self.motor_rl = DRV8833Motor(
-            drv8833=self.motor_driver_rear, motor_number=2, direction="-"
+            drv8833=self.motor_driver_rear, motor_number=2, direction="+"
         )
 
         # Create motor controller for all 4 motors
@@ -94,6 +94,11 @@ class Hw:
     def reset_eyes(self):
         self.left_eye.write("left eye")
         self.right_eye.write("right eye")
+
+    def get_cpu_temperature(self):
+        with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
+            temp_millidegrees = f.read()
+            return int(temp_millidegrees) / 1000
 
 
 class ColorSensor:

@@ -26,10 +26,13 @@ class RacingGame(GameTemplate):
         self.hw.color_sensor.active = True
         while True:
             await asyncio.sleep(0.5)
+            temp_text = f"CPU: {self.hw.get_cpu_temperature()} C"
+            self.hw.right_eye.write(temp_text)
+            logging.info(temp_text)
             lux = self.hw.color_sensor.lux
-            text = f"lux: {lux}"
-            self.hw.left_eye.write(text)
-            logging.info(text)
+            lux_text = f"lux: {lux}"
+            self.hw.left_eye.write(lux_text)
+            logging.info(lux_text)
             if lux is not None and lux > 800:
                 end_time = time.time()
                 return end_time - start_time

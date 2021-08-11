@@ -138,7 +138,7 @@ class SurrobotGame(Game):
         self.inputs["top-slot-1-camera"] = camera
 
         claw = ServosActuator(
-            [self.hw.servos[i] for i in range(2, 10)],
+            [self.hw.servos],
             [
                 {
                     "min": "KeyN",
