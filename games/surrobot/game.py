@@ -104,7 +104,11 @@ class SurrobotGame(Game):
 
         self.inputs = {}
         self.hw = Hw()
-        self.templates = [Game1(self.hw), RacingGame(self.hw), Game3(self.hw)]
+        self.templates = [
+            Game1(self.hw, self.io),
+            RacingGame(self.hw, self.io),
+            Game3(self.hw, self.io),
+        ]
 
         # Preferably the input configs could be "live reloaded" based on the
         # "slot" & etc configuration. For e.g movement slot selection

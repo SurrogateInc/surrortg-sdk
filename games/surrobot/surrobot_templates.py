@@ -2,10 +2,15 @@ import asyncio
 import logging
 import time
 
+from surrortg.image_recognition.aruco import ArucoFinder
 
+
+# TODO some cleanup function when a template is changed
+# for example: to stop the ArucoFinder running if not used
 class GameTemplate:
-    def __init__(self, hw):
+    def __init__(self, hw, io):
         self.hw = hw
+        self.io = io
 
     async def on_start(self):
         pass
@@ -21,7 +26,19 @@ class Game1(GameTemplate):
 
 
 class RacingGame(GameTemplate):
+    async def on_config(self):
+        # initialize ArucoFinder if does not exist
+        if not hasattr(self, "finder"):
+            self.finder == await ArucoFinder.create(
+                self.io, num_markers=2, in_order=True, num_laps=2
+            )
+        self.finder.on_config(self.configs)
+
     async def on_start(self):
+        # start the aruco finder
+        self.finder.on_start()
+
+        # color sensor checking code
         start_time = time.time()
         self.hw.color_sensor.active = True
         while True:
