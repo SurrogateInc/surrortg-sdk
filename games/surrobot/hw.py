@@ -3,13 +3,12 @@ import logging
 import time
 
 import adafruit_ssd1306
-import adafruit_tcs34725
 import busio
 from board import SCL, SDA
 from PIL import Image, ImageDraw
 
 from games.surrobot.DRV8833 import DRV8833, DRV8833Motor, MotorController
-from surrortg.devices import Servo, i2c_connected
+from surrortg.devices import SafeTCS34725, Servo, i2c_connected
 
 # Motor driver control pins
 
@@ -51,7 +50,9 @@ class Hw:
         self.left_eye = Oled(self.i2c)
         self.right_eye = Oled(self.i2c, addr=0x3D)
         # These should be lazy generated?
-        self.color_sensor = ColorSensor(self.i2c)
+        self.color_sensor = SafeTCS34725(self.i2c)
+        self.color_sensor.integration_time = 150
+        self.color_sensor.active = False
 
         # Create motor drivers, one for front and one for rear
         self.motor_driver_front = DRV8833(
@@ -96,66 +97,6 @@ class Hw:
         with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
             temp_millidegrees = f.read()
             return int(temp_millidegrees) / 1000
-
-
-class ColorSensor:
-    def __init__(self, i2c, integration_time=150):
-        self.working = False
-        self.i2c = i2c
-        self._integration_time = integration_time
-        self._active = False
-        self.safe_init()
-
-    def safe_init(self):
-        try:
-            self.color_sensor = adafruit_tcs34725.TCS34725(self.i2c)
-            self.color_sensor.integration_time = self._integration_time
-            self.color_sensor.active = self._active
-            self.working = True
-        except (OSError, ValueError):
-            logging.error("ColorSensor init failed")
-            self.working = False
-
-    @property
-    def lux(self):
-        # Try re-init if broken
-        if not self.working:
-            self.safe_init()
-        # Try only if in a working state
-        if self.working:
-            try:
-                return self.color_sensor.lux
-            except OSError:
-                logging.error("ColorSensor lux failed")
-                self.working = False
-                return None
-
-    @property
-    def active(self):
-        # Try re-init if broken
-        if not self.working:
-            self.safe_init()
-        # Try only if in a working state
-        if self.working:
-            try:
-                return self.color_sensor.active
-            except OSError:
-                return None
-        else:
-            return None
-
-    @active.setter
-    def active(self, active):
-        self._active = active
-        # Try re-init if broken
-        if not self.working:
-            self.safe_init()
-        # Try only if in a working state
-        if self.working:
-            try:
-                self.color_sensor.active = self._active
-            except OSError:
-                pass
 
 
 class Oled:
