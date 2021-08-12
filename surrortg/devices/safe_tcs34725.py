@@ -2,15 +2,6 @@ import logging
 
 from adafruit_tcs34725 import TCS34725
 
-INTERNAL_ATTRIBUTES = {
-    "_working",
-    "_i2c",
-    "_address",
-    "_attributes_set_order",
-    "_state",
-    "_TCS34725",
-}
-
 
 class SafeTCS34725:
     """'Safe' wrapper class for adafruit_tcs34725.TCS34725
@@ -43,11 +34,20 @@ class SafeTCS34725:
     """
 
     def __init__(self, i2c, address=0x29):
+        self._internal_attributes = {
+            "_working",
+            "_i2c",
+            "_address",
+            "_attributes_set_order",
+            "_state",
+            "_tcs34725",
+        }
         self._working = False
         self._i2c = i2c
         self._address = address
         self._attributes_set_order = []
         self._state = dict()
+        self._tcs34725 = None
         self._safe_init()
 
     @property
@@ -77,22 +77,22 @@ class SafeTCS34725:
 
     def _safe_init(self):
         try:
-            # init
-            self._TCS34725 = TCS34725(self._i2c, self._address)
-            # restore old state
+            # Init adafruit_tcs34725
+            self._tcs34725 = TCS34725(self._i2c, self._address)
+            # Restore old state
             for attr in self._attributes_set_order:
                 logging.info(
-                    f"restoring: TCS3472.{attr} = {self._state[attr]}"
+                    f"restoring: TCS34725.{attr} = {self._state[attr]}"
                 )
-                setattr(self._TCS34725, attr, self._state[attr])
+                setattr(self._tcs34725, attr, self._state[attr])
             self._working = True
         except (OSError, ValueError) as e:
-            logging.error(f"TCS3472.__init__() failed: {e}")
+            logging.error(f"TCS34725.__init__() failed: {e}")
             self._working = False
 
     def __getattr__(self, name):
-        # check if internal use case
-        if name in INTERNAL_ATTRIBUTES:
+        # Check if internal use case
+        if name == "_internal_attributes" or name in self._internal_attributes:
             # Default behaviour
             return self.__getattribute__(name)
 
@@ -102,18 +102,18 @@ class SafeTCS34725:
         # Try getting only if in a working state
         if self._working:
             try:
-                return getattr(self._TCS34725, name)
+                return getattr(self._tcs34725, name)
             except OSError as e:
-                logging.error(f"Getting TCS3472.{name} failed: {e}")
+                logging.error(f"Getting TCS34725.{name} failed: {e}")
                 self._working = False
 
     def __setattr__(self, name, value):
-        # check if internal use case
-        if name in INTERNAL_ATTRIBUTES:
+        # Check if internal use case
+        if name == "_internal_attributes" or name in self._internal_attributes:
             # Default behaviour
             return super().__setattr__(name, value)
 
-        # save value into state
+        # Save value into state
         # NOTE: we now assume the user sets the values only in a proper order,
         # and each attribute is in the order only once
         if name not in self._attributes_set_order:
@@ -126,9 +126,9 @@ class SafeTCS34725:
         # Try setting only if in a working state
         if self._working:
             try:
-                setattr(self._TCS34725, name, value)
+                setattr(self._tcs34725, name, value)
             except OSError as e:
-                logging.error(f"Setting TCS3472.{name} failed: {e}")
+                logging.error(f"Setting TCS34725.{name} failed: {e}")
                 self._working = False
 
 
