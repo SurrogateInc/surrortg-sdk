@@ -1,7 +1,11 @@
 import logging
 
 from games.surrobot.hw import Hw
-from games.surrobot.surrobot_templates import Game1, Game3, RacingGame
+from games.surrobot.surrobot_templates import (
+    ExplorationGame,
+    ObjectHuntGame,
+    RacingGame,
+)
 from surrortg import ConfigType, Game
 from surrortg.inputs import Joystick, KeyCode, LinearActuator
 
@@ -105,9 +109,9 @@ class SurrobotGame(Game):
         self.inputs = {}
         self.hw = Hw()
         self.templates = [
-            Game1(self.hw, self.io),
+            ExplorationGame(self.hw, self.io),
             RacingGame(self.hw, self.io),
-            Game3(self.hw, self.io),
+            ObjectHuntGame(self.hw, self.io),
         ]
 
         # Preferably the input configs could be "live reloaded" based on the

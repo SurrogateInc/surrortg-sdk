@@ -19,9 +19,9 @@ class GameTemplate:
         return 1
 
 
-class Game1(GameTemplate):
+class ExplorationGame(GameTemplate):
     async def on_start(self):
-        await asyncio.sleep(5)
+        await asyncio.sleep(30)
         return 1
 
 
@@ -59,7 +59,8 @@ class RacingGame(GameTemplate):
         self.hw.reset_eyes()
 
 
-class Game3(GameTemplate):
+class ObjectHuntGame(GameTemplate):
     async def on_start(self):
+        # TODO object hunt logic
         await asyncio.sleep(10)
         return 0
