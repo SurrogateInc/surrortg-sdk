@@ -205,6 +205,10 @@ class ArucoDetector:
             logging.info(f"error while removing aruco callback: {e}")
             pass
 
+    def unregister_all_observers(self):
+        """Unregister all callbacks from receiving aruco markers"""
+        self.callbacks = []
+
     def set_crop(self, crop_params):
         """Set cropping for frames used for aruco detection. Useful for
             increasing performance.
