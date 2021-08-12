@@ -109,9 +109,9 @@ class SurrobotGame(Game):
         self.inputs = {}
         self.hw = Hw()
         self.templates = [
-            ExplorationGame(self.hw, self.io),
-            RacingGame(self.hw, self.io),
-            ObjectHuntGame(self.hw, self.io),
+            ExplorationGame(self),
+            RacingGame(self),
+            ObjectHuntGame(self),
         ]
 
         # Preferably the input configs could be "live reloaded" based on the
@@ -168,8 +168,7 @@ class SurrobotGame(Game):
 
     async def on_start(self):
         logging.info("Game starts")
-        score = await self.template.on_start()
-        self.io.send_score(score=score, final_score=True)
+        await self.template.on_start()
 
     async def on_finish(self):
         logging.info("Game ends")
