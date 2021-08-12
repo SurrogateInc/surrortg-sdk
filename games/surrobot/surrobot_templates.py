@@ -60,7 +60,17 @@ class RacingGame(GameTemplate):
 
 
 class ObjectHuntGame(GameTemplate):
+    async def on_config(self):
+        # initialize ArucoFinder if does not exist
+        if not hasattr(self, "finder"):
+            self.finder == await ArucoFinder.create(
+                self.io, num_markers=3, in_order=False
+            )
+        self.finder.on_config(self.configs)
+
     async def on_start(self):
-        # TODO object hunt logic
-        await asyncio.sleep(10)
+        # start the aruco finder
+        self.finder.on_start()
+
+        await asyncio.sleep(60)
         return 0
