@@ -146,7 +146,7 @@ class SurrobotGame(Game):
         self.inputs["top-slot-1-camera"] = camera
 
         claw = ServosActuator(
-            [self.hw.servos],
+            self.hw.servos,
             [
                 {
                     "min": "KeyN",
@@ -165,6 +165,7 @@ class SurrobotGame(Game):
         self.template = self.templates[game_template - 1]
         logging.info(f"game template: {game_template}")
         # Could we set inputs here based on the game template + slot config?
+        await self.template.on_config()
 
     async def on_start(self):
         logging.info("Game starts")

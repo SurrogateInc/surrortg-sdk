@@ -13,6 +13,10 @@ class GameTemplate:
         self.game = game
 
     @abstractmethod
+    async def on_config(self):
+        pass
+
+    @abstractmethod
     async def on_start(self):
         pass
 
@@ -22,16 +26,22 @@ class GameTemplate:
 
 
 class ExplorationGame(GameTemplate):
+    async def on_config(self):
+        pass
+
     async def on_start(self):
         await asyncio.sleep(30)
         self.game.io.send_score(score=1, final_score=True)
+
+    async def on_finish(self):
+        pass
 
 
 class RacingGame(GameTemplate):
     async def on_config(self):
         # initialize ArucoFinder if does not exist
         if not hasattr(self, "finder"):
-            self.finder == await ArucoFinder.create(
+            self.finder = await ArucoFinder.create(
                 self.game.io, num_markers=2, in_order=True, num_laps=2
             )
         self.finder.on_config(self.game.configs)
@@ -65,7 +75,7 @@ class ObjectHuntGame(GameTemplate):
     async def on_config(self):
         # initialize ArucoFinder if does not exist
         if not hasattr(self, "finder"):
-            self.finder == await ArucoFinder.create(
+            self.finder = await ArucoFinder.create(
                 self.game.io, num_markers=3, in_order=False
             )
         self.finder.on_config(self.game.configs)
@@ -75,3 +85,6 @@ class ObjectHuntGame(GameTemplate):
         self.finder.on_start()
         await asyncio.sleep(60)
         self.game.io.send_score(score=1, final_score=True)
+
+    async def on_finish(self):
+        pass
