@@ -36,7 +36,7 @@ class GameIO:
         self.input_bindings = {}
         self._custom_configs = []
         self._robot_configs = EMPTY_CONFIG
-        self._global_configs = EMPTY_CONFIG
+        self._game_configs = EMPTY_CONFIG
         self._message_router = MultiSeatMessageRouter(robot_log_handler)
 
         # If type is not string (deprecated old interface), assume type is
@@ -211,8 +211,8 @@ class GameIO:
 
         self._custom_configs.append(obj)
 
-    def set_global_configs(self, configs):
-        """Set global configs
+    def set_game_configs(self, configs):
+        """Set game configs
 
         Sets the custom configs for the game. These values will appear only
         once in the settings regardless of the number of robots, and the
@@ -309,7 +309,7 @@ class GameIO:
         """
 
         check_config_group(configs, configs, configs)
-        self._global_configs = configs
+        self._game_configs = configs
 
     def register_inputs(self, inputs, admin=False, bindable=True):
         """Registers inputs
@@ -350,7 +350,7 @@ class GameIO:
         Sets the custom configs for this specific robot. Some examples:
         the speed of the robot or components connected to the robot.
 
-        See set_global_configs for description on the config dictionary.
+        See set_game_configs for description on the config dictionary.
         """
         check_config_group(configs, configs, configs)
         self._robot_configs = configs
@@ -615,7 +615,7 @@ class GameIO:
         else:
             configs = {
                 "robotConfigs": self._robot_configs,
-                "globalConfigs": self._global_configs,
+                "gameConfigs": self._game_configs,
             }
         msg = {"inputs": self._get_inputs(), "configs": configs}
         logging.info(f"Sending controller ready: {msg}")
