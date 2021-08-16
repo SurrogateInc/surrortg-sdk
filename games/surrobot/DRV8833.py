@@ -47,7 +47,7 @@ class DRV8833:
     def set_motor_speed(self, *, motor_number, speed):
         assert 1 <= motor_number <= 2, f"Invalid motor number: {motor_number}."
         assert -1 <= speed <= 1, f"Motor speed out of range: {speed}."
-        logging.info(f"Motor {motor_number} speed: {speed}.")
+        logging.debug(f"Motor {motor_number} speed: {speed}.")
 
         if motor_number == 1:
             self._motor_a_speed = speed
