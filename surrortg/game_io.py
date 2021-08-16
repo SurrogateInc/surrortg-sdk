@@ -219,56 +219,63 @@ class GameIO:
         values can be read on any robot. Some examples: game template or
         maximum laps in a racing game.
 
-        EXAMPLE_CONF = {
-            "children": {
-                "myconf": {
-                    "title": "My conf displayname",
-                    "description": "Describes the conf in detail",
-                    "valueType": ConfigType.NUMBER,
-                    "default": 1,
-                    "enum": [
-                        { "value": 1, "description": "shown when selected" },
-                        { "value": 2, "description": "another description" },
-                    ],
-                },
-                "condconf": {
-                    "title": "Conditional config",
-                    "valueType": ConfigType.BOOLEAN,
-                    "default": False,
-                    "conditions": [
-                        { "variable": "myconf", "value": 1 },
-                        { "variable": "mygroup.mysubconf", "value": 3 },
-                    ],
-                },
-                "mygroup": {
-                    "conditions": [
-                        { "variable": "myconf", "value": 1 },
-                    ],
-                    "children": {
-                        "mysubconf": {
-                            "title": "My Sub Conf",
-                            "valueType": ConfigType.INTEGER,
-                            "default": 3,
-                            "minimum": 2,
-                            "maximum": 50,
-                        },
-                        "myothersubconf": {
-                            "valueType": ConfigType.BOOLEAN,
-                            "default": False,
+        .. highlight:: python
+        .. code-block:: python
+
+            EXAMPLE_CONF = {
+                "children": {
+                    "myconf": {
+                        "title": "My conf displayname",
+                        "description": "Describes the conf in detail",
+                        "valueType": ConfigType.NUMBER,
+                        "default": 1,
+                        "enum": [
+                            { "value": 1, "description": "something" },
+                            { "value": 2, "description": "something else" },
+                        ],
+                    },
+                    "condconf": {
+                        "title": "Conditional config",
+                        "valueType": ConfigType.BOOLEAN,
+                        "default": False,
+                        "conditions": [
+                            { "variable": "myconf", "value": 1 },
+                            { "variable": "mygroup.mysubconf", "value": 3 },
+                        ],
+                    },
+                    "mygroup": {
+                        "conditions": [
+                            { "variable": "myconf", "value": 1 },
+                        ],
+                        "children": {
+                            "mysubconf": {
+                                "title": "My Sub Conf",
+                                "valueType": ConfigType.INTEGER,
+                                "default": 3,
+                                "minimum": 2,
+                                "maximum": 50,
+                            },
+                            "myothersubconf": {
+                                "valueType": ConfigType.BOOLEAN,
+                                "default": False,
+                            },
                         },
                     },
-                },
+                }
             }
-        }
 
         As seen above, the configuration is a dictionary, consisting of
         groups and variables. The groups can be nested.
 
         Group fields:
+
         children: a dictionary of configs and groups. Key is the id, value is
                   subgroup/subvariable
+
         title: a display name to be used in UI instead of id [optional]
+
         description: a longer string describing the group [optional]
+
         conditions: a list of conditions. The config is only shown in frontend
                     if the conditions are true. A condition consists of
                     variable name and value, and is true when the other
@@ -276,22 +283,31 @@ class GameIO:
                     from the top of the config tree and subconfigs are accessed
                     by using . as the delimiter (mygroup.subvariable). If the
                     variable starts with a . then search starts from the
-                    current group.
+                    current group. [optional]
 
         Variable fields:
+
         valueType: Type of the variable, see ConfigType for possible types
+
         default: Default value of the variable. Has to match the valueType
+
         enum: List of possible values for the variable, with optional
               descriptions. Rendered as a dropdown menu in frontend. [optional]
+
         minimum: Minimum value, only applies to numeric types and is mutually
                  exclusive with enum. [optional]
+
         maximum: Maximum value, only applies to numeric types and is mutually
                  exclusive with enum. If both minimum and maximum are given,
                  slider is rendered in frontend. [optional]
+
         title: a display name to be used in UI instead of id [optional]
+
         description: a longer string describing the variable [optional]
 
+        conditions: refer to groups [optional]
         """
+
         check_config_group(configs, configs, configs)
         self._global_configs = configs
 
