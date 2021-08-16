@@ -1,7 +1,6 @@
 import asyncio
 import functools
 import logging
-import sys
 
 import socketio
 
@@ -38,13 +37,15 @@ class ApiClient(socketio.AsyncClientNamespace):
 
     def on_connect(self):
         self.connected = True
-        self.connected_future.set_result(True)
-        self.connected_future = None
+        if self.connected_future is not None:
+            self.connected_future.set_result(True)
+            self.connected_future = None
 
     def on_disconnect(self):
         self.connected = False
-        self.connected_future.set_exception(Exception())
-        self.connected_future = None
+        if self.connected_future is not None:
+            self.connected_future.set_exception(Exception())
+            self.connected_future = None
 
     @staticmethod
     def _resolve_future(future, data):
@@ -75,7 +76,7 @@ class ApiClient(socketio.AsyncClientNamespace):
                 self.connected_future.set_exception(Exception(msg))
                 self.connected_future = None
             if "Invalid robot token" in msg:
-                sys.exit(2)
+                raise Exception(msg)
 
         self.sio.register_namespace(self)
 
