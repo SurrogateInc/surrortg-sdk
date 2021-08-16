@@ -7,6 +7,7 @@ from games.surrobot.surrobot_templates import (
     RacingGame,
 )
 from surrortg import ConfigType, Game
+from surrortg.image_recognition.aruco import ArucoDetector
 from surrortg.inputs import Joystick, KeyCode, LinearActuator
 
 
@@ -158,12 +159,21 @@ class SurrobotGame(Game):
 
         self.io.register_inputs(self.inputs)
         self.hw.reset_eyes()
+        self.aruco_source = await ArucoDetector.create()
+        self.template = None
 
     async def on_config(self):
         # Read game template
-        game_template = self.configs["custom"]["game-template"]
-        self.template = self.templates[game_template - 1]
-        logging.info(f"game template: {game_template}")
+        current_template = self.templates[
+            self.configs["custom"]["game-template"] - 1
+        ]
+        if self.template != current_template:
+            # Cleanup old selection
+            self.aruco_source.unregister_all_observers()
+            # Select the new template
+            self.template = current_template
+            await self.template.on_template_selected()
+        logging.info(f"Game template: {type(self.template).__name__}")
         # Could we set inputs here based on the game template + slot config?
         await self.template.on_config()
 
@@ -174,7 +184,7 @@ class SurrobotGame(Game):
     async def on_finish(self):
         logging.info("Game ends")
         # if reset during previous game self.template might not exist
-        if hasattr(self, "template"):
+        if self.template is not None:
             await self.template.on_finish()
 
 
