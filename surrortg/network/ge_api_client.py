@@ -25,8 +25,6 @@ class ApiClient(socketio.AsyncClientNamespace):
         self.url = self._get_query_url(url, query)
         self.connected = False
 
-        self.connected_futures = []
-
         super().__init__(SOCKETIO_NAMESPACE)
 
     def _get_query_url(self, url, query):
