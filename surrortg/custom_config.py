@@ -59,6 +59,10 @@ def check_conditions(config, parent, root):
     if "conditions" not in config:
         return
     for condition in config["conditions"]:
+        assert condition.keys() <= {
+            "variable",
+            "value",
+        }, "there were extra items in a condition"
         assert isinstance(condition["variable"], str)
         is_relative = condition["variable"][0] == "."
         real_root = parent if is_relative else root
@@ -68,7 +72,6 @@ def check_conditions(config, parent, root):
         except KeyError:
             var = condition["variable"]
             raise AssertionError(f"Condition {var} not found")
-        print(real_root)
         value_type = real_root["valueType"]
         if type(value_type) is not str:
             value_type = value_type.value
@@ -83,12 +86,28 @@ def check_title(id, config):
 
 
 def check_config_group(id, group, root):
+    assert group.keys() <= {
+        "title",
+        "conditions",
+        "children",
+    }, "there were extra items in group"
     check_title(id, group)
     for id, config in group["children"].items():
         check_config_entry(id, config, group, root)
 
 
 def check_config_variable(id, variable, root):
+    assert variable.keys() <= {
+        "valueType",
+        "default",
+        "minimum",
+        "maximum",
+        "enum",
+        "title",
+        "description",
+        "conditions",
+        "children",
+    }, "there were extra items in config"
     check_title(id, variable)
     assert "description" not in variable or isinstance(
         variable["description"], str
