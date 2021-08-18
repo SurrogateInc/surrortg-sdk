@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import logging
 import os
 import time
@@ -355,6 +356,66 @@ class GameTest(unittest.TestCase):
             g.io.register_config(
                 "defaultnotinenum", ConfigType.INTEGER, 6, True, enum=[3, 5]
             )
+
+        test_conf = {
+            "children": {
+                "gameconf": {
+                    "title": "Test game",
+                    "description": "Describes the conf in detail",
+                    "valueType": ConfigType.NUMBER,
+                    "default": 1,
+                    "enum": [
+                        {
+                            "value": 1,
+                            "description": "desc",
+                        },
+                        {"value": 2, "description": "luls"},
+                    ],
+                },
+                "gamecond": {
+                    "title": "Conditional shit",
+                    "description": "wut",
+                    "valueType": ConfigType.BOOLEAN,
+                    "default": False,
+                    "conditions": [
+                        {"variable": "gameconf", "value": 1},
+                    ],
+                },
+                "mygroup": {
+                    "conditions": [
+                        {"variable": "gamecond", "value": True},
+                    ],
+                    "children": {
+                        "mysubconf": {
+                            "title": "My Sub Conf",
+                            "valueType": ConfigType.INTEGER,
+                            "default": 3,
+                            "minimum": 2,
+                            "maximum": 50,
+                        },
+                        "subconf2": {
+                            "title": "Sub bool",
+                            "valueType": ConfigType.BOOLEAN,
+                            "default": False,
+                        },
+                    },
+                },
+            }
+        }
+        try:
+            g.io.set_robot_configs(copy.deepcopy(test_conf))
+            g.io.set_game_configs(copy.deepcopy(test_conf))
+        except Exception:
+            self.fail("set_config raised an unexpected exception")
+
+        test_copy = copy.deepcopy(test_conf)
+        test_copy["children"]["gameconf"]["extra"] = 0
+        with self.assertRaises(AssertionError):
+            g.io.set_robot_configs(test_copy)
+        test_copy = copy.deepcopy(test_conf)
+        test_copy["children"]["gameconf"]["default"] = False
+        with self.assertRaises(AssertionError):
+            g.io.set_robot_configs(test_copy)
 
     def test_game_properties(self):
         """The properties should raise RuntimeError if accessed before run"""

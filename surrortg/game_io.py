@@ -1,31 +1,16 @@
 import logging
-from enum import Enum
 
 from .config_parser import get_config
+from .custom_config import (
+    EMPTY_CONFIG,
+    ConfigType,
+    check_config_group,
+    get_config_types,
+)
 from .network.message_router import MultiSeatMessageRouter
 from .network.socket_handler import SocketHandler
 
 SURRORTG_VERSION = "0.2.2"
-
-
-class ConfigType(Enum):
-    STRING = "string"
-    NUMBER = "number"
-    INTEGER = "integer"
-    BOOLEAN = "boolean"
-
-
-def _get_config_types(value_type):
-    types_to_check = ()
-    if value_type == "string":
-        types_to_check = (str,)
-    elif value_type == "number":
-        types_to_check = (int, float)
-    elif value_type == "integer":
-        types_to_check = (int,)
-    elif value_type == "boolean":
-        types_to_check = (bool,)
-    return types_to_check
 
 
 class GameIO:
@@ -50,6 +35,8 @@ class GameIO:
         self.device_id = self._config["device_id"]
         self.input_bindings = {}
         self._custom_configs = []
+        self._robot_configs = EMPTY_CONFIG
+        self._game_configs = EMPTY_CONFIG
         self._message_router = MultiSeatMessageRouter(robot_log_handler)
 
         # If type is not string (deprecated old interface), assume type is
@@ -146,20 +133,7 @@ class GameIO:
         assert isinstance(
             is_robot_specific, bool
         ), "'is_robot_specific' must be a boolean"
-        types_to_check = _get_config_types(value_type)
-        if value_type == "string" or value_type == "boolean":
-            assert (
-                minimum is None and maximum is None
-            ), "String config cannot have min/max value"
-        elif value_type == "number":
-            for val in [minimum, maximum]:
-                assert val is None or isinstance(
-                    val, (int, float)
-                ), "min/max val has to be float, int or None"
-        elif value_type == "integer":
-            for val in [minimum, maximum]:
-                assert val is None or isinstance(val, int)
-                "min/max val has to be float, int or None"
+        types_to_check = get_config_types(value_type)
 
         assert isinstance(
             default, types_to_check
@@ -207,7 +181,7 @@ class GameIO:
                 len(other_conf) == 1
             ), "Condition conf must be registered before"
 
-            other_conf_check_types = _get_config_types(
+            other_conf_check_types = get_config_types(
                 other_conf[0]["valueType"]
             )
 
@@ -236,6 +210,106 @@ class GameIO:
             }
 
         self._custom_configs.append(obj)
+
+    def set_game_configs(self, configs):
+        """Set game configs
+
+        Sets the custom configs for the game. These values will appear only
+        once in the settings regardless of the number of robots, and the
+        values can be read on any robot. Some examples: game template or
+        maximum laps in a racing game.
+
+        .. highlight:: python
+        .. code-block:: python
+
+            EXAMPLE_CONF = {
+                "children": {
+                    "myconf": {
+                        "title": "My conf displayname",
+                        "description": "Describes the conf in detail",
+                        "valueType": ConfigType.NUMBER,
+                        "default": 1,
+                        "enum": [
+                            { "value": 1, "description": "something" },
+                            { "value": 2, "description": "something else" },
+                        ],
+                    },
+                    "condconf": {
+                        "title": "Conditional config",
+                        "valueType": ConfigType.BOOLEAN,
+                        "default": False,
+                        "conditions": [
+                            { "variable": "myconf", "value": 1 },
+                            { "variable": "mygroup.mysubconf", "value": 3 },
+                        ],
+                    },
+                    "mygroup": {
+                        "conditions": [
+                            { "variable": "myconf", "value": 1 },
+                        ],
+                        "children": {
+                            "mysubconf": {
+                                "title": "My Sub Conf",
+                                "valueType": ConfigType.INTEGER,
+                                "default": 3,
+                                "minimum": 2,
+                                "maximum": 50,
+                            },
+                            "myothersubconf": {
+                                "valueType": ConfigType.BOOLEAN,
+                                "default": False,
+                            },
+                        },
+                    },
+                }
+            }
+
+        As seen above, the configuration is a dictionary, consisting of
+        groups and variables. The groups can be nested.
+
+        Group fields:
+
+        children: a dictionary of configs and groups. Key is the id, value is
+                  subgroup/subvariable
+
+        title: a display name to be used in UI instead of id [optional]
+
+        description: a longer string describing the group [optional]
+
+        conditions: a list of conditions. The config is only shown in frontend
+                    if the conditions are true. A condition consists of
+                    variable name and value, and is true when the other
+                    variable has the value specified. Conditions are searched
+                    from the top of the config tree and subconfigs are accessed
+                    by using . as the delimiter (mygroup.subvariable). If the
+                    variable starts with a . then search starts from the
+                    current group. [optional]
+
+        Variable fields:
+
+        valueType: Type of the variable, see ConfigType for possible types
+
+        default: Default value of the variable. Has to match the valueType
+
+        enum: List of possible values for the variable, with optional
+              descriptions. Rendered as a dropdown menu in frontend. [optional]
+
+        minimum: Minimum value, only applies to numeric types and is mutually
+                 exclusive with enum. [optional]
+
+        maximum: Maximum value, only applies to numeric types and is mutually
+                 exclusive with enum. If both minimum and maximum are given,
+                 slider is rendered in frontend. [optional]
+
+        title: a display name to be used in UI instead of id [optional]
+
+        description: a longer string describing the variable [optional]
+
+        conditions: refer to groups [optional]
+        """
+
+        check_config_group(configs, configs, configs)
+        self._game_configs = configs
 
     def register_inputs(self, inputs, admin=False, bindable=True):
         """Registers inputs
@@ -269,6 +343,17 @@ class GameIO:
                     "admin": admin,
                     **handler_obj._get_default_keybinds(),
                 }
+
+    def set_robot_configs(self, configs):
+        """Set robot-specific configs
+
+        Sets the custom configs for this specific robot. Some examples:
+        the speed of the robot or components connected to the robot.
+
+        See set_game_configs for description on the config dictionary.
+        """
+        check_config_group(configs, configs, configs)
+        self._robot_configs = configs
 
     def unregister_inputs(self, ids):
         """Unregisters inputs
@@ -525,7 +610,14 @@ class GameIO:
             logging.info(message)
 
     def _send_controller_ready(self):
-        msg = {"inputs": self._get_inputs(), "configs": self._custom_configs}
+        if len(self._custom_configs) > 0:
+            configs = self._custom_configs
+        else:
+            configs = {
+                "robotConfigs": self._robot_configs,
+                "gameConfigs": self._game_configs,
+            }
+        msg = {"inputs": self._get_inputs(), "configs": configs}
         logging.info(f"Sending controller ready: {msg}")
         self._send_threadsafe("controllerReady", payload=msg)
 
