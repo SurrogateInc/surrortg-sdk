@@ -106,7 +106,6 @@ class ObjectHuntGame(GameTemplate):
         if len(self.filter.ids) == 0:
             logging.info("All found!")
             self.game.io.send_score(score=1, final_score=True)
-            return
         else:
             logging.info(f"{len(self.filter.ids)} markers left!")
 

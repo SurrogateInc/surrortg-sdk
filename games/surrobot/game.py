@@ -164,14 +164,14 @@ class SurrobotGame(Game):
 
     async def on_config(self):
         # Read game template
-        current_template = self.templates[
+        new_template = self.templates[
             self.configs["custom"]["game-template"] - 1
         ]
-        if self.template != current_template:
+        if self.template != new_template:
             # Cleanup old selection
             self.aruco_source.unregister_all_observers()
             # Select the new template
-            self.template = current_template
+            self.template = new_template
             await self.template.on_template_selected()
         logging.info(f"Game template: {type(self.template).__name__}")
         # Could we set inputs here based on the game template + slot config?
