@@ -1,6 +1,8 @@
 import asyncio
 import logging
 
+from games.surrobot.surrobot_config import Extension, Slot
+from surrortg.game_io import ConfigType
 from surrortg.image_recognition.aruco import ArucoFilter
 
 MARKER_IDS = [1, 2, 3]
@@ -13,6 +15,15 @@ LAPS = 3
 class GameTemplate:
     def __init__(self, game):
         self.game = game
+
+    def description(self):
+        return None
+
+    def game_configs(self):
+        return None
+
+    def slot_limits(self):
+        return None
 
     async def on_template_selected(self):
         pass
@@ -41,6 +52,32 @@ class RacingGame(GameTemplate):
             detection_cooldown=0.5,
         )
         self.lap = 1
+
+    def slot_limits(self):
+        return {
+            Slot.MOVEMENT: {
+                "default": Extension.DRIVE_4_WHEELS,
+                "extensions": [
+                    Extension.DRIVE_4_WHEELS,
+                    Extension.DRIVE_2_WHEELS,
+                ],
+            }
+        }
+
+    def game_configs(self):
+        return {
+            "max-laps": {
+                "title": "Maximum laps",
+                "valueType": ConfigType.INTEGER,
+                "default": 3,
+                "minimum": 1,
+                "maximum": 10,
+            }
+        }
+
+    async def on_config(self):
+        self.max_laps = self.game.config_parser.get_game_config("max-laps")
+        print(f"max-laps {self.max_laps}")
 
     def marker_callback(self, marker):
         logging.info(f"marker {marker.id} found")
@@ -99,6 +136,23 @@ class ObjectHuntGame(GameTemplate):
             detection_cooldown=0,
             detect_distance=DETECT_DISTANCE,
         )
+
+    def game_configs(self):
+        return {
+            "max-markers": {
+                "title": "Amount of markers",
+                "valueType": ConfigType.INTEGER,
+                "default": 3,
+                "minimum": 1,
+                "maximum": 20,
+            }
+        }
+
+    async def on_config(self):
+        self.max_markers = self.game.config_parser.get_game_config(
+            "max-markers"
+        )
+        print(f"max-markers {self.max_markers}")
 
     def marker_callback(self, marker):
         logging.info(f"marker {marker.id} found")

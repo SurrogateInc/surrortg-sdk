@@ -1,13 +1,20 @@
 import logging
+import os
 
-from games.surrobot.hw import Hw
+if os.getenv("MOCK_HW", False):
+    from games.surrobot.mock_hw import MockArucoDetector as ArucoDetector
+    from games.surrobot.mock_hw import MockHw as Hw
+else:
+    from games.surrobot.hw import Hw
+    from surrortg.image_recognition.aruco import ArucoDetector
+
+from games.surrobot.surrobot_config import ConfigParser, generate_configs
 from games.surrobot.surrobot_templates import (
     ExplorationGame,
     ObjectHuntGame,
     RacingGame,
 )
-from surrortg import ConfigType, Game
-from surrortg.image_recognition.aruco import ArucoDetector
+from surrortg import Game
 from surrortg.inputs import Joystick, KeyCode, LinearActuator
 
 
@@ -65,55 +72,17 @@ class ServosActuator(ServoActuator):
 
 class SurrobotGame(Game):
     async def on_init(self):
-        # Game Type Enum (Racing-Game, Free-Roam, Tag)
-        # Different game types can have restriction to slot options? & offer
-        # extra configuration spesific to game type.
-        # Every game-type has it's own game loop
-        # implementation. for e.g. racing-game requires 1 light sensor,
-        # 4 wheel or 2 wheel drive
-        # And the implementation will track lap times and send them to GE
-        self.io.register_config(
-            "game-template", ConfigType.INTEGER, 1, False, minimum=1, maximum=3
-        )
-        self.io.register_config(
-            "game-template-2[conditional]-max-laps",
-            ConfigType.INTEGER,
-            3,
-            False,
-            minimum=1,
-            maximum=10,
-        )
-        # Movement slot (side 4x motors, 4x servos)
-        # Offer 4 wheel drive, 2 wheel drive etc
-        self.io.register_config(
-            "movement-slot", ConfigType.INTEGER, 1, False, minimum=1, maximum=4
-        )
-        self.io.register_config(
-            "movement-speed",
-            ConfigType.INTEGER,
-            8,
-            False,
-            minimum=1,
-            maximum=10,
-        )
-        # Top slot 1 (3x servos)
-        # Offer servo arm, camera pivot, etc
-        self.io.register_config(
-            "top-slot-1", ConfigType.INTEGER, 1, False, minimum=1, maximum=4
-        )
-        # Bottom slot (1x servo)
-        # Offer claw, button presser
-        self.io.register_config(
-            "bottom-slot", ConfigType.INTEGER, 1, False, minimum=1, maximum=2
-        )
+        self.templates = {
+            "racing": RacingGame(self),
+            "object-hunt": ObjectHuntGame(self),
+            "custom": ExplorationGame(self),
+        }
+        configs = generate_configs(self.templates, "racing")
+        self.io.set_game_configs(configs)
+        self.config_parser = ConfigParser(self)
 
         self.inputs = {}
         self.hw = Hw()
-        self.templates = [
-            ExplorationGame(self),
-            RacingGame(self),
-            ObjectHuntGame(self),
-        ]
 
         # Preferably the input configs could be "live reloaded" based on the
         # "slot" & etc configuration. For e.g movement slot selection
@@ -164,9 +133,7 @@ class SurrobotGame(Game):
 
     async def on_config(self):
         # Read game template
-        new_template = self.templates[
-            self.configs["custom"]["game-template"] - 1
-        ]
+        new_template = self.templates[self.config_parser.current_template()]
         if self.template != new_template:
             # Cleanup old selection
             self.aruco_source.unregister_all_observers()

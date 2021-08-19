@@ -38,3 +38,4 @@ pipeline = """bash -c '\
 docs = "docs/rebuild.sh"
 pdf-docs = "docs/rebuild_pdf.sh"
 dummy = "python -m games.dummy_game.game"
+surrobot = "python -m games.surrobot.game"
