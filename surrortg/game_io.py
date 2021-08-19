@@ -1,4 +1,5 @@
 import logging
+from enum import Enum
 
 from .config_parser import get_config
 from .custom_config import (
@@ -11,6 +12,19 @@ from .network.message_router import MultiSeatMessageRouter
 from .network.socket_handler import SocketHandler
 
 SURRORTG_VERSION = "0.2.2"
+
+
+class ScoreType(Enum):
+    POINTS = "points"
+    TIMESTAMP = "timestamp"
+    ELO = "elo"
+    TOTAL_WINS = "totalWins"
+    TOTAL_GAMES = "totalGames"
+
+
+class SortOrder(Enum):
+    ASCENDING = "ascending"
+    DESCENDING = "descending"
 
 
 class GameIO:
@@ -311,6 +325,31 @@ class GameIO:
         check_config_group(configs, configs, configs)
         self._game_configs = configs
 
+    def set_robot_configs(self, configs):
+        """Set robot-specific configs
+
+        Sets the custom configs for this specific robot. Some examples:
+        the speed of the robot or components connected to the robot.
+
+        See set_game_configs for description on the config dictionary.
+        """
+        check_config_group(configs, configs, configs)
+        self._robot_configs = configs
+
+    async def set_score_type(self, score_type, sort_order):
+        if not self._can_register_inputs:
+            raise RuntimeError(
+                "set_score_type called outside on_init|on_config"
+            )
+        assert isinstance(score_type, ScoreType), "'score_type' has to be enum"
+        assert isinstance(sort_order, SortOrder), "'sort_order' has to be enum"
+
+        payload = {
+            "scoreType": score_type.value,
+            "sortOrder": sort_order.value,
+        }
+        await self._send("setScoreType", payload=payload)
+
     def register_inputs(self, inputs, admin=False, bindable=True):
         """Registers inputs
 
@@ -343,17 +382,6 @@ class GameIO:
                     "admin": admin,
                     **handler_obj._get_default_keybinds(),
                 }
-
-    def set_robot_configs(self, configs):
-        """Set robot-specific configs
-
-        Sets the custom configs for this specific robot. Some examples:
-        the speed of the robot or components connected to the robot.
-
-        See set_game_configs for description on the config dictionary.
-        """
-        check_config_group(configs, configs, configs)
-        self._robot_configs = configs
 
     def unregister_inputs(self, ids):
         """Unregisters inputs
