@@ -9,65 +9,13 @@ else:
     from surrortg.image_recognition.aruco import ArucoDetector
 
 from games.surrobot.surrobot_config import ConfigParser, generate_configs
+from games.surrobot.surrobot_inputs import generate_inputs
 from games.surrobot.surrobot_templates import (
     ExplorationGame,
     ObjectHuntGame,
     RacingGame,
 )
 from surrortg import Game
-from surrortg.inputs import Joystick, KeyCode, LinearActuator
-
-
-class MotorJoystick(Joystick):
-    def __init__(self, motor_controller, custom_binds=None):
-        self.motor_controller = motor_controller
-        self.custom_binds = custom_binds
-
-    async def handle_coordinates(self, x, y, seat=0):
-        self.motor_controller.rotational_speed = x
-        self.motor_controller.longitudinal_speed = y
-
-    def get_default_keybinds(self):
-        if self.custom_binds:
-            return self.custom_binds
-        return super().get_default_keybinds()
-
-
-class ServoJoystick(Joystick):
-    def __init__(self, servo_x, servo_y=None, custom_binds=None):
-        self.servo_x = servo_x
-        self.servo_y = servo_y
-        self.custom_binds = custom_binds
-
-    async def handle_coordinates(self, x, y, seat=0):
-        self.servo_x.rotation_speed = x
-        if self.servo_y:
-            self.servo_y.rotation_speed = y
-
-    def get_default_keybinds(self):
-        if self.custom_binds:
-            return self.custom_binds
-        return super().get_default_keybinds()
-
-
-class ServoActuator(LinearActuator):
-    def __init__(self, servo, custom_binds=None):
-        self.servo = servo
-        self.custom_binds = custom_binds
-
-    async def drive_actuator(self, val, seat=0):
-        self.servo.rotation_speed = val
-
-    def get_default_keybinds(self):
-        if self.custom_binds:
-            return self.custom_binds
-        return super().get_default_keybinds()
-
-
-class ServosActuator(ServoActuator):
-    async def drive_actuator(self, val, seat=0):
-        for servo in self.servo:
-            servo.rotation_speed = val
 
 
 class SurrobotGame(Game):
@@ -84,49 +32,6 @@ class SurrobotGame(Game):
         self.inputs = {}
         self.hw = Hw()
 
-        # Preferably the input configs could be "live reloaded" based on the
-        # "slot" & etc configuration. For e.g movement slot selection
-        # "4 wheel drive" & "2 wheel drive" would give create following
-        # joystick with correct motor_controller (4 or 2 wheel)
-        motor_joystick = MotorJoystick(
-            self.hw.motor_controller,
-            custom_binds=[
-                {
-                    "up": KeyCode.KEY_W,
-                    "down": KeyCode.KEY_S,
-                    "left": KeyCode.KEY_A,
-                    "right": KeyCode.KEY_D,
-                }
-            ],
-        )
-        self.inputs["movement"] = motor_joystick
-
-        camera = ServoJoystick(
-            self.hw.servos[0],
-            self.hw.servos[1],
-            [
-                {
-                    "up": KeyCode.KEY_ARROW_UP,
-                    "down": KeyCode.KEY_ARROW_DOWN,
-                    "left": KeyCode.KEY_ARROW_LEFT,
-                    "right": KeyCode.KEY_ARROW_RIGHT,
-                }
-            ],
-        )
-        self.inputs["top-slot-1-camera"] = camera
-
-        claw = ServosActuator(
-            self.hw.servos,
-            [
-                {
-                    "min": "KeyN",
-                    "max": "KeyM",
-                }
-            ],
-        )
-        self.inputs["bottom-slot-claw"] = claw
-
-        self.io.register_inputs(self.inputs)
         self.hw.reset_eyes()
         self.aruco_source = await ArucoDetector.create()
         self.template = None
@@ -136,12 +41,17 @@ class SurrobotGame(Game):
         new_template = self.templates[self.config_parser.current_template()]
         if self.template != new_template:
             # Cleanup old selection
-            self.aruco_source.unregister_all_observers()
             # Select the new template
+            self.aruco_source.unregister_all_observers()
             self.template = new_template
             await self.template.on_template_selected()
         logging.info(f"Game template: {type(self.template).__name__}")
-        # Could we set inputs here based on the game template + slot config?
+
+        if self.inputs:
+            self.io.unregister_inputs(list(self.inputs.keys()))
+        self.inputs = generate_inputs(self.hw, self.config_parser)
+        self.io.register_inputs(self.inputs)
+
         await self.template.on_config()
 
     async def on_start(self):

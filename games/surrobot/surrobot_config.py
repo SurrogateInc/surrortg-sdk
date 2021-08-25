@@ -174,6 +174,7 @@ class ConfigParser:
         template_id = self.current_template()
         return self.configs()["game-type-group"][template_id + "-" + config_id]
 
-    def get_slot_confgi(self, slot):
+    def get_slot_config(self, slot):
         template_id = self.current_template()
-        return self.configs()["slot-config-" + template_id][slot.value]
+        extension_id = self.configs()["slot-config-" + template_id][slot.value]
+        return Extension(extension_id)
