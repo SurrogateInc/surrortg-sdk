@@ -66,7 +66,7 @@ class RacingGame(GameTemplate):
 
     def game_configs(self):
         return {
-            "max-laps": {
+            "maxLaps": {
                 "title": "Maximum laps",
                 "valueType": ConfigType.INTEGER,
                 "default": 3,
@@ -76,8 +76,8 @@ class RacingGame(GameTemplate):
         }
 
     async def on_config(self):
-        self.max_laps = self.game.config_parser.get_game_config("max-laps")
-        print(f"max-laps {self.max_laps}")
+        self.max_laps = self.game.config_parser.get_game_config("maxLaps")
+        print(f"max laps {self.max_laps}")
 
     def marker_callback(self, marker):
         logging.info(f"marker {marker.id} found")
@@ -139,7 +139,7 @@ class ObjectHuntGame(GameTemplate):
 
     def game_configs(self):
         return {
-            "max-markers": {
+            "maxMarkers": {
                 "title": "Amount of markers",
                 "valueType": ConfigType.INTEGER,
                 "default": 3,
@@ -150,9 +150,9 @@ class ObjectHuntGame(GameTemplate):
 
     async def on_config(self):
         self.max_markers = self.game.config_parser.get_game_config(
-            "max-markers"
+            "maxMarkers"
         )
-        print(f"max-markers {self.max_markers}")
+        print(f"max markers {self.max_markers}")
 
     def marker_callback(self, marker):
         logging.info(f"marker {marker.id} found")

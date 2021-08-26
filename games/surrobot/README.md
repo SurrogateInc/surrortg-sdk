@@ -1,3 +1,14 @@
+# Surrobot
+
+## How to run for development
+
+The surrobot game template can be run with:
+`pipenv run surrobot`
+
+The surrobot implementation has mock classes for hardware so the code can be
+run on other devices than the physical bot. To enable the mocks use:
+`MOCK_HW=True pipenv run surrobot`
+
 ## Open questions
 
 ### 1. Do we have different game modes as different game.py implementations?

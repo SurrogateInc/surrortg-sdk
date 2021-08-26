@@ -113,7 +113,9 @@ def check_config_variable(id, variable, root):
         variable["description"], str
     ), f"[{id}] Description must be a string"
     value_type = variable["valueType"]
-    assert isinstance(value_type, ConfigType) or ConfigType(value_type), (
+    assert isinstance(value_type, ConfigType) or value_type in [
+        c.value for c in ConfigType
+    ], (
         f"[{id}] 'value_type' must be a valid ConfigType ",
         "(string | number | integer | bool)",
     )

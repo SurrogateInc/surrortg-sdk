@@ -22,7 +22,7 @@ class SurrobotGame(Game):
     async def on_init(self):
         self.templates = {
             "racing": RacingGame(self),
-            "object-hunt": ObjectHuntGame(self),
+            "objectHunt": ObjectHuntGame(self),
             "custom": ExplorationGame(self),
         }
         configs = generate_configs(self.templates, "racing")

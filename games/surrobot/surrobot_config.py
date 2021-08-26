@@ -4,10 +4,10 @@ from surrortg.game_io import ConfigType
 
 
 class Slot(Enum):
-    TOP_FRONT = "top-front"
-    TOP_BACK = "top-back"
-    BOTTOM_FRONT = "bottom-front"
-    BOTTOM_SENSOR = "bottom-sensor"
+    TOP_FRONT = "topFront"
+    TOP_BACK = "topBack"
+    BOTTOM_FRONT = "bottomFront"
+    BOTTOM_SENSOR = "bottomSensor"
     MOVEMENT = "movement"
     BACK = "back"
 
@@ -15,12 +15,12 @@ class Slot(Enum):
 class Extension(Enum):
     DISABLED = "disabled"
     CUSTOM = "custom"
-    CAMERA_2_AXIS = "camera-2-axis"
-    ROBOT_ARM = "robot-arm"
-    BUTTON_PRESSER = "button-presser"
-    COLOR_SENSOR = "color-sensor"
-    DRIVE_4_WHEELS = "4-wheel-drive"
-    DRIVE_2_WHEELS = "2-wheel-drive"
+    CAMERA_2_AXIS = "camera2Axis"
+    ROBOT_ARM = "robotArm"
+    BUTTON_PRESSER = "buttonPresser"
+    COLOR_SENSOR = "colorSensor"
+    DRIVE_4_WHEELS = "drive4Wheels"
+    DRIVE_2_WHEELS = "drive2Wheels"
     CLAW = "claw"
 
 
@@ -98,9 +98,17 @@ def default_slot_config():
     }
 
 
+def game_settings_group_id(template_id):
+    return "gameSettingGroup" + template_id.capitalize()
+
+
+def slot_group_id(template_id):
+    return "slotGroup" + template_id.capitalize()
+
+
 def generate_configs(templates, default_game_type):
-    game_type_group = {"children": {}, "title": "Game Settings"}
-    root_config = {"children": {"game-type-group": game_type_group}}
+    game_type_group = {"children": {}, "title": "Game Type"}
+    root_config = {"children": {"gameTypeGroup": game_type_group}}
     game_type_enum_list = []
     for template_id, template in templates.items():
         enum_config = {"value": template_id}
@@ -110,27 +118,34 @@ def generate_configs(templates, default_game_type):
             enum_config["description"] = description
         game_type_enum_list.append(enum_config)
 
-    game_type_group["children"]["game-type"] = {
+    game_type_group["children"]["gameType"] = {
         "title": "Game Type",
         "valueType": ConfigType.STRING,
         "default": default_game_type,
         "enum": game_type_enum_list,
     }
     for template_id, template in templates.items():
+
         game_configs = template.game_configs()
         if game_configs:
-            for config_id, config in game_configs.items():
-                config["conditions"] = [
-                    {"variable": ".game-type", "value": template_id}
-                ]
-                game_type_group["children"][
-                    template_id + "-" + config_id
-                ] = config
+            game_settings_group = {
+                "title": "Game Settings",
+                "children": game_configs,
+                "conditions": [
+                    {
+                        "variable": "gameTypeGroup.gameType",
+                        "value": template_id,
+                    }
+                ],
+            }
+            root_config["children"][
+                game_settings_group_id(template_id)
+            ] = game_settings_group
 
         template_slot_group = {
             "title": "Slot Configuration",
             "conditions": [
-                {"variable": "game-type-group.game-type", "value": template_id}
+                {"variable": "gameTypeGroup.gameType", "value": template_id}
             ],
         }
 
@@ -154,7 +169,7 @@ def generate_configs(templates, default_game_type):
 
         template_slot_group["children"] = template_slot_config
         root_config["children"][
-            "slot-config-" + template_id
+            slot_group_id(template_id)
         ] = template_slot_group
 
     return root_config
@@ -168,13 +183,13 @@ class ConfigParser:
         return self.game.configs["custom"]
 
     def current_template(self):
-        return self.configs()["game-type-group"]["game-type"]
+        return self.configs()["gameTypeGroup"]["gameType"]
 
     def get_game_config(self, config_id):
         template_id = self.current_template()
-        return self.configs()["game-type-group"][template_id + "-" + config_id]
+        return self.configs()[game_settings_group_id(template_id)][config_id]
 
     def get_slot_config(self, slot):
         template_id = self.current_template()
-        extension_id = self.configs()["slot-config-" + template_id][slot.value]
+        extension_id = self.configs()[slot_group_id(template_id)][slot.value]
         return Extension(extension_id)

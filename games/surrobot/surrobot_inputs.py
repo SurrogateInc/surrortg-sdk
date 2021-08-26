@@ -102,7 +102,7 @@ def generate_inputs(hw, config_parser):
                 }
             ],
         )
-        inputs["top-front-camera"] = camera
+        inputs["topFrontCamera"] = camera
 
     bottom_front_slot = config_parser.get_slot_config(Slot.BOTTOM_FRONT)
     if bottom_front_slot is Extension.CLAW:
@@ -115,9 +115,9 @@ def generate_inputs(hw, config_parser):
                 }
             ],
         )
-        inputs["bottom-front-claw"] = claw
+        inputs["bottomFrontClaw"] = claw
     elif bottom_front_slot is Extension.BUTTON_PRESSER:
         presser = ServoButton(hw.servos[4], custom_binds=["KeyN"])
-        inputs["bottom-front-button-presser"] = presser
+        inputs["bottomFrontButtonPresser"] = presser
 
     return inputs
