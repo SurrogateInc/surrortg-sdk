@@ -164,8 +164,8 @@ class MotorController:
         # Add rotational speed
         speed_fl += self._rotational_speed
         speed_fr -= self._rotational_speed
-        speed_rr += self._rotational_speed
-        speed_rl -= self._rotational_speed
+        speed_rr -= self._rotational_speed
+        speed_rl += self._rotational_speed
 
         # Limit one wheel speed between -1 to 1
         if speed_fl > 1:
