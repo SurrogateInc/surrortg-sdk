@@ -2,20 +2,17 @@ import logging
 
 import pigpio
 
-# PWM frequency for motor speed control
-MOTOR_PWM_FREQ = 30000
-
 
 class DRV8833:
-    def __init__(self, *, ain1, ain2, bin1, bin2, sleep):
+    def __init__(self, *, ain1, ain2, bin1, bin2, sleep=None, pwm_freq=40000):
         # Connect to pigpio daemon
         self._pi = pigpio.pi()
         if not self._pi.connected:
             raise RuntimeError("Could not connect to pigpio daemon.")
 
         # Store motor speeds
-        self._motor_a_speed = 0
-        self._motor_b_speed = 0
+        self._motor_1_speed = 0
+        self._motor_2_speed = 0
 
         # Store motor driver control pins
         self._ain1 = ain1
@@ -29,20 +26,22 @@ class DRV8833:
         self._pi.set_mode(self._ain2, pigpio.OUTPUT)
         self._pi.set_mode(self._bin1, pigpio.OUTPUT)
         self._pi.set_mode(self._bin2, pigpio.OUTPUT)
-        self._pi.set_mode(self._sleep, pigpio.OUTPUT)
+        if self._sleep is not None:
+            self._pi.set_mode(self._sleep, pigpio.OUTPUT)
 
         # Set motor driver speed control PWM frequency
-        self._pi.set_PWM_frequency(self._ain1, MOTOR_PWM_FREQ)
-        self._pi.set_PWM_frequency(self._ain2, MOTOR_PWM_FREQ)
-        self._pi.set_PWM_frequency(self._bin1, MOTOR_PWM_FREQ)
-        self._pi.set_PWM_frequency(self._bin2, MOTOR_PWM_FREQ)
+        self._pi.set_PWM_frequency(self._ain1, pwm_freq)
+        self._pi.set_PWM_frequency(self._ain2, pwm_freq)
+        self._pi.set_PWM_frequency(self._bin1, pwm_freq)
+        self._pi.set_PWM_frequency(self._bin2, pwm_freq)
 
         # Stop motors and enable motor driver
         self._pi.set_PWM_dutycycle(self._ain1, 0)
         self._pi.set_PWM_dutycycle(self._ain2, 0)
         self._pi.set_PWM_dutycycle(self._bin1, 0)
         self._pi.set_PWM_dutycycle(self._bin2, 0)
-        self._pi.write(self._sleep, pigpio.HIGH)
+        if self._sleep is not None:
+            self._pi.write(self._sleep, pigpio.HIGH)
 
     def set_motor_speed(self, *, motor_number, speed):
         assert 1 <= motor_number <= 2, f"Invalid motor number: {motor_number}."
@@ -50,9 +49,9 @@ class DRV8833:
         logging.debug(f"Motor {motor_number} speed: {speed}.")
 
         if motor_number == 1:
-            self._motor_a_speed = speed
+            self._motor_1_speed = speed
         else:
-            self._motor_b_speed = speed
+            self._motor_2_speed = speed
 
         # Convert the speed to range of 0 - 255
         speed = round(speed * 255)
@@ -84,9 +83,9 @@ class DRV8833:
         assert 1 <= motor_number <= 2, f"Invalid motor number: {motor_number}."
 
         if motor_number == 1:
-            return self._motor_a_speed
+            return self._motor_1_speed
         else:
-            return self._motor_b_speed
+            return self._motor_2_speed
 
 
 class DRV8833Motor:

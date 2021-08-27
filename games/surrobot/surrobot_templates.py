@@ -86,7 +86,7 @@ class RacingGame(GameTemplate):
             if len(self.filter.ids) == 0:
                 self.lap += 1
                 self.filter.ids = MARKER_IDS.copy()
-                self.game.io.send_lap()  # ignored by ge currently
+                self.game.io.send_lap()  # Ignored by ge currently
                 if self.lap > LAPS:
                     logging.info("last lap finished!")
                     self.game.io.send_score(
@@ -97,14 +97,14 @@ class RacingGame(GameTemplate):
             if self.lap <= LAPS:
                 progress = round(1 - len(self.filter.ids) / len(MARKER_IDS), 2)
                 logging.info(f"progress: {progress}, lap {self.lap}/{LAPS}")
-                self.game.io.send_progress(progress)  # ignored by ge currently
+                self.game.io.send_progress(progress)  # Ignored by ge currently
 
     async def on_start(self):
         self.lap = 1
         self.filter.ids = MARKER_IDS.copy()
         self.filter.start()
 
-        # color sensor checking code
+        # Color sensor checking code
         """
         start_time = time.time()
         self.game.hw.color_sensor.active = True

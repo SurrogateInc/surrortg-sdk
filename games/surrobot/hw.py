@@ -11,29 +11,24 @@ from games.surrobot.DRV8833 import DRV8833, DRV8833Motor, MotorController
 from surrortg.devices import SafeTCS34725, Servo, i2c_connected
 
 # Motor driver control pins
-
 # Front left motor
-MOTOR_FL_IN_1 = 22
-MOTOR_FL_IN_2 = 23
+MOTOR_FL_IN_1 = 16
+MOTOR_FL_IN_2 = 20
 # Front right motor
-MOTOR_FR_IN_1 = 17
-MOTOR_FR_IN_2 = 27
+MOTOR_FR_IN_1 = 26
+MOTOR_FR_IN_2 = 21
 # Rear right motor
-MOTOR_RR_IN_1 = 26
-MOTOR_RR_IN_2 = 19
+MOTOR_RR_IN_1 = 19
+MOTOR_RR_IN_2 = 13
 # Rear left motor
-MOTOR_RL_IN_1 = 5
-MOTOR_RL_IN_2 = 6
+MOTOR_RL_IN_1 = 6
+MOTOR_RL_IN_2 = 12
 
-FRONT_MOTORS_SLEEP = 24
-REAR_MOTORS_SLEEP = 13
-
-SERVO_PINS = [21, 20, 16, 13, 12, 25]
+SERVO_PINS = [17, 27, 22, 25, 24, 23, 5, 18]
 
 I2C_DEVICES = {
     "right oled": "0x3d",
     "left oled": "0x3c",
-    "servo board": "0x40",
     "color sensor": "0x29",
 }
 
@@ -54,23 +49,21 @@ class Hw:
         self.color_sensor.integration_time = 150
         self.color_sensor.active = False
 
-        # Create motor drivers, one for front and one for rear
+        # Create motor drivers, one for front and one for rear motors
         self.motor_driver_front = DRV8833(
             ain1=MOTOR_FL_IN_1,
             ain2=MOTOR_FL_IN_2,
             bin1=MOTOR_FR_IN_1,
             bin2=MOTOR_FR_IN_2,
-            sleep=FRONT_MOTORS_SLEEP,
         )
         self.motor_driver_rear = DRV8833(
             ain1=MOTOR_RR_IN_1,
             ain2=MOTOR_RR_IN_2,
             bin1=MOTOR_RL_IN_1,
             bin2=MOTOR_RL_IN_2,
-            sleep=REAR_MOTORS_SLEEP,
         )
 
-        # Create motor drivers for each 4 motor
+        # Abstract motor drivers into 4 individual motors
         self.motor_fl = DRV8833Motor(
             drv8833=self.motor_driver_front, motor_number=1, direction="-"
         )

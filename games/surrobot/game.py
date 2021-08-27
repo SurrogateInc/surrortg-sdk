@@ -60,7 +60,7 @@ class SurrobotGame(Game):
 
     async def on_finish(self):
         logging.info("Game ends")
-        # if reset during previous game self.template might not exist
+        # If reset during previous game self.template might not exist
         if self.template is not None:
             await self.template.on_finish()
 

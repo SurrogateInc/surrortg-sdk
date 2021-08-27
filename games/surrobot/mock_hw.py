@@ -11,7 +11,7 @@ class MockServo:
 
 class MockOled:
     def write(self, txt):
-        print(f"Writin to eye: {txt}")
+        print(f"Writing to eye: {txt}")
 
 
 class MockColorSensor:
