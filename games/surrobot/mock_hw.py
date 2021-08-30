@@ -10,8 +10,14 @@ class MockServo:
 
 
 class MockOled:
-    def write(self, txt):
-        print(f"Writing to eye: {txt}")
+    def show_text(self, txt):
+        print(f"Writing text to eye: {txt}")
+
+    def show_image(self, image):
+        print("Showing image on eye")
+
+    def clear(self):
+        print("Clearing eye")
 
 
 class MockColorSensor:
@@ -43,8 +49,8 @@ class MockHw:
         self.motor_controller = MockMotorController()
 
     def reset_eyes(self):
-        self.left_eye.write("left eye")
-        self.right_eye.write("right eye")
+        self.left_eye.show_text("left eye")
+        self.right_eye.show_text("right eye")
 
     def get_cpu_temperature(self):
         return 0
