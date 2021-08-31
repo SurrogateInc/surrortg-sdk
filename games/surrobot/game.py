@@ -38,7 +38,15 @@ class SurrobotGame(Game):
 
     async def on_config(self):
         # Read game template
-        new_template = self.templates[self.config_parser.current_template()]
+        # Default to "custom" if template id does not match to know
+        # templates. This can happen for e.g. when robots with different
+        # surrogate sdk versions connect to same GE
+        # Note: The default template should not send scores
+        # or otherwise affect the GE game loop
+        new_template = self.templates["custom"]
+        new_template_id = self.config_parser.current_template()
+        if new_template_id in self.templates:
+            new_template = self.templates[new_template_id]
         if self.template != new_template:
             # Cleanup old selection
             # Select the new template
