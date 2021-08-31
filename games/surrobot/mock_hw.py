@@ -1,3 +1,5 @@
+import logging
+
 SERVO_PINS = [21, 20, 16, 13, 12, 25]
 
 
@@ -6,18 +8,18 @@ class MockServo:
         self.pin = pin
 
     async def rotate_to(self, position, rotation_speed=None):
-        print(f"Moving servo {self.pin} to position: {position}")
+        logging.info(f"Moving servo {self.pin} to position: {position}")
 
 
 class MockOled:
     def show_text(self, txt):
-        print(f"Writing text to eye: {txt}")
+        logging.info(f"Writing text to eye: {txt}")
 
     def show_image(self, image):
-        print("Showing image on eye")
+        logging.info("Showing image on eye")
 
     def clear(self):
-        print("Clearing eye")
+        logging.info("Clearing eye")
 
 
 class MockColorSensor:
