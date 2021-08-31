@@ -1,13 +1,14 @@
 import asyncio
 import logging
+import time
 
 from games.surrobot.surrobot_config import Extension, Slot
 from surrortg.game_io import ConfigType
 from surrortg.image_recognition.aruco import ArucoFilter
 
+# These are still used in ObjectHuntGame, to be replaced with new configs
 MARKER_IDS = [1, 2, 3]
 DETECT_DISTANCE = 0
-LAPS = 3
 
 
 # TODO some cleanup function when a template is changed
@@ -45,13 +46,23 @@ class ExplorationGame(GameTemplate):
 
 
 class RacingGame(GameTemplate):
-    async def on_template_selected(self):
-        self.filter = ArucoFilter(
-            self.marker_callback,
-            self.game.aruco_source,
-            detection_cooldown=0.5,
-        )
-        self.lap = 1
+    def game_configs(self):
+        return {
+            "maxLaps": {
+                "title": "Number of laps",
+                "valueType": ConfigType.INTEGER,
+                "default": 3,
+                "minimum": 1,
+                "maximum": 10,
+            },
+            "markerCount": {
+                "title": "Number of markers",
+                "valueType": ConfigType.INTEGER,
+                "default": 3,
+                "minimum": 3,
+                "maximum": 50,
+            },
+        }
 
     def slot_limits(self):
         return {
@@ -64,68 +75,60 @@ class RacingGame(GameTemplate):
             }
         }
 
-    def game_configs(self):
-        return {
-            "maxLaps": {
-                "title": "Maximum laps",
-                "valueType": ConfigType.INTEGER,
-                "default": 3,
-                "minimum": 1,
-                "maximum": 10,
-            }
-        }
+    async def on_template_selected(self):
+        self.filter = ArucoFilter(
+            self.marker_callback,
+            self.game.aruco_source,
+            detection_cooldown=0.5,
+        )
 
     async def on_config(self):
         self.max_laps = self.game.config_parser.get_game_config("maxLaps")
-        print(f"max laps {self.max_laps}")
-
-    def marker_callback(self, marker):
-        logging.info(f"marker {marker.id} found")
-        if len(self.filter.ids) != 0 and marker.id == min(self.filter.ids):
-            self.filter.ids.remove(marker.id)
-            if len(self.filter.ids) == 0:
-                self.lap += 1
-                self.filter.ids = MARKER_IDS.copy()
-                self.game.io.send_lap()  # Ignored by ge currently
-                if self.lap > LAPS:
-                    logging.info("last lap finished!")
-                    self.game.io.send_score(
-                        score=1, seat=0, seat_final_score=True
-                    )
-                    return
-
-            if self.lap <= LAPS:
-                progress = round(1 - len(self.filter.ids) / len(MARKER_IDS), 2)
-                logging.info(f"progress: {progress}, lap {self.lap}/{LAPS}")
-                self.game.io.send_progress(progress)  # Ignored by ge currently
+        self.marker_count = self.game.config_parser.get_game_config(
+            "markerCount"
+        )
 
     async def on_start(self):
-        self.lap = 1
-        self.filter.ids = MARKER_IDS.copy()
+        self.start_time = time.perf_counter()
+        self.lap = 0
+        self.next_marker = 1
+        self.filter.ids = [1]
         self.filter.start()
 
-        # Color sensor checking code
-        """
-        start_time = time.time()
-        self.game.hw.color_sensor.active = True
-        while True:
-            await asyncio.sleep(0.5)
-            temp_text = f"CPU: {self.game.hw.get_cpu_temperature()} C"
-            self.game.hw.right_eye.write(temp_text)
-            logging.info(temp_text)
-            lux = self.game.hw.color_sensor.lux
-            lux_text = f"lux: {lux}"
-            self.game.hw.left_eye.write(lux_text)
-            logging.info(lux_text)
-            if lux is not None and lux > 800:
-                end_time = time.time()
-                return end_time - start_time
-        """
-
     async def on_finish(self):
+        self.game.io.disable_inputs()
         self.filter.stop()
-        self.game.hw.color_sensor.active = False
         self.game.hw.reset_eyes()
+
+    def marker_callback(self, marker):
+        logging.info(f"Marker {marker.id} found")
+
+        # If start/finish line was found
+        if marker.id == 1:
+            self.lap += 1
+            logging.info(f"Lap {self.lap}/{self.max_laps}")
+
+        # If last lap was finished
+        if self.lap > self.max_laps:
+            time_ms = self.seconds_to_ms(time.perf_counter() - self.start_time)
+            self.game.io.send_score(
+                score=time_ms, seat=0, seat_final_score=True
+            )
+            logging.info("Race finished!")
+
+        # If last marker was found
+        if marker.id == self.marker_count:
+            self.next_marker = 1
+        else:
+            self.next_marker += 1
+
+        # Set new marker id
+        self.filter.ids = [self.next_marker]
+
+    def seconds_to_ms(self, seconds):
+        ms = seconds * 1000
+        rounded_ms = round(ms, 0)
+        return rounded_ms
 
 
 class ObjectHuntGame(GameTemplate):
@@ -152,7 +155,6 @@ class ObjectHuntGame(GameTemplate):
         self.max_markers = self.game.config_parser.get_game_config(
             "maxMarkers"
         )
-        print(f"max markers {self.max_markers}")
 
     def marker_callback(self, marker):
         logging.info(f"marker {marker.id} found")
