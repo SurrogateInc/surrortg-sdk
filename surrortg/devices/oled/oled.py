@@ -96,23 +96,15 @@ class Oled:
 
             # Try showing only if in a working state
             if self._working:
-                time_now = time.time()
-
+                wait_time = self._wait_time_before_render()
                 # Try showing now only if enough time has passed
-                if time_now - self._last_update_ts > self._max_update_interval:
+                if wait_time < 0:
                     self._render_text(
                         text, x, y, invert_colors, font_size, fit_to_screen
                     )
                 # If not, create a task to write later
                 else:
-                    if (
-                        self._render_task is not None
-                        and not self._render_task.done()
-                    ):
-                        self._render_task.cancel()
-                    wait_time = self._max_update_interval - (
-                        time_now - self._last_update_ts
-                    )
+                    self._cancel_ongoing_render_tasks()
                     self._render_task = asyncio.create_task(
                         self._render_text_after_wait(
                             text,
@@ -148,20 +140,13 @@ class Oled:
 
         # Try showing only if in a working state
         if self._working:
-            time_now = time.time()
+            wait_time = self._wait_time_before_render()
             # Try showing now only if enough time has passed
-            if time_now - self._last_update_ts > self._max_update_interval:
+            if wait_time < 0:
                 self._render_image(image, invert_colors)
             # If not, create a task to write later
             else:
-                if (
-                    self._render_task is not None
-                    and not self._render_task.done()
-                ):
-                    self._render_task.cancel()
-                wait_time = self._max_update_interval - (
-                    time_now - self._last_update_ts
-                )
+                self._cancel_ongoing_render_tasks()
                 self._render_task = asyncio.create_task(
                     self._render_image_after_wait(
                         image, invert_colors, wait_time
@@ -180,6 +165,13 @@ class Oled:
             self._oled.fill(fill)
             self._safe_show()
             self._last_text_written = ""
+
+    def _cancel_ongoing_render_tasks(self):
+        if self._render_task is not None and not self._render_task.done():
+            self._render_task.cancel()
+
+    def _wait_time_before_render(self):
+        return self._max_update_interval - (time.time() - self._last_update_ts)
 
     def _render_text(
         self, text, x, y, invert_colors, font_size, fit_to_screen
