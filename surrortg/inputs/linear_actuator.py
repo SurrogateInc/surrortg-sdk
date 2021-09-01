@@ -3,10 +3,24 @@ import traceback
 from abc import abstractmethod
 
 from .input import Input
+from .input_config import assert_keys_object
 
 
 class LinearActuator(Input):
     """A class for moving linear actuators"""
+
+    def validate_defaults(self, defaults):
+        super().validate_defaults(defaults)
+        assert defaults.keys() <= {
+            "humanReadableName",
+            "onScreenPosition",
+            "minKeys",
+            "maxKeys",
+        }, "there were extra items in defaults"
+        assert "minKeys" in defaults
+        assert_keys_object(defaults["minKeys"])
+        assert "maxKeys" in defaults
+        assert_keys_object(defaults["maxKeys"])
 
     async def _on_input(self, command, seat):
         """LinearActuator input functionality

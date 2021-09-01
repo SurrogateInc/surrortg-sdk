@@ -380,7 +380,7 @@ class GameIO:
                 self.input_bindings[input_id] = {
                     "type": handler_obj.get_name(),
                     "admin": admin,
-                    **handler_obj._get_default_keybinds(),
+                    **handler_obj.get_defaults_dict(),
                 }
 
     def unregister_inputs(self, ids):

@@ -3,6 +3,7 @@ import math
 from enum import Enum, auto
 
 from .input import Input
+from .input_config import assert_keys_object
 
 
 class Directions(Enum):
@@ -58,6 +59,25 @@ class Joystick(Input):
 
     Implement custom logic based on directions and amounts or x/y coordinates.
     """
+
+    def validate_defaults(self, defaults):
+        super().validate_defaults(defaults)
+        assert defaults.keys() <= {
+            "humanReadableName",
+            "onScreenPosition",
+            "xMinKeys",
+            "xMaxKeys",
+            "yMinKeys",
+            "yMaxKeys",
+        }, "there were extra items in defaults"
+        assert "xMinKeys" in defaults
+        assert_keys_object(defaults["xMinKeys"])
+        assert "xMaxKeys" in defaults
+        assert_keys_object(defaults["xMaxKeys"])
+        assert "yMinKeys" in defaults
+        assert_keys_object(defaults["yMinKeys"])
+        assert "yMaxKeys" in defaults
+        assert_keys_object(defaults["yMaxKeys"])
 
     def set_min_amount(self, min_amount):
         """Set joystick min_amount parameter
