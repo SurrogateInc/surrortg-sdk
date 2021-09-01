@@ -12,7 +12,7 @@ class GEConnectionError(Exception):
 
 
 class ApiClient(socketio.AsyncClientNamespace):
-    def __init__(self, client_id, url, game_id, token):
+    def __init__(self, client_id, url, game_id, token, message_listener=None):
         query = {
             "clientType": "robot",
             "gameId": game_id,
@@ -28,6 +28,7 @@ class ApiClient(socketio.AsyncClientNamespace):
         self.socketio_logger = logging.getLogger("socketio")
         self.url = self._get_query_url(url, query)
         self.connected = False
+        self.message_listener = message_listener
 
         super().__init__(SOCKETIO_NAMESPACE)
 
@@ -62,7 +63,15 @@ class ApiClient(socketio.AsyncClientNamespace):
         )
         return await future
 
-    async def on_message(self):
+    async def send(self, event, data):
+        await self.emit(
+            "message",
+            {"event": event, "payload": data, "dst": "gameEngine"},
+        )
+
+    async def on_message(self, data, *args):
+        if self.message_listener is not None:
+            asyncio.create_task(self.message_listener(data))
         pass
 
     async def connect(self):
@@ -95,6 +104,14 @@ class ApiClient(socketio.AsyncClientNamespace):
     async def set_local_url(self, url):
         res = await self.request("setLocalConfigUrl", {"url": url})
         logging.info(f"result {res}")
+
+    async def run(self):
+        while True:
+            # check periodically if still connected
+            while self.connected:
+                await asyncio.sleep(0.5)
+
+            await self.shutdown()
 
 
 if __name__ == "__main__":
