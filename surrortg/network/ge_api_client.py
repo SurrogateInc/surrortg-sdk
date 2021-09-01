@@ -7,6 +7,10 @@ import socketio
 SOCKETIO_NAMESPACE = "/api"
 
 
+class GEConnectionError(Exception):
+    pass
+
+
 class ApiClient(socketio.AsyncClientNamespace):
     def __init__(self, client_id, url, game_id, token):
         query = {
@@ -42,7 +46,7 @@ class ApiClient(socketio.AsyncClientNamespace):
     def on_disconnect(self):
         self.connected = False
         if self.connected_future is not None:
-            self.connected_future.set_exception(Exception())
+            self.connected_future.set_exception(GEConnectionError())
             self.connected_future = None
 
     @staticmethod
@@ -71,10 +75,10 @@ class ApiClient(socketio.AsyncClientNamespace):
             logging.error(f"GE socketio connection error: {msg}")
             self.connected = False
             if self.connected_future is not None:
-                self.connected_future.set_exception(Exception(msg))
+                self.connected_future.set_exception(GEConnectionError(msg))
                 self.connected_future = None
             if "Invalid robot token" in msg:
-                raise Exception(msg)
+                raise GEConnectionError(msg)
 
         self.sio.register_namespace(self)
 
