@@ -2,13 +2,25 @@ import logging
 from abc import abstractmethod
 
 from .input import Input
+from .input_config import assert_keycode_list
 
 
 class Switch(Input):
     """Switch input class
 
     Implement custom on() and off() logic
+    Read more about defaults from input_config.py
     """
+
+    def validate_defaults(self, defaults):
+        super().validate_defaults(defaults)
+        assert defaults.keys() <= {
+            "humanReadableName",
+            "onScreenPosition",
+            "keys",
+        }, "there were extra items in defaults"
+        assert "keys" in defaults
+        assert_keycode_list(defaults["keys"])
 
     async def _on_input(self, command, seat):
         """Switch input functionality
