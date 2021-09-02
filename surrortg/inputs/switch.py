@@ -9,6 +9,7 @@ class Switch(Input):
     """Switch input class
 
     Implement custom on() and off() logic
+    Read more about defaults from input_config.py
     """
 
     def validate_defaults(self, defaults):

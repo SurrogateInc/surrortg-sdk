@@ -7,7 +7,10 @@ from .input_config import assert_keys_object
 
 
 class LinearActuator(Input):
-    """A class for moving linear actuators"""
+    """A class for moving linear actuators
+
+    Read more about defaults from input_config.py
+    """
 
     def validate_defaults(self, defaults):
         super().validate_defaults(defaults)

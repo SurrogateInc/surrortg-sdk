@@ -4,7 +4,10 @@ from .input_config import assert_on_screen_position, convert_enums_to_values
 
 
 class Input(ABC):
-    """Base class for all user inputs"""
+    """Base class for all user inputs
+
+    Read more about defaults from input_config.py
+    """
 
     def __init__(self, defaults=None):
         if defaults:

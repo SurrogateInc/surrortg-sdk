@@ -58,6 +58,7 @@ class Joystick(Input):
     """Joystick input class
 
     Implement custom logic based on directions and amounts or x/y coordinates.
+    Read more about defaults from input_config.py
     """
 
     def validate_defaults(self, defaults):

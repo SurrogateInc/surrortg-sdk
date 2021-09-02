@@ -1,5 +1,73 @@
 from enum import Enum
 
+"""
+Helper functions and enums for creating default input configurations.
+
+Some examples:
+
+# For Switch input
+{
+    "humanReadableName": "shoot",
+    "onScreenPosition": on_screen_position(50, 80, 20),
+    "keys": [KeyCode.KEY_P],
+}
+
+# For LinearActuator input
+{
+    "humanReadableName": "camera",
+    "onScreenPosition": on_screen_position(
+        80, 80, 20, InputOrientation.VERTICAL
+    ),
+    "minKeys": keys_object("look down", [KeyCode.KEY_ARROW_DOWN]),
+    "maxKeys": keys_object("look up", [KeyCode.KEY_ARROW_UP]),
+}
+
+# For Joystick input
+{
+    "humanReadableName": "movement",
+    "onScreenPosition": on_screen_position(20, 80, 20),
+    "xMinKeys": keys_object("left", [KeyCode.KEY_A]),
+    "xMaxKeys": keys_object("right", [KeyCode.KEY_D]),
+    "yMinKeys": keys_object("back", [KeyCode.KEY_S]),
+    "yMaxKeys": keys_object("forward", [KeyCode.KEY_W])
+}
+
+Generic for all inputs
+humanReadableName: Name for the input in dashboard and game page
+                   "Controls" section.
+onScreenPosition: x, y, size and orientation of the input
+    - x: position of the input from left to right as 0-100% from the total
+         play area width
+    - y: position of the input from top to bottom as 0-100% from the total
+         play area height
+    - size: size of the input as 0-100% from the total play area width
+    - orientation: show mobile actuator (slider) in vertical or horizontal
+                   direction
+
+Switch
+keys: List of KeyCodes to send on/off commands
+
+LinearActuator
+minKeys: Name of the action and list of KeyCodes that will tricker
+         drive_actuator with value of -1
+maxKeys: Name of the action and list of KeyCodes that will tricker
+         drive_actuator with value of 1
+
+Joystick
+xMinKeys: Name of the action and list of KeyCodes that will tricker
+          handle_coordinates with x value of -1
+xMaxKeys: Name of the action and list of KeyCodes that will tricker
+          handle_coordinates with x value of 1
+yMinKeys: Name of the action and list of KeyCodes that will tricker
+          handle_coordinates with y value of -1
+yMaxKeys: Name of the action and list of KeyCodes that will tricker
+          handle_coordinates with y value of 1
+
+Note: minKeys, maxKeys, xMinKeys, xMaxKeys, yMinKeys and yMaxKeys
+name will be displayed on game page "Controls" section
+
+"""
+
 
 class KeyCode(Enum):
     """
@@ -135,10 +203,10 @@ def value_if_enum(obj):
 # Helper function to convert enums in dict/list structure to values
 def convert_enums_to_values(current):
     if isinstance(current, dict):
-        output = {}
-        for key, value in current.items():
-            output[value_if_enum(key)] = convert_enums_to_values(value)
-        return output
+        return {
+            value_if_enum(key): convert_enums_to_values(value)
+            for key, value in current.items()
+        }
     if isinstance(current, list):
         return list(map(convert_enums_to_values, current))
 
