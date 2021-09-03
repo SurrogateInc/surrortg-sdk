@@ -60,7 +60,7 @@ class Input(ABC):
 
     def get_defaults_dict(self):
         """Returns the default input config"""
-        if self.defaults:
+        if hasattr(self, "defaults") and self.defaults:
             return convert_enums_to_values(self.defaults)
         return self._get_default_keybinds()
 
