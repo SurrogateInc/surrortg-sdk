@@ -1,0 +1,13 @@
+[Unit]
+Description=Surrogate robot updater
+After=network.target pigpiod.service
+Wants=pigpiod.service
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=10
+WorkingDirectory=/home/pi/surrortg-sdk
+ExecStart=/usr/bin/python3 /home/pi/surrortg-sdk/surrortg/utils/updater.py
+[Install]
+WantedBy=multi-user.target
