@@ -48,6 +48,14 @@ parser.add_argument(
     action="store_true",
 )
 
+parser.add_argument(
+    "--check-only",
+    help="just run a check",
+    dest="check_only",
+    action="store_true",
+)
+
+
 args = parser.parse_args()
 
 
@@ -211,6 +219,59 @@ async def send_status(api_client, msg, progress=0):
     )
 
 
+def is_controller_up_to_date():
+    local = run(
+        ["git", "rev-parse", "HEAD"],
+        capture_output=True,
+        text=True,
+        cwd=args.path,
+    )
+
+    remote = run(
+        ["git", "rev-parse", "@{u}"],
+        capture_output=True,
+        text=True,
+        cwd=args.path,
+    )
+
+    if local.returncode != 0 or remote.returncode != 0:
+        raise Exception("Failed to get controller revisions")
+
+    if local.stdout == remote.stdout:
+        print("Controller is up to date")
+        return True
+    else:
+        print("Controller needs an update")
+        return False
+
+
+def is_apt_package_up_to_date(package):
+    status = run(
+        ["apt", "list", "--upgradable", package],
+        capture_output=True,
+        text=True,
+    )
+    if status.returncode != 0:
+        raise Exception()
+    lines = status.stdout.splitlines()
+    if len(lines) > 1 and package in lines[1]:
+        print(f"Apt package {package} needs update")
+        return False
+    print(f"Apt package {package} up to date")
+    return True
+
+
+def is_everything_up_to_date():
+    return is_controller_up_to_date() and all(
+        is_apt_package_up_to_date(package) for package in APT_PACKAGES
+    )
+
+
+def restart_self():
+    run(["systemctl", "restart", "srtg-updater"])
+    pass
+
+
 async def message_handler(raw_msg):
     try:
         msg = Message.from_dict(raw_msg)
@@ -219,20 +280,49 @@ async def message_handler(raw_msg):
 
     print(f"updater msg {msg}")
     if msg.event == "startUpdate":
-        await run_upgrade(functools.partial(send_status, api_client))
-        print("Update successful!")
+        if is_everything_up_to_date():
+            print("No need to update")
+        else:
+            await run_upgrade(functools.partial(send_status, api_client))
+            print("Update successful!")
+            restart_self()
         await api_client.send(
             "updateSuccessful", {"robot": config["device_id"]}
         )
     elif msg.event == "checkForUpdates":
         print("Checking for updates..")
+        if is_everything_up_to_date():
+            print("Software is up to date!")
+        else:
+            print("Software is not up to date")
+            version = ""
+            current = run(
+                ["git", "rev-parse", "HEAD"],
+                capture_output=True,
+                text=True,
+                cwd=args.path,
+            )
+            if current.returncode == 0:
+                version = current.stdout.splitlines()[0]
+            await api_client.send(
+                "updateAvailable",
+                {"robot": config["device_id"], "currentVersion": version},
+            )
 
 
 loop = asyncio.get_event_loop()
 
 if args.local:
-    loop.run_until_complete(local_printer("Starting a local update..", 0.00))
-    loop.run_until_complete(run_upgrade(local_printer))
+    if args.check_only:
+        if is_everything_up_to_date():
+            print("Software is up to date!")
+        else:
+            print("Software is not up to date")
+    else:
+        loop.run_until_complete(
+            local_printer("Starting a local update..", 0.00)
+        )
+        loop.run_until_complete(run_upgrade(local_printer))
 else:
     config = get_config(args.config)
     ge_config = config["game_engine"]
