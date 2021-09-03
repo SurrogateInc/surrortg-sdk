@@ -1,9 +1,15 @@
 import asyncio
 import logging
+import os
 import time
 
 import adafruit_ssd1306
 from PIL import Image, ImageChops, ImageDraw, ImageFont
+
+ASSETS_PATH = os.path.join(os.path.dirname(__file__), "assets")
+FONT_PATH = os.path.join(ASSETS_PATH, "FreeMono.ttf")
+LOGO_PATH = os.path.join(ASSETS_PATH, "surrogatetv_logo.png")
+LOADING_GIF_PATH = os.path.join(ASSETS_PATH, "loading_balls_2.gif")
 
 
 class Oled:
@@ -185,7 +191,7 @@ class Oled:
             actual_font_size = font_size
 
         # External font is used so that font size can be changed
-        font = ImageFont.truetype("FreeMono.ttf", actual_font_size)
+        font = ImageFont.truetype(FONT_PATH, actual_font_size)
         image = Image.new("1", (self._width, self._height))
         draw = ImageDraw.Draw(image)
         draw.text((x, y), text_processed, font=font, fill=255)
@@ -240,7 +246,7 @@ class Oled:
         self._render_image(image, invert_colors)
 
     def _fit_text(self, text, x, y, font_size):
-        font = ImageFont.truetype("FreeMono.ttf", font_size)
+        font = ImageFont.truetype(FONT_PATH, font_size)
         image = Image.new("1", (self._width, self._height))
         draw = ImageDraw.Draw(image)
         min_font_size = 20
@@ -327,12 +333,13 @@ if __name__ == "__main__":
         "NO WRAP HERE", invert_colors=True, font_size=18, fit_to_screen=False
     )
     time.sleep(2)
-
-    oled.show_image("smile.png")
+    oled.show_image(LOGO_PATH)
     time.sleep(2)
-
-    oled.show_image("box.gif", invert_colors=True)
-
+    oled.show_image(LOADING_GIF_PATH, invert_colors=True)
+    oled.clear()
+    time.sleep(0.5)
     oled.clear(invert_colors=True)
+    time.sleep(1)
+    oled.show_text("exiting", y=15)
     time.sleep(1)
     oled.clear()
