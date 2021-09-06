@@ -3,7 +3,7 @@ import asyncio
 import functools
 from subprocess import run
 
-from surrortg import ApiClient, Message, get_config
+from .. import ApiClient, Message, get_config
 
 DEFAULT_CONFIG_PATH = "/etc/srtg/srtg.toml"
 

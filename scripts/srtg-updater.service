@@ -8,6 +8,6 @@ Type=simple
 Restart=always
 RestartSec=10
 WorkingDirectory=/home/pi/surrortg-sdk
-ExecStart=/usr/bin/python3 /home/pi/surrortg-sdk/surrortg/utils/updater.py
+ExecStart=/usr/bin/python3 -m surrortg.utils.updater -p /home/pi/surrortg-sdk
 [Install]
 WantedBy=multi-user.target
