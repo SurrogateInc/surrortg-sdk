@@ -15,49 +15,6 @@ APT_PACKAGES = [
 ]
 APT_UNITS = ["srtg", "srtg-watcherstream"]
 
-parser = argparse.ArgumentParser("surrobot updater")
-parser.add_argument(
-    "-p",
-    "--path",
-    help="path to controller git repo root",
-    default="/opt/srtg-python",
-)
-
-parser.add_argument(
-    "-w", "--wait_for_input", dest="wait_for_input", action="store_true"
-)
-
-parser.add_argument(
-    "--controller-unit",
-    help="controller systemd unit name",
-    default="controller",
-)
-
-parser.add_argument(
-    "-c",
-    "--config",
-    help="path to the config file",
-    default=DEFAULT_CONFIG_PATH,
-)
-
-parser.add_argument(
-    "-l",
-    "--local",
-    help="run once locally, do not start update service",
-    dest="local",
-    action="store_true",
-)
-
-parser.add_argument(
-    "--check-only",
-    help="just run a check",
-    dest="check_only",
-    action="store_true",
-)
-
-
-args = parser.parse_args()
-
 
 def wait_for_input():
     if args.wait_for_input and args.local:
@@ -310,39 +267,82 @@ async def message_handler(raw_msg):
             )
 
 
-loop = asyncio.get_event_loop()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser("surrobot updater")
+    parser.add_argument(
+        "-p",
+        "--path",
+        help="path to controller git repo root",
+        default="/opt/srtg-python",
+    )
 
-if args.local:
-    if args.check_only:
-        if is_everything_up_to_date():
-            print("Software is up to date!")
+    parser.add_argument(
+        "-w", "--wait_for_input", dest="wait_for_input", action="store_true"
+    )
+
+    parser.add_argument(
+        "--controller-unit",
+        help="controller systemd unit name",
+        default="controller",
+    )
+
+    parser.add_argument(
+        "-c",
+        "--config",
+        help="path to the config file",
+        default=DEFAULT_CONFIG_PATH,
+    )
+
+    parser.add_argument(
+        "-l",
+        "--local",
+        help="run once locally, do not start update service",
+        dest="local",
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--check-only",
+        help="just run a check",
+        dest="check_only",
+        action="store_true",
+    )
+
+    args = parser.parse_args()
+
+    loop = asyncio.get_event_loop()
+
+    if args.local:
+        if args.check_only:
+            if is_everything_up_to_date():
+                print("Software is up to date!")
+            else:
+                print("Software is not up to date")
         else:
-            print("Software is not up to date")
+            loop.run_until_complete(
+                local_printer("Starting a local update..", 0.00)
+            )
+            loop.run_until_complete(run_upgrade(local_printer))
     else:
-        loop.run_until_complete(
-            local_printer("Starting a local update..", 0.00)
+        config = get_config(args.config)
+        ge_config = config["game_engine"]
+
+        api_client = ApiClient(
+            config["device_id"],
+            ge_config["url"],
+            ge_config["id"],
+            ge_config["token"],
+            message_handler,
         )
-        loop.run_until_complete(run_upgrade(local_printer))
-else:
-    config = get_config(args.config)
-    ge_config = config["game_engine"]
 
-    api_client = ApiClient(
-        config["device_id"],
-        ge_config["url"],
-        ge_config["id"],
-        ge_config["token"],
-        message_handler,
-    )
+        print("Starting updater..")
+        print(f"Connecting to {ge_config['url']}")
 
-    print("Starting updater..")
-    print(f"Connecting to {ge_config['url']}")
+        loop.run_until_complete(api_client.connect())
+        print("Registering updater..")
+        loop.run_until_complete(
+            api_client.send("registerUpdater", {"robot": config["device_id"]})
+        )
 
-    loop.run_until_complete(api_client.connect())
-    print("Registering updater..")
-    loop.run_until_complete(
-        api_client.send("registerUpdater", {"robot": config["device_id"]})
-    )
-
-    print("Registered updater..")
-    loop.run_until_complete(api_client.run())
+        print("Registered updater..")
+        loop.run_until_complete(api_client.run())
