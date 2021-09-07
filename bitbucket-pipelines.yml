@@ -46,6 +46,8 @@ definitions:
           - pipenv run docs
     - step: &github-sync
         name: github-sync
+        clone:
+          depth: 100
         script:
           - git remote add github-repo git@github.com:SurrogateInc/surrortg-sdk.git
           - git push github-repo HEAD:main
@@ -53,17 +55,6 @@ definitions:
 pipelines:
   default:
     - parallel:
-      - step: *unittests
-      - step: *isort
-      - step: *black
-      - step: *flake8
-      - step: *markdownlint
-      - step: *codespell
-      - step: *docs-test
-
-  branches:
-    main: # If tests/formatting fails, does not push to Github.
-      - parallel:
         - step: *unittests
         - step: *isort
         - step: *black
@@ -71,4 +62,15 @@ pipelines:
         - step: *markdownlint
         - step: *codespell
         - step: *docs-test
+
+  branches:
+    main: # If tests/formatting fails, does not push to Github.
+      - parallel:
+          - step: *unittests
+          - step: *isort
+          - step: *black
+          - step: *flake8
+          - step: *markdownlint
+          - step: *codespell
+          - step: *docs-test
       - step: *github-sync
