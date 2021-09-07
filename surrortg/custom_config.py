@@ -113,7 +113,9 @@ def check_config_variable(id, variable, root):
         variable["description"], str
     ), f"[{id}] Description must be a string"
     value_type = variable["valueType"]
-    assert isinstance(value_type, ConfigType), (
+    assert isinstance(value_type, ConfigType) or value_type in [
+        c.value for c in ConfigType
+    ], (
         f"[{id}] 'value_type' must be a valid ConfigType ",
         "(string | number | integer | bool)",
     )
@@ -142,7 +144,7 @@ def check_config_variable(id, variable, root):
             assert isinstance(
                 val["value"], types_to_check
             ), f"enum values must be of type {value_type}"
-            assert val["description"] is None or isinstance(
+            assert "description" not in val or isinstance(
                 val["description"], str
             ), "Enum description must be a string"
         assert default in map(

@@ -15,6 +15,9 @@ class ImportTest(unittest.TestCase):
         Some external package imports are mocked.
         """
 
+        # mock import hardware spesific libraries
+        import_mock_modules(["adafruit_tcs34725", "pigpio"])
+
         # DEVICES
         # ROOT
         from surrortg import Game, GameIO  # noqa:F401

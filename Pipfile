@@ -21,6 +21,7 @@ docutils = "==0.16" # versions above 0.16 break the rendering of lists in docs
 surrortg = {editable = true, path = "."}
 pillow = "*"
 rpi-ws281x = "*"
+adafruit-circuitpython-ssd1306 = "*"
 
 [scripts]
 tests = "python tests/main.py"
@@ -38,3 +39,4 @@ pipeline = """bash -c '\
 docs = "docs/rebuild.sh"
 pdf-docs = "docs/rebuild_pdf.sh"
 dummy = "python -m games.dummy_game.game"
+surrobot = "python -m games.surrobot.game"
