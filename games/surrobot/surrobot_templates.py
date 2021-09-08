@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import time
 
@@ -37,9 +36,47 @@ class GameTemplate:
 
 
 class ExplorationGame(GameTemplate):
+    def slot_limits(self):
+        return {
+            Slot.MOVEMENT: {
+                "default": Extension.DISABLED,
+                "extensions": [
+                    Extension.DRIVE_4_WHEELS,
+                    Extension.DRIVE_2_WHEELS,
+                    Extension.DISABLED,
+                ],
+            },
+            Slot.TOP_FRONT: {
+                "default": Extension.DISABLED,
+                "extensions": [
+                    Extension.BUTTON_PRESSER,
+                    Extension.DISABLED,
+                ],
+            },
+            Slot.TOP_BACK: {
+                "default": Extension.DISABLED,
+                "extensions": [
+                    Extension.BUTTON_PRESSER,
+                    Extension.DISABLED,
+                ],
+            },
+            Slot.BOTTOM_FRONT: {
+                "default": Extension.DISABLED,
+                "extensions": [
+                    Extension.BUTTON_PRESSER,
+                    Extension.DISABLED,
+                ],
+            },
+        }
+
+    async def on_config(self):
+        # Set correct score type and order
+        await self.game.io.set_score_type(
+            ScoreType.TOTAL_GAMES, SortOrder.DESCENDING
+        )
+
     async def on_start(self):
-        await asyncio.sleep(30)
-        self.game.io.send_score(score=1, final_score=True)
+        self.game.io.send_score(score=1)
 
 
 class RacingGame(GameTemplate):
