@@ -21,19 +21,7 @@ def wait_for_input():
         input("Press Enter to continue...")
 
 
-async def verify_repo_unchanged(expected_branch, msg_func):
-    result = run(
-        ["git", "rev-parse", "--abbrev-ref", "HEAD"],
-        capture_output=True,
-        text=True,
-        cwd=args.path,
-    )
-    if result.returncode != 0:
-        return False
-    branch = result.stdout.strip()
-
-    await msg_func(f"On branch {branch}", 0.01)
-
+async def verify_repo_unchanged(msg_func):
     result = run(
         ["git", "status", "--porcelain"],
         capture_output=True,
@@ -45,7 +33,7 @@ async def verify_repo_unchanged(expected_branch, msg_func):
 
     await msg_func(f"Repo has no changes: {has_no_changes}", 0.01)
 
-    return has_no_changes and branch == expected_branch
+    return has_no_changes
 
 
 def rollback_git(rev):
@@ -75,17 +63,20 @@ async def update_controller(git_branch, msg_func):
     wait_for_input()
     await msg_func("Retrieving new version..", 0.04)
     updated = run(
-        ["git", "pull", "origin", git_branch], cwd=args.path
+        ["git", "fetch", "origin", git_branch], cwd=args.path
     ).returncode
     if updated == 0:
-        await msg_func("Update successful, restarting..", 0.30)
-        run(["systemctl", "start", args.controller_unit])
-        await msg_func("Controller updated and started", 0.31)
-        return True
-    else:
-        await msg_func(f"Update unsuccessful, rollback to {old_commit}", 1.0)
-        rollback_git(old_commit)
-        return False
+        changed = run(
+            ["git", "checkout", f"origin/{git_branch}"], cwd=args.path
+        ).returncode
+        if changed == 0:
+            await msg_func("Fetch successful, restarting..", 0.30)
+            run(["systemctl", "start", args.controller_unit])
+            await msg_func("Controller updated and started", 0.31)
+            return True
+    await msg_func(f"Update unsuccessful, rollback to {old_commit}", 1.0)
+    rollback_git(old_commit)
+    return False
 
 
 def get_package_version(package):
@@ -102,7 +93,7 @@ def get_package_version(package):
 def rollback_apt(versions):
     run(
         [
-            "apt",
+            "apt-get",
             "install",
             "-y",
             *(f"{name}={version}" for name, version in versions.items()),
@@ -122,7 +113,7 @@ async def update_apt_packages(msg_func):
 
     await msg_func(f"Apt package versions: {versions}", 0.33)
 
-    result = run(["apt", "update", "-y"])
+    result = run(["apt-get", "update", "-y"])
     if result.returncode != 0:
         print("Failed to update apt cache")
         return False
@@ -136,7 +127,7 @@ async def update_apt_packages(msg_func):
     wait_for_input()
     await msg_func("Upgrading apt packages..", 0.45)
     upgraded = run(
-        ["apt", "install", "--only-upgrade", "-y", *APT_PACKAGES]
+        ["apt-get", "install", "--only-upgrade", "-y", *APT_PACKAGES]
     ).returncode
     if upgraded == 0:
         await msg_func("Update successful, starting streamer", 0.95)
@@ -151,13 +142,13 @@ async def update_apt_packages(msg_func):
         return False
 
 
-async def run_upgrade(msg_func):
-    unchanged = await verify_repo_unchanged("main", msg_func)
+async def run_upgrade(msg_func, branch):
+    unchanged = await verify_repo_unchanged(msg_func)
     await msg_func(f"Repo unchanged: {unchanged}", 0.01)
     wait_for_input()
 
     if unchanged:
-        await update_controller("main", msg_func)
+        await update_controller(branch, msg_func)
     else:
         await msg_func("Repo has changes, skipping controller update", 0.31)
 
@@ -166,6 +157,7 @@ async def run_upgrade(msg_func):
 
 async def local_printer(msg, progress=0):
     print(f"[{int(progress * 100)}%] {msg}")
+    msg_times.append((progress, time.time()))
 
 
 async def send_status(api_client, msg, progress=0):
@@ -176,7 +168,7 @@ async def send_status(api_client, msg, progress=0):
     )
 
 
-def is_controller_up_to_date():
+def is_controller_up_to_date(target_branch):
     local = run(
         ["git", "rev-parse", "HEAD"],
         capture_output=True,
@@ -185,7 +177,7 @@ def is_controller_up_to_date():
     )
 
     remote = run(
-        ["git", "rev-parse", "@{u}"],
+        ["git", "rev-parse", f"origin/{target_branch}"],
         capture_output=True,
         text=True,
         cwd=args.path,
@@ -202,31 +194,40 @@ def is_controller_up_to_date():
         return False
 
 
-def is_apt_package_up_to_date(package):
+def are_apt_packages_up_to_date(packages):
+    status = run(["apt-get", "update"])
+    if status.returncode != 0:
+        raise Exception()
     status = run(
-        ["apt", "list", "--upgradable", package],
+        ["apt-get", "-s", "--no-download", "upgrade", "-V", "--fix-missing"],
         capture_output=True,
         text=True,
     )
     if status.returncode != 0:
         raise Exception()
-    lines = status.stdout.splitlines()
-    if len(lines) > 1 and package in lines[1]:
+    apt_output = status.stdout.splitlines()
+    return all(
+        is_apt_package_up_to_date(package, apt_output) for package in packages
+    )
+
+
+def is_apt_package_up_to_date(package, apt_output):
+    result = [i for i in apt_output if package in i]
+    if len(result) > 0:
         print(f"Apt package {package} needs update")
         return False
     print(f"Apt package {package} up to date")
     return True
 
 
-def is_everything_up_to_date():
-    return is_controller_up_to_date() and all(
-        is_apt_package_up_to_date(package) for package in APT_PACKAGES
-    )
+def is_everything_up_to_date(target_branch):
+    return is_controller_up_to_date(
+        target_branch
+    ) and are_apt_packages_up_to_date(APT_PACKAGES)
 
 
 def restart_self():
     run(["systemctl", "restart", "srtg-updater"])
-    pass
 
 
 async def message_handler(raw_msg):
@@ -237,10 +238,14 @@ async def message_handler(raw_msg):
 
     print(f"updater msg {msg}")
     if msg.event == "startUpdate":
-        if is_everything_up_to_date():
+        branch = msg.payload["branch"]
+        if is_everything_up_to_date(branch):
             print("No need to update")
         else:
-            await run_upgrade(functools.partial(send_status, api_client))
+            print(f"Updating to branch {branch}")
+            await run_upgrade(
+                functools.partial(send_status, api_client), branch
+            )
             print("Update successful!")
             restart_self()
         await api_client.send(
@@ -248,7 +253,8 @@ async def message_handler(raw_msg):
         )
     elif msg.event == "checkForUpdates":
         print("Checking for updates..")
-        if is_everything_up_to_date():
+        branch = msg.payload["branch"]
+        if is_everything_up_to_date(branch):
             print("Software is up to date!")
         else:
             print("Software is not up to date")
@@ -308,13 +314,21 @@ if __name__ == "__main__":
         action="store_true",
     )
 
+    parser.add_argument(
+        "-b", "--branch", help="branch to change to", default="main"
+    )
+
     args = parser.parse_args()
 
     loop = asyncio.get_event_loop()
 
     if args.local:
+        import time
+
+        start_time = time.time()
+        msg_times = []
         if args.check_only:
-            if is_everything_up_to_date():
+            if is_everything_up_to_date(args.branch):
                 print("Software is up to date!")
             else:
                 print("Software is not up to date")
@@ -322,7 +336,15 @@ if __name__ == "__main__":
             loop.run_until_complete(
                 local_printer("Starting a local update..", 0.00)
             )
-            loop.run_until_complete(run_upgrade(local_printer))
+            loop.run_until_complete(run_upgrade(local_printer, args.branch))
+        end_time = time.time()
+        run_time = end_time - start_time
+        print(f"Total run time {run_time}")
+        for logtime in msg_times:
+            real = logtime[1] - start_time
+            print(
+                f"Real vs expected progress: {real / run_time} | {logtime[0]}"
+            )
     else:
         config = get_config(args.config)
         ge_config = config["game_engine"]
