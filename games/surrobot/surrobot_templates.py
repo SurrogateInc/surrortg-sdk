@@ -52,7 +52,7 @@ class RacingGame(GameTemplate):
                 "minimum": 1,
                 "maximum": 10,
             },
-            "markerCount": {
+            "maxMarkers": {
                 "title": "Number of markers",
                 "valueType": ConfigType.INTEGER,
                 "default": 3,
@@ -80,9 +80,15 @@ class RacingGame(GameTemplate):
         )
 
     async def on_config(self):
+        # Set correct score type and order
+        await self.game.io.set_score_type(
+            ScoreType.TIMESTAMP, SortOrder.ASCENDING
+        )
+
+        # Store custom configs
         self.max_laps = self.game.config_parser.get_game_config("maxLaps")
-        self.marker_count = self.game.config_parser.get_game_config(
-            "markerCount"
+        self.max_markers = self.game.config_parser.get_game_config(
+            "maxMarkers"
         )
 
     async def on_start(self):
@@ -94,7 +100,6 @@ class RacingGame(GameTemplate):
 
     async def on_finish(self):
         self.game.io.disable_inputs()
-        self.filter.stop()
         self.game.hw.reset_eyes()
 
     def marker_callback(self, marker):
@@ -111,10 +116,11 @@ class RacingGame(GameTemplate):
             self.game.io.send_score(
                 score=time_ms, seat=0, seat_final_score=True
             )
+            self.filter.stop()
             logging.info("Race finished!")
 
         # If last marker was found
-        if marker.id == self.marker_count:
+        if marker.id == self.max_markers:
             self.next_marker = 1
         else:
             self.next_marker += 1
