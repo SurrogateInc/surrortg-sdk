@@ -1,14 +1,10 @@
-import asyncio
 import logging
 import time
 
 from games.surrobot.surrobot_config import Extension, Slot
+from surrortg import ScoreType, SortOrder
 from surrortg.game_io import ConfigType
 from surrortg.image_recognition.aruco import ArucoFilter
-
-# These are still used in ObjectHuntGame, to be replaced with new configs
-MARKER_IDS = [1, 2, 3]
-DETECT_DISTANCE = 0
 
 
 # TODO some cleanup function when a template is changed
@@ -40,9 +36,47 @@ class GameTemplate:
 
 
 class ExplorationGame(GameTemplate):
+    def slot_limits(self):
+        return {
+            Slot.MOVEMENT: {
+                "default": Extension.DISABLED,
+                "extensions": [
+                    Extension.DRIVE_4_WHEELS,
+                    Extension.DRIVE_2_WHEELS,
+                    Extension.DISABLED,
+                ],
+            },
+            Slot.TOP_FRONT: {
+                "default": Extension.DISABLED,
+                "extensions": [
+                    Extension.BUTTON_PRESSER,
+                    Extension.DISABLED,
+                ],
+            },
+            Slot.TOP_BACK: {
+                "default": Extension.DISABLED,
+                "extensions": [
+                    Extension.BUTTON_PRESSER,
+                    Extension.DISABLED,
+                ],
+            },
+            Slot.BOTTOM_FRONT: {
+                "default": Extension.DISABLED,
+                "extensions": [
+                    Extension.BUTTON_PRESSER,
+                    Extension.DISABLED,
+                ],
+            },
+        }
+
+    async def on_config(self):
+        # Set correct score type and order
+        await self.game.io.set_score_type(
+            ScoreType.TOTAL_GAMES, SortOrder.DESCENDING
+        )
+
     async def on_start(self):
-        await asyncio.sleep(30)
-        self.game.io.send_score(score=1, final_score=True)
+        self.game.io.send_score(score=1)
 
 
 class RacingGame(GameTemplate):
@@ -55,7 +89,7 @@ class RacingGame(GameTemplate):
                 "minimum": 1,
                 "maximum": 10,
             },
-            "markerCount": {
+            "maxMarkers": {
                 "title": "Number of markers",
                 "valueType": ConfigType.INTEGER,
                 "default": 3,
@@ -83,9 +117,15 @@ class RacingGame(GameTemplate):
         )
 
     async def on_config(self):
+        # Set correct score type and order
+        await self.game.io.set_score_type(
+            ScoreType.TIMESTAMP, SortOrder.ASCENDING
+        )
+
+        # Store custom configs
         self.max_laps = self.game.config_parser.get_game_config("maxLaps")
-        self.marker_count = self.game.config_parser.get_game_config(
-            "markerCount"
+        self.max_markers = self.game.config_parser.get_game_config(
+            "maxMarkers"
         )
 
     async def on_start(self):
@@ -97,7 +137,6 @@ class RacingGame(GameTemplate):
 
     async def on_finish(self):
         self.game.io.disable_inputs()
-        self.filter.stop()
         self.game.hw.reset_eyes()
 
     def marker_callback(self, marker):
@@ -114,10 +153,11 @@ class RacingGame(GameTemplate):
             self.game.io.send_score(
                 score=time_ms, seat=0, seat_final_score=True
             )
+            self.filter.stop()
             logging.info("Race finished!")
 
         # If last marker was found
-        if marker.id == self.marker_count:
+        if marker.id == self.max_markers:
             self.next_marker = 1
         else:
             self.next_marker += 1
@@ -136,35 +176,74 @@ class ObjectHuntGame(GameTemplate):
         self.filter = ArucoFilter(
             self.marker_callback,
             self.game.aruco_source,
-            detection_cooldown=0,
-            detect_distance=DETECT_DISTANCE,
         )
 
     def game_configs(self):
         return {
             "maxMarkers": {
-                "title": "Amount of markers",
+                "title": "Number of markers",
                 "valueType": ConfigType.INTEGER,
                 "default": 3,
                 "minimum": 1,
-                "maximum": 20,
+                "maximum": 50,
+            }
+        }
+
+    def slot_limits(self):
+        return {
+            Slot.MOVEMENT: {
+                "default": Extension.DRIVE_4_WHEELS,
+                "extensions": [
+                    Extension.DRIVE_4_WHEELS,
+                ],
             }
         }
 
     async def on_config(self):
+        # Set correct score type and order
+        await self.game.io.set_score_type(
+            ScoreType.POINTS, SortOrder.DESCENDING
+        )
+
+        # Store custom configs
         self.max_markers = self.game.config_parser.get_game_config(
             "maxMarkers"
         )
 
-    def marker_callback(self, marker):
-        logging.info(f"marker {marker.id} found")
-        self.filter.ids.remove(marker.id)
-        if len(self.filter.ids) == 0:
-            logging.info("All found!")
-            self.game.io.send_score(score=1, final_score=True)
-        else:
-            logging.info(f"{len(self.filter.ids)} markers left!")
-
     async def on_start(self):
-        self.filter.ids = MARKER_IDS.copy()
+        self.filter.ids = list(range(1, self.max_markers + 1))
         self.filter.start()
+        self.search_start_time = time.perf_counter()
+        self.marker_max_score = 100
+        self.total_score = 0
+
+    async def on_finish(self):
+        self.game.io.disable_inputs()
+        self.game.hw.reset_eyes()
+
+    def marker_callback(self, marker):
+        logging.info(f"Marker {marker.id} found")
+
+        # Calculate marker search time and reset clock
+        search_end_time = time.perf_counter()
+        search_time = search_end_time - self.search_start_time
+        self.search_start_time = time.perf_counter()
+
+        # Add score from current marker to total score and send it to the GE.
+        # Score for each marker starts from marker maximum score and then
+        # decays exponentially as time goes on.
+        self.total_score += self.marker_max_score * (1 - 0.0228) ** search_time
+        self.game.io.send_score(round(self.total_score, 2))
+
+        # Mark filter as found
+        self.filter.ids.remove(marker.id)
+
+        # If last marker was found
+        if not self.filter.ids:
+            self.game.io.send_score(
+                score=round(self.total_score, 2), seat_final_score=True
+            )
+            self.filter.stop()
+            logging.info("All markers found!")
+        else:
+            logging.info(f"{len(self.filter.ids)} markers left")

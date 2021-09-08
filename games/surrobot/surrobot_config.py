@@ -58,6 +58,7 @@ def default_slot_config():
             "default": Extension.DISABLED.value,
             "enum": [
                 extension_enum_entry(Extension.CAMERA_2_AXIS),
+                extension_enum_entry(Extension.BUTTON_PRESSER),
                 extension_enum_entry(Extension.DISABLED),
                 extension_enum_entry(Extension.CUSTOM),
             ],
@@ -89,8 +90,7 @@ def default_slot_config():
             "valueType": ConfigType.STRING,
             "default": Extension.DISABLED.value,
             "enum": [
-                extension_enum_entry(Extension.CLAW),
-                extension_enum_entry(Extension.BUTTON_PRESSER),
+                extension_enum_entry(Extension.COLOR_SENSOR),
                 extension_enum_entry(Extension.DISABLED),
                 extension_enum_entry(Extension.CUSTOM),
             ],
