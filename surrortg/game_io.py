@@ -27,6 +27,10 @@ class SortOrder(Enum):
     DESCENDING = "descending"
 
 
+class CustomElementType:
+    STRING = "string"
+
+
 class GameIO:
     """For communication between Python and the game engine
 
@@ -636,6 +640,40 @@ class GameIO:
         self._send_threadsafe("adminLog", payload={"message": message})
         if also_log:
             logging.info(message)
+
+    def set_custom_overlay_text(self, element_id, text, player_only=True):
+        """Set text to custom frontend overlay element
+
+        :param element_id: Element id
+        :type element_id: string
+        :param text: Text to be displayed in the element
+        :type text: string
+        :param player_only: If true, set only for player of this robot,
+                            otherwise set for all players and watchers
+        :type player_only: boolean
+        """
+        self._send_threadsafe(
+            "setCustomOverlayText",
+            payload={
+                "elementId": element_id,
+                "playerOnly": player_only,
+                "config": {"value": text, "type": CustomElementType.STRING},
+            },
+        )
+
+    def remove_custom_overlay_text(self, element_id, player_only=True):
+        """Remove text from custom frontend overlay element
+
+        :param element_id: Element id
+        :type element_id: string
+        :param player_only: If true, remove only from player of this robot,
+                            otherwise remove from all players and watchers
+        :type player_only: boolean
+        """
+        self._send_threadsafe(
+            "removeCustomOverlayText",
+            payload={"elementId": element_id, "playerOnly": player_only},
+        )
 
     def _send_controller_ready(self):
         if len(self._custom_configs) > 0:
