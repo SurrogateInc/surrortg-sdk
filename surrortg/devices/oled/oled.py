@@ -146,7 +146,7 @@ class Oled:
         :type invert_colors: bool, optional
         """
         assert isinstance(
-            image, (str, Image)
+            image, (str, Image.Image)
         ), "image must be a string or an Image"
 
         # Try to re-init if broken
@@ -221,7 +221,7 @@ class Oled:
 
     def _render_image(self, image, invert_colors):
         assert isinstance(
-            image, (str, Image)
+            image, (str, Image.Image)
         ), "image must be a string or an Image"
 
         if isinstance(image, str):
@@ -230,7 +230,7 @@ class Oled:
             except FileNotFoundError:
                 logging.error(f"File '{image}' not found!")
                 return
-        elif isinstance(image, Image):
+        elif isinstance(image, Image.Image):
             image_in = image
 
         # Show image frame by frame
