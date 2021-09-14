@@ -6,3 +6,4 @@ pigpio
 Pillow
 rpi-ws281x
 adafruit-circuitpython-ssd1306
+adafruit-circuitpython-tcs34725
