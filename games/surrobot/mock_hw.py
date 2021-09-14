@@ -36,12 +36,26 @@ class MockColorSensor:
     def __init__(self):
         self.lux = 10
 
+class MockMotor:
+    def __init__(self, name):
+        self.name = name
+        self._speed = 0
+    
+    @property
+    def speed(self):
+        return self._speed
+
+    @speed.setter
+    def speed(self, speed):
+        logging.info(f"Change speed of {self.name} to: {speed}")
+        self._speed = speed
+
 
 class MockMotorController:
     def __init__(self):
         self.rotational_speed = 0
         self.longitudinal_speed = 0
-
+        
 
 class MockArucoDetector:
     @classmethod
@@ -69,6 +83,10 @@ class MockHw:
         self.left_eye = MockOled()
         self.right_eye = MockOled()
         self.color_sensor = MockColorSensor()
+        self.motor_fl = MockMotor("fl")
+        self.motor_fr = MockMotor("fr")
+        self.motor_rr = MockMotor("rr")
+        self.motor_rl = MockMotor("rl")
         self.motor_controller = MockMotorController()
 
     def reset_eyes(self):

@@ -81,6 +81,7 @@ def generate_inputs(hw, config_parser):
     joystick_size = 20
     actuator_size = 15
     button_size = 15
+    small_button_size = 10
     if movement_slot in [Extension.DRIVE_4_WHEELS, Extension.DRIVE_2_WHEELS]:
         # TODO: Set the motor_controller to some 4 or 2 wheel mode
         motor_joystick = MotorJoystick(
@@ -98,12 +99,13 @@ def generate_inputs(hw, config_parser):
     elif movement_slot is Extension.SEPARATE_MOTORS:
         motors = [hw.motor_fl, hw.motor_fr, hw.motor_rr, hw.motor_rl]
         keys = [[KeyCode.KEY_Q, KeyCode.KEY_W], [KeyCode.KEY_A, KeyCode.KEY_S], [KeyCode.KEY_E, KeyCode.KEY_R], [KeyCode.KEY_D, KeyCode.KEY_F]]
+        positions = [[10, 92],[25, 92],[10, 80],[25, 80]]
         for i, motor in enumerate(motors):
             motor_actuator = MotorActuator(
                 motor,
                 defaults={
                     "humanReadableName": f"Motor {i}",
-                    "onScreenPosition": on_screen_position(10, 90 - (i*7), actuator_size),
+                    "onScreenPosition": on_screen_position(positions[i][0], positions[i][1], actuator_size),
                     "minKeys": keys_object("reverse", [keys[i][0]]),
                     "maxKeys": keys_object("forward", [keys[i][1]]),
                 },
@@ -143,6 +145,45 @@ def generate_inputs(hw, config_parser):
                 },
             )
             inputs[f"robotArm{pivot.capitalize()}"] = pivotActuator
+    elif top_back_slot is Extension.BUTTON_PRESSER:
+        for i, servo in enumerate(top_back_servos): 
+            presser = ServoButton(
+                servo,
+                defaults={
+                    "humanReadableName": f"top button {i}",
+                    "onScreenPosition": on_screen_position(10, 10+(i*14), small_button_size),
+                    "keys": [top_back_keys[i][0]],
+                },
+            )
+            inputs[f"topBackButtonPresser{i}"] = presser
+    if top_back_slot is Extension.KNOB_TURNER:
+        for i, servo in enumerate(top_back_servos): 
+            turner = ServoActuator(
+                servo,
+                defaults={
+                    "humanReadableName": "top knob turner {i}",
+                    "onScreenPosition": on_screen_position(10, 10+(i*14), small_button_size),
+                    "minKeys": keys_object("close", [top_back_keys[i][0]]),
+                    "maxKeys": keys_object("open", [top_back_keys[i][1]]),
+                },
+            )
+            inputs[f"toBackKnobTurner{i}"] = turner
+    if top_back_slot is Extension.SWITCH_FLICKER:
+        for i, servo in enumerate(top_back_servos): 
+            directions = ["off", "on"]
+            positions = [-1, 1]
+            for i_direction, direction in enumerate(directions): 
+                button = ServoButton(
+                    servo,
+                    on_position=positions[i_direction],
+                    off_position=positions[i_direction],
+                    defaults={
+                        "humanReadableName": f"top flicker {i} {direction}",
+                        "onScreenPosition": on_screen_position(10 + (i_direction*10), 10+(i*14), small_button_size),
+                        "keys": [top_back_keys[i][i_direction]],
+                    },
+                )
+                inputs[f"topBackFlicker{i}{direction.capitalize()}"] = button
 
     bottom_front_slot = config_parser.get_slot_config(Slot.BOTTOM_FRONT)
     bottom_front_servo = hw.servos[7]
@@ -177,8 +218,8 @@ def generate_inputs(hw, config_parser):
             defaults={
                 "humanReadableName": "knob turner",
                 "onScreenPosition": on_screen_position(50, 85, actuator_size),
-                "minKeys": keys_object("close", bottom_front_keys[0]),
-                "maxKeys": keys_object("open", bottom_front_keys[1]),
+                "minKeys": keys_object("close", [bottom_front_keys[0]]),
+                "maxKeys": keys_object("open", [bottom_front_keys[1]]),
             },
         )
         inputs["bottomFrontKnobTurner"] = turner
