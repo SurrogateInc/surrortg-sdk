@@ -1,14 +1,24 @@
 import logging
 
-SERVO_PINS = [21, 20, 16, 13, 12, 25]
+SERVO_PINS = [17, 27, 22, 25, 24, 23, 5, 18]
 
 
 class MockServo:
     def __init__(self, pin):
         self.pin = pin
+        self._rotation_speed = 0
 
     async def rotate_to(self, position, rotation_speed=None):
         logging.info(f"Moving servo {self.pin} to position: {position}")
+    
+    @property
+    def rotation_speed(self):
+        return self._rotation_speed
+
+    @rotation_speed.setter
+    def rotation_speed(self, rotation_speed):
+        logging.info(f"Rotation speed of {self.pin} to: {rotation_speed}")
+        self._rotation_speed = rotation_speed
 
 
 class MockOled:
@@ -40,6 +50,17 @@ class MockArucoDetector:
 
     def unregister_all_observers(self):
         return
+
+
+class MockArucoFilter:
+    def __init__(*args, **kwargs):
+        return
+    
+    def start(*args, **kwargs):
+        logging.info("MockArucoFilter - start")
+    
+    def stop(*args, **kwargs):
+        logging.info("MockArucoFilter - start")
 
 
 class MockHw:
