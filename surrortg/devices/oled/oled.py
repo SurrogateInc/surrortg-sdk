@@ -4,6 +4,7 @@ import os
 import time
 
 import adafruit_ssd1306
+import board
 from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 ASSETS_PATH = os.path.join(os.path.dirname(__file__), "assets")
@@ -16,7 +17,7 @@ class Oled:
     """Class for controlling I2C OLED screen with SSD1306 chip
 
     :param i2c: I2C connection
-    :type i2c: For example busio.I2C or board.i2c
+    :type i2c: For example busio.I2C or board.i2c, optional
     :param addr: I2C address, defaults to 0x3C
     :type addr: hexadecimal, optional
     :param max_update_interval: Update interval of the screen, defaults to 0.5
@@ -28,7 +29,12 @@ class Oled:
     """
 
     def __init__(
-        self, i2c, addr=0x3C, max_update_interval=0.5, width=128, height=64
+        self,
+        i2c=None,
+        addr=0x3C,
+        max_update_interval=0.5,
+        width=128,
+        height=64,
     ):
         self._working = False
         self._i2c = i2c
@@ -53,6 +59,9 @@ class Oled:
 
         # Show empty display if working
         self.clear()
+
+    def is_working(self):
+        return self._working
 
     def show_text(
         self,
@@ -298,6 +307,15 @@ class Oled:
         return (output, font_size)
 
     def _safe_init(self):
+        if self._i2c is None:
+            try:
+                self._i2c = board.I2C()
+            except Exception as e:
+                logging.warning(
+                    "Couldn't init i2c." f" OLED screens will not work. {e}"
+                )
+                self.working = False
+                return
         try:
             self._oled = adafruit_ssd1306.SSD1306_I2C(
                 self._width, self._height, self._i2c, addr=self._addr
@@ -317,8 +335,6 @@ class Oled:
 
 
 if __name__ == "__main__":
-    import board
-
     logging.basicConfig(level=logging.INFO)
     i2c = board.I2C()
     oled = Oled(i2c)
