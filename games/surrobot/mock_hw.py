@@ -2,26 +2,40 @@ import logging
 
 SERVO_PINS = [17, 27, 22, 25, 24, 23, 5, 18]
 
+class BaseMock:
+    def __init__(self, attrs = {}):
+        self._attrs = attrs
 
-class MockServo:
+    def __setattr__(self, name, value):
+        if name == "_attrs":
+            super().__setattr__(name, value)
+            return
+        attrs = self.__getattribute__("_attrs")
+        if name in attrs:
+            logging.info(f"{self.__class__} setting {name} to: {value}")
+            attrs[name] = value
+            return
+        super().__setattr__(name, value)
+        
+    
+    def __getattr__(self, name):
+        attrs = self.__getattribute__("_attrs")
+        if name in attrs:
+            return attrs[name]
+        return super().__getattr__(name)
+
+class MockServo(BaseMock):
     def __init__(self, pin):
+        super().__init__({
+            "rotation_speed": 0
+        })
         self.pin = pin
-        self._rotation_speed = 0
 
     async def rotate_to(self, position, rotation_speed=None):
         logging.info(f"Moving servo {self.pin} to position: {position}")
-    
-    @property
-    def rotation_speed(self):
-        return self._rotation_speed
-
-    @rotation_speed.setter
-    def rotation_speed(self, rotation_speed):
-        logging.info(f"Rotation speed of {self.pin} to: {rotation_speed}")
-        self._rotation_speed = rotation_speed
 
 
-class MockOled:
+class MockOled(BaseMock):
     def show_text(self, txt):
         logging.info(f"Writing text to eye: {txt}")
 
@@ -32,32 +46,28 @@ class MockOled:
         logging.info("Clearing eye")
 
 
-class MockColorSensor:
+class MockColorSensor(BaseMock):
     def __init__(self):
-        self.lux = 10
+        super().__init__({
+            "lux": 10,
+        })
 
-class MockMotor:
+class MockMotor(BaseMock):
     def __init__(self, name):
-        self.name = name
-        self._speed = 0
-    
-    @property
-    def speed(self):
-        return self._speed
-
-    @speed.setter
-    def speed(self, speed):
-        logging.info(f"Change speed of {self.name} to: {speed}")
-        self._speed = speed
+        super().__init__({
+            "speed": 0,
+        })
 
 
-class MockMotorController:
+class MockMotorController(BaseMock):
     def __init__(self):
-        self.rotational_speed = 0
-        self.longitudinal_speed = 0
-        
+        super().__init__({
+            "longitudinal_speed": 0,
+            "rotational_speed": 0,
+        })
 
-class MockArucoDetector:
+
+class MockArucoDetector(BaseMock):
     @classmethod
     async def create(*args, **kwargs):
         return MockArucoDetector()
@@ -66,19 +76,21 @@ class MockArucoDetector:
         return
 
 
-class MockArucoFilter:
-    def __init__(*args, **kwargs):
+class MockArucoFilter(BaseMock):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
         return
     
-    def start(*args, **kwargs):
+    def start(self, *args, **kwargs):
         logging.info("MockArucoFilter - start")
     
-    def stop(*args, **kwargs):
+    def stop(self, *args, **kwargs):
         logging.info("MockArucoFilter - start")
 
 
-class MockHw:
+class MockHw(BaseMock):
     def __init__(self):
+        super().__init__()
         self.servos = [MockServo(pin) for pin in SERVO_PINS]
         self.left_eye = MockOled()
         self.right_eye = MockOled()

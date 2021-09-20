@@ -4,6 +4,7 @@
         "busio",
         "getenv",
         "oled",
+        "rtype",
         "surrortg"
     ]
 }
