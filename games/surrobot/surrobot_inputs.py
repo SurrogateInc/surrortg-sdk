@@ -68,7 +68,13 @@ class ServoButton(Switch):
         await self.servo.rotate_to(self.on_position)
 
 
-class ServoRotateButton(Switch):
+class BidirectionalServoTurner(Switch):
+    """Moves servo to either direction at constant speed
+
+    Note: The direction of movement can be defined by using negative
+    or positive speed.
+    """
+
     def __init__(self, servo, speed, defaults=None):
         super().__init__(defaults)
         self.servo = servo
@@ -150,14 +156,14 @@ def generate_top_back_slot(hw, extension, inputs):
         pivots = ["shoulder", "elbow", "wrist"]
         for i, pivot in enumerate(pivots):
             pivot_actuator = ServoActuator(
-                top_back_servos[0],
+                top_back_servos[i],
                 defaults={
                     "humanReadableName": pivot,
                     "onScreenPosition": on_screen_position(
                         10, 10 + (i * 7), ACTUATOR_SIZE
                     ),
                     "minKeys": keys_object("min", [top_back_keys[i][0]]),
-                    "maxKeys": keys_object("max", [top_back_keys[i][0]]),
+                    "maxKeys": keys_object("max", [top_back_keys[i][1]]),
                 },
             )
             inputs[f"robotArm{pivot.capitalize()}"] = pivot_actuator
@@ -217,7 +223,7 @@ def generate_bottom_front_slot(hw, extension, inputs):
         directions = ["close", "open"]
         speeds = [-0.5, 0.5]
         for i, direction in enumerate(directions):
-            speed_button = ServoRotateButton(
+            speed_button = BidirectionalServoTurner(
                 bottom_front_servo,
                 speeds[i],
                 defaults={
