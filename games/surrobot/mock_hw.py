@@ -2,8 +2,9 @@ import logging
 
 SERVO_PINS = [17, 27, 22, 25, 24, 23, 5, 18]
 
+
 class BaseMock:
-    def __init__(self, attrs = {}):
+    def __init__(self, attrs={}):
         self._attrs = attrs
 
     def __setattr__(self, name, value):
@@ -16,19 +17,17 @@ class BaseMock:
             attrs[name] = value
             return
         super().__setattr__(name, value)
-        
-    
+
     def __getattr__(self, name):
         attrs = self.__getattribute__("_attrs")
         if name in attrs:
             return attrs[name]
         return super().__getattr__(name)
 
+
 class MockServo(BaseMock):
     def __init__(self, pin):
-        super().__init__({
-            "rotation_speed": 0
-        })
+        super().__init__({"rotation_speed": 0})
         self.pin = pin
 
     async def rotate_to(self, position, rotation_speed=None):
@@ -48,23 +47,30 @@ class MockOled(BaseMock):
 
 class MockColorSensor(BaseMock):
     def __init__(self):
-        super().__init__({
-            "lux": 10,
-        })
+        super().__init__(
+            {
+                "lux": 10,
+            }
+        )
+
 
 class MockMotor(BaseMock):
     def __init__(self, name):
-        super().__init__({
-            "speed": 0,
-        })
+        super().__init__(
+            {
+                "speed": 0,
+            }
+        )
 
 
 class MockMotorController(BaseMock):
     def __init__(self):
-        super().__init__({
-            "longitudinal_speed": 0,
-            "rotational_speed": 0,
-        })
+        super().__init__(
+            {
+                "longitudinal_speed": 0,
+                "rotational_speed": 0,
+            }
+        )
 
 
 class MockArucoDetector(BaseMock):
@@ -80,10 +86,10 @@ class MockArucoFilter(BaseMock):
     def __init__(self, *args, **kwargs):
         super().__init__()
         return
-    
+
     def start(self, *args, **kwargs):
         logging.info("MockArucoFilter - start")
-    
+
     def stop(self, *args, **kwargs):
         logging.info("MockArucoFilter - start")
 

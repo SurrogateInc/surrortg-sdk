@@ -1,10 +1,11 @@
 import logging
-import time
 import os
+import time
 
 from games.surrobot.surrobot_config import Extension, Slot
 from surrortg import ScoreType, SortOrder
 from surrortg.game_io import ConfigType
+
 if os.getenv("MOCK_HW", False):
     from games.surrobot.mock_hw import MockArucoFilter as ArucoFilter
 else:

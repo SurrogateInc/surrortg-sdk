@@ -53,7 +53,7 @@ def default_slot_config():
                 extension_enum_entry(Extension.DRIVE_4_WHEELS),
                 extension_enum_entry(Extension.DRIVE_2_WHEELS),
                 extension_enum_entry(Extension.SEPARATE_MOTORS),
-                extension_enum_entry(Extension.DISABLED)
+                extension_enum_entry(Extension.DISABLED),
             ],
         },
         Slot.TOP_FRONT.value: {
