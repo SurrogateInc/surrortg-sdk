@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 
@@ -74,5 +75,16 @@ class SurrobotGame(Game):
 
 
 if __name__ == "__main__":
-    # Start running the game
-    SurrobotGame().run()
+    parser = argparse.ArgumentParser("Surrobot Game")
+    parser.add_argument(
+        "-c",
+        "--conf",
+        metavar="",
+        help="path to configuration .toml file",
+        required=False,
+    )
+    args = parser.parse_args()
+    if args.conf is not None:
+        SurrobotGame().run(config_path=args.conf)
+    else:
+        SurrobotGame().run()

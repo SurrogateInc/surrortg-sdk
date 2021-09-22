@@ -1,10 +1,15 @@
 import logging
+import os
 import time
 
 from games.surrobot.surrobot_config import Extension, Slot
 from surrortg import ScoreType, SortOrder
 from surrortg.game_io import ConfigType
-from surrortg.image_recognition.aruco import ArucoFilter
+
+if os.getenv("MOCK_HW", False):
+    from games.surrobot.mock_hw import MockArucoFilter as ArucoFilter
+else:
+    from surrortg.image_recognition.aruco import ArucoFilter
 
 
 # TODO some cleanup function when a template is changed
@@ -43,13 +48,13 @@ class ExplorationGame(GameTemplate):
                 "extensions": [
                     Extension.DRIVE_4_WHEELS,
                     Extension.DRIVE_2_WHEELS,
+                    Extension.SEPARATE_MOTORS,
                     Extension.DISABLED,
                 ],
             },
             Slot.TOP_FRONT: {
                 "default": Extension.DISABLED,
                 "extensions": [
-                    Extension.BUTTON_PRESSER,
                     Extension.DISABLED,
                 ],
             },

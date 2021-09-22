@@ -18,9 +18,13 @@ class Extension(Enum):
     CAMERA_2_AXIS = "camera2Axis"
     ROBOT_ARM = "robotArm"
     BUTTON_PRESSER = "buttonPresser"
+    KNOB_TURNER = "knobTurner"
+    SWITCH_FLICKER = "switchFlicker"
+    LED_MATRIX = "ledMatrix"
     COLOR_SENSOR = "colorSensor"
     DRIVE_4_WHEELS = "drive4Wheels"
     DRIVE_2_WHEELS = "drive2Wheels"
+    SEPARATE_MOTORS = "separateMotors"
     CLAW = "claw"
 
 
@@ -48,8 +52,8 @@ def default_slot_config():
             "enum": [
                 extension_enum_entry(Extension.DRIVE_4_WHEELS),
                 extension_enum_entry(Extension.DRIVE_2_WHEELS),
+                extension_enum_entry(Extension.SEPARATE_MOTORS),
                 extension_enum_entry(Extension.DISABLED),
-                extension_enum_entry(Extension.CUSTOM),
             ],
         },
         Slot.TOP_FRONT.value: {
@@ -58,9 +62,7 @@ def default_slot_config():
             "default": Extension.DISABLED.value,
             "enum": [
                 extension_enum_entry(Extension.CAMERA_2_AXIS),
-                extension_enum_entry(Extension.BUTTON_PRESSER),
                 extension_enum_entry(Extension.DISABLED),
-                extension_enum_entry(Extension.CUSTOM),
             ],
         },
         Slot.TOP_BACK.value: {
@@ -69,9 +71,11 @@ def default_slot_config():
             "default": Extension.DISABLED.value,
             "enum": [
                 extension_enum_entry(Extension.ROBOT_ARM),
+                extension_enum_entry(Extension.LED_MATRIX),
                 extension_enum_entry(Extension.BUTTON_PRESSER),
+                extension_enum_entry(Extension.KNOB_TURNER),
+                extension_enum_entry(Extension.SWITCH_FLICKER),
                 extension_enum_entry(Extension.DISABLED),
-                extension_enum_entry(Extension.CUSTOM),
             ],
         },
         Slot.BOTTOM_FRONT.value: {
@@ -81,8 +85,9 @@ def default_slot_config():
             "enum": [
                 extension_enum_entry(Extension.CLAW),
                 extension_enum_entry(Extension.BUTTON_PRESSER),
+                extension_enum_entry(Extension.KNOB_TURNER),
+                extension_enum_entry(Extension.SWITCH_FLICKER),
                 extension_enum_entry(Extension.DISABLED),
-                extension_enum_entry(Extension.CUSTOM),
             ],
         },
         Slot.BOTTOM_SENSOR.value: {
@@ -92,7 +97,6 @@ def default_slot_config():
             "enum": [
                 extension_enum_entry(Extension.COLOR_SENSOR),
                 extension_enum_entry(Extension.DISABLED),
-                extension_enum_entry(Extension.CUSTOM),
             ],
         },
     }
