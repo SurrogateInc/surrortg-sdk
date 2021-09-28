@@ -43,18 +43,11 @@ class GameTemplate:
 class ExplorationGame(GameTemplate):
     def slot_limits(self):
         return {
-            Slot.MOVEMENT: {
-                "default": Extension.DISABLED,
-                "extensions": [
-                    Extension.DRIVE_4_WHEELS,
-                    Extension.DRIVE_2_WHEELS,
-                    Extension.SEPARATE_MOTORS,
-                    Extension.DISABLED,
-                ],
-            },
             Slot.TOP_FRONT: {
                 "default": Extension.DISABLED,
                 "extensions": [
+                    Extension.CAMERA_2_AXIS,
+                    Extension.BUTTON_PRESSER,
                     Extension.DISABLED,
                 ],
             },
@@ -82,6 +75,11 @@ class ExplorationGame(GameTemplate):
 
     async def on_start(self):
         self.game.io.send_score(score=1)
+
+
+class CustomGame(GameTemplate):
+    async def on_start(self):
+        logging.info("CustomGame on_start")
 
 
 class RacingGame(GameTemplate):

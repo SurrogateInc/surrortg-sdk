@@ -24,9 +24,29 @@ class Extension(Enum):
     COLOR_SENSOR = "colorSensor"
     DRIVE_4_WHEELS = "drive4Wheels"
     DRIVE_2_WHEELS = "drive2Wheels"
-    SEPARATE_MOTORS = "separateMotors"
+    SEPARATE_MOTOR = "separateMotor"
     CLAW = "claw"
 
+
+SLOT_SIZES = {
+    Slot.MOVEMENT: 4,
+    Slot.TOP_FRONT: 3,
+    Slot.TOP_BACK: 4,
+}
+
+CUSTOM_EXTENSIONS = {
+    Slot.MOVEMENT: [Extension.SEPARATE_MOTOR],
+    Slot.TOP_FRONT: [
+        Extension.BUTTON_PRESSER,
+        Extension.KNOB_TURNER,
+        Extension.SWITCH_FLICKER,
+    ],
+    Slot.TOP_BACK: [
+        Extension.BUTTON_PRESSER,
+        Extension.KNOB_TURNER,
+        Extension.SWITCH_FLICKER,
+    ],
+}
 
 EXTENSION_DISPLAY_INFO = {
     Extension.DISABLED: ["Disabled", "No extensions connected"]
@@ -52,7 +72,6 @@ def default_slot_config():
             "enum": [
                 extension_enum_entry(Extension.DRIVE_4_WHEELS),
                 extension_enum_entry(Extension.DRIVE_2_WHEELS),
-                extension_enum_entry(Extension.SEPARATE_MOTORS),
                 extension_enum_entry(Extension.DISABLED),
             ],
         },
@@ -108,6 +127,50 @@ def game_settings_group_id(template_id):
 
 def slot_group_id(template_id):
     return "slotGroup" + template_id.capitalize()
+
+
+def generate_custom_options(template, base_config):
+    limits = template.slot_limits()
+    full_config = {}
+    for slot_id, config in base_config.items():
+        full_config[slot_id] = config
+        slot = Slot(slot_id)
+        if slot not in SLOT_SIZES or slot not in CUSTOM_EXTENSIONS:
+            break
+        custom_count = SLOT_SIZES[slot]
+        custom_extensions = CUSTOM_EXTENSIONS[slot].copy()
+        if limits and slot in limits:
+            custom_limit = limits[slot]["extensions"]
+            custom_extensions = list(
+                filter(
+                    lambda extension: extension in custom_limit,
+                    custom_extensions,
+                )
+            )
+        if custom_count > 1 and len(custom_extensions) > 0:
+            custom_extensions.append(Extension.DISABLED)
+            custom_enums = list(
+                map(
+                    lambda extension: extension_enum_entry(extension),
+                    custom_extensions,
+                )
+            )
+            config["enum"].append(extension_enum_entry(Extension.CUSTOM))
+            for i in range(custom_count):
+                custom_id = f"{slot_id}Custom{i}"
+                full_config[custom_id] = {
+                    "title": f"{config['title']} Custom {i+1}",
+                    "valueType": ConfigType.STRING,
+                    "default": Extension.DISABLED.value,
+                    "enum": custom_enums,
+                    "conditions": [
+                        {
+                            "variable": f".{slot_id}",
+                            "value": Extension.CUSTOM.value,
+                        }
+                    ],
+                }
+    return full_config
 
 
 def generate_configs(templates, default_game_type):
@@ -171,7 +234,11 @@ def generate_configs(templates, default_game_type):
                     "default"
                 ].value
 
-        template_slot_group["children"] = template_slot_config
+        config_with_custom_option = generate_custom_options(
+            template, template_slot_config
+        )
+
+        template_slot_group["children"] = config_with_custom_option
         root_config["children"][
             slot_group_id(template_id)
         ] = template_slot_group
@@ -197,3 +264,13 @@ class ConfigParser:
         template_id = self.current_template()
         extension_id = self.configs()[slot_group_id(template_id)][slot.value]
         return Extension(extension_id)
+
+    def get_slot_custom_config(self, slot):
+        template_id = self.current_template()
+        extension_ids = []
+        for i in range(SLOT_SIZES[slot]):
+            slot_group = self.configs()[slot_group_id(template_id)]
+            config_name = f"{slot.value}Custom{i}"
+            if config_name in slot_group:
+                extension_ids.append(slot_group[config_name])
+        return map(lambda extension_id: Extension(extension_id), extension_ids)

@@ -12,6 +12,7 @@ else:
 from games.surrobot.surrobot_config import ConfigParser, generate_configs
 from games.surrobot.surrobot_inputs import generate_inputs
 from games.surrobot.surrobot_templates import (
+    CustomGame,
     ExplorationGame,
     ObjectHuntGame,
     RacingGame,
@@ -24,7 +25,8 @@ class SurrobotGame(Game):
         self.templates = {
             "racing": RacingGame(self),
             "objectHunt": ObjectHuntGame(self),
-            "custom": ExplorationGame(self),
+            "exploration": ExplorationGame(self),
+            "custom": CustomGame(self),
         }
         configs = generate_configs(self.templates, "racing")
         self.io.set_game_configs(configs)
