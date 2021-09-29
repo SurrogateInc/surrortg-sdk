@@ -56,7 +56,7 @@ class GameIO:
         self._robot_configs = EMPTY_CONFIG
         self._game_configs = EMPTY_CONFIG
         self._message_router = MultiSeatMessageRouter(robot_log_handler)
-        self._custom_overlay = {}
+        self._custom_overlay = None
 
         # If type is not string (deprecated old interface), assume type is
         # RobotType. Not testing it directly because of circlar imports

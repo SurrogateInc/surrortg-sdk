@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
         "aruco",
+        "asyncio",
         "busio",
         "getenv",
         "oled",

@@ -62,6 +62,8 @@ class SurrobotGame(Game):
             self.io.unregister_inputs(list(self.inputs.keys()))
         self.inputs = generate_inputs(self.hw, self.config_parser)
         self.io.register_inputs(self.inputs)
+        overlay = self.template.custom_overlay()
+        self.io.set_custom_overlay(overlay)
 
         await self.template.on_config()
 

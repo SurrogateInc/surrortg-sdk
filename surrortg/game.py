@@ -507,8 +507,9 @@ class Game:
         self.io._can_register_inputs = False
         payload = {
             "inputs": self.io._get_inputs(),
-            "overlayConfig": self.io._custom_overlay,
         }
+        if self.io._custom_overlay:
+            payload["overlayConfig"] = self.io._custom_overlay
         if set_num is not None:
             payload["set"] = set_num
 
