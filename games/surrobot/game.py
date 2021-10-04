@@ -16,6 +16,7 @@ from games.surrobot.surrobot_templates import (
     ExplorationGame,
     ObjectHuntGame,
     RacingGame,
+    StarterGame,
 )
 from surrortg import Game
 
@@ -26,9 +27,10 @@ class SurrobotGame(Game):
             "racing": RacingGame(self),
             "objectHunt": ObjectHuntGame(self),
             "exploration": ExplorationGame(self),
+            "gettingStarted": StarterGame(self),
             "custom": CustomGame(self),
         }
-        configs = generate_configs(self.templates, "racing")
+        configs = generate_configs(self.templates, "gettingStarted")
         self.io.set_game_configs(configs)
         self.config_parser = ConfigParser(self)
 

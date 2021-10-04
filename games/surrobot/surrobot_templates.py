@@ -95,6 +95,53 @@ class CustomGame(GameTemplate):
         logging.info("CustomGame on_start")
 
 
+class StarterGame(GameTemplate):
+    def slot_limits(self):
+        return {
+            Slot.MOVEMENT: {
+                "default": Extension.DISABLED,
+                "extensions": [
+                    Extension.DRIVE_4_WHEELS,
+                    Extension.DISABLED,
+                ],
+            },
+            Slot.TOP_FRONT: {
+                "default": Extension.DISABLED,
+                "extensions": [
+                    Extension.CAMERA_2_AXIS,
+                    Extension.DISABLED,
+                ],
+            },
+            Slot.TOP_BACK: {
+                "default": Extension.DISABLED,
+                "extensions": [
+                    Extension.BUTTON_PRESSER,
+                    Extension.DISABLED,
+                ],
+            },
+            Slot.BOTTOM_FRONT: {
+                "default": Extension.BUTTON_PRESSER,
+                "extensions": [
+                    Extension.BUTTON_PRESSER,
+                    Extension.DISABLED,
+                ],
+            },
+        }
+
+    def custom_overlay(self):
+        return overlay_config([player_list(), timer(TimerType.REMAINING)])
+
+    async def on_start(self):
+        logging.info("Starter on_start")
+        self.game.io.send_score(score=1)
+
+    async def on_config(self):
+        # Set correct score type and order
+        await self.game.io.set_score_type(
+            ScoreType.TOTAL_GAMES, SortOrder.DESCENDING
+        )
+
+
 class RacingGame(GameTemplate):
     def game_configs(self):
         return {
