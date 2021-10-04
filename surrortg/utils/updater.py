@@ -170,6 +170,13 @@ async def send_status(api_client, msg, progress=0):
 
 
 def is_controller_up_to_date(target_branch):
+    updated = run(
+        ["git", "fetch", "origin", target_branch], cwd=args.path
+    ).returncode
+    if updated != 0:
+        # TODO: handling?
+        logging.warning("failed to fetch from controller repo")
+
     local = run(
         ["git", "rev-parse", "HEAD"],
         capture_output=True,
