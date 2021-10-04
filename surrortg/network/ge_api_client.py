@@ -111,7 +111,7 @@ class ApiClient(socketio.AsyncClientNamespace):
             while self.connected:
                 await asyncio.sleep(0.5)
 
-            await self.shutdown()
+            await self.disconnect()
 
 
 if __name__ == "__main__":
