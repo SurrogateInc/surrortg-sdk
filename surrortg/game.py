@@ -505,11 +505,18 @@ class Game:
         self.io._can_register_inputs = True
         set_num = await self.on_config()
         self.io._can_register_inputs = False
-        payload = {"inputs": self.io._get_inputs()}
+        payload = {
+            "inputs": self.io._get_inputs(),
+        }
+        if self.io._custom_overlay:
+            payload["overlayConfig"] = self.io._custom_overlay
         if set_num is not None:
             payload["set"] = set_num
 
         logging.info(f"Sending inputs in on_config: {self.io._get_inputs()}")
+        logging.info(
+            f"Sending overlay in on_config: {self.io._custom_overlay}"
+        )
 
         return payload
 

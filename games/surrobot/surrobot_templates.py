@@ -4,6 +4,13 @@ import time
 
 from games.surrobot.surrobot_config import Extension, Slot
 from surrortg import ScoreType, SortOrder
+from surrortg.custom_overlay import (
+    TimerType,
+    custom_text_element,
+    overlay_config,
+    player_list,
+    timer,
+)
 from surrortg.game_io import ConfigType
 
 if os.getenv("MOCK_HW", False):
@@ -26,6 +33,9 @@ class GameTemplate:
 
     def slot_limits(self):
         return None
+
+    def custom_overlay(self):
+        return overlay_config([], {})
 
     async def on_template_selected(self):
         pass
@@ -66,6 +76,9 @@ class ExplorationGame(GameTemplate):
                 ],
             },
         }
+
+    def custom_overlay(self):
+        return overlay_config([player_list(), timer(TimerType.REMAINING)])
 
     async def on_config(self):
         # Set correct score type and order
@@ -112,6 +125,12 @@ class RacingGame(GameTemplate):
             }
         }
 
+    def custom_overlay(self):
+        return overlay_config(
+            [player_list(), timer(TimerType.ELAPSED)],
+            {"laps": custom_text_element("Lap Count")},
+        )
+
     async def on_template_selected(self):
         self.filter = ArucoFilter(
             self.marker_callback,
@@ -131,16 +150,23 @@ class RacingGame(GameTemplate):
             "maxMarkers"
         )
 
+    def update_lap_overlay(self):
+        current_lap = max(1, min(self.lap, self.max_laps))
+        lap_text = f"Lap {current_lap}/{self.max_laps}"
+        self.game.io.set_custom_overlay_text("laps", lap_text)
+
     async def on_start(self):
         self.start_time = time.perf_counter()
         self.lap = 0
         self.next_marker = 1
         self.filter.ids = [1]
         self.filter.start()
+        self.update_lap_overlay()
 
     async def on_finish(self):
         self.game.io.disable_inputs()
         self.game.hw.reset_eyes()
+        self.filter.stop()
 
     def marker_callback(self, marker):
         logging.info(f"Marker {marker.id} found")
@@ -149,6 +175,7 @@ class RacingGame(GameTemplate):
         if marker.id == 1:
             self.lap += 1
             logging.info(f"Lap {self.lap}/{self.max_laps}")
+            self.update_lap_overlay()
 
         # If last lap was finished
         if self.lap > self.max_laps:
@@ -202,6 +229,12 @@ class ObjectHuntGame(GameTemplate):
             }
         }
 
+    def custom_overlay(self):
+        return overlay_config(
+            [player_list(), timer(TimerType.REMAINING)],
+            {"markers": custom_text_element("Markers Found")},
+        )
+
     async def on_config(self):
         # Set correct score type and order
         await self.game.io.set_score_type(
@@ -213,16 +246,23 @@ class ObjectHuntGame(GameTemplate):
             "maxMarkers"
         )
 
+    def update_marker_overlay(self):
+        found = self.max_markers - len(self.filter.ids)
+        marker_text = f"{found}/{self.max_markers} Markers Found"
+        self.game.io.set_custom_overlay_text("markers", marker_text)
+
     async def on_start(self):
         self.filter.ids = list(range(1, self.max_markers + 1))
         self.filter.start()
         self.search_start_time = time.perf_counter()
         self.marker_max_score = 100
         self.total_score = 0
+        self.update_marker_overlay()
 
     async def on_finish(self):
         self.game.io.disable_inputs()
         self.game.hw.reset_eyes()
+        self.filter.stop()
 
     def marker_callback(self, marker):
         logging.info(f"Marker {marker.id} found")
@@ -240,6 +280,7 @@ class ObjectHuntGame(GameTemplate):
 
         # Mark filter as found
         self.filter.ids.remove(marker.id)
+        self.update_marker_overlay()
 
         # If last marker was found
         if not self.filter.ids:

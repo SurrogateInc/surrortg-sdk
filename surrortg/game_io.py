@@ -56,6 +56,7 @@ class GameIO:
         self._robot_configs = EMPTY_CONFIG
         self._game_configs = EMPTY_CONFIG
         self._message_router = MultiSeatMessageRouter(robot_log_handler)
+        self._custom_overlay = None
 
         # If type is not string (deprecated old interface), assume type is
         # RobotType. Not testing it directly because of circlar imports
@@ -674,6 +675,10 @@ class GameIO:
             "removeCustomOverlayText",
             payload={"elementId": element_id, "playerOnly": player_only},
         )
+
+    def set_custom_overlay(self, overlay_config):
+        # TODO: documentation and type checking
+        self._custom_overlay = overlay_config
 
     def _send_controller_ready(self):
         if len(self._custom_configs) > 0:

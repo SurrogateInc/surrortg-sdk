@@ -1,4 +1,6 @@
+import asyncio
 import logging
+import random
 
 SERVO_PINS = [17, 27, 22, 25, 24, 23, 5, 18]
 
@@ -82,16 +84,38 @@ class MockArucoDetector(BaseMock):
         return
 
 
-class MockArucoFilter(BaseMock):
-    def __init__(self, *args, **kwargs):
+class MockArucoMarker:
+    def __init__(self, id, corners, resolution):
+        self.id = id
+        self.corners = corners
+        self.resolution = resolution
+
+
+class MockArucoFilter:
+    def __init__(self, callback, aruco_source, ids=[], *args, **kwargs):
         super().__init__()
-        return
+        self.callback = callback
+        self.ids = ids
+        self.callback_task = None
+
+    async def callback_loop(self):
+        while True:
+            await asyncio.sleep(10)
+            if self.ids:
+                id = random.choice(self.ids)
+                marker = MockArucoMarker(id, None, None)
+                logging.info(f"MockArucoFilter callback for id: {id}")
+                self.callback(marker)
 
     def start(self, *args, **kwargs):
         logging.info("MockArucoFilter - start")
+        self.stop()
+        self.callback_task = asyncio.create_task(self.callback_loop())
 
     def stop(self, *args, **kwargs):
-        logging.info("MockArucoFilter - start")
+        logging.info("MockArucoFilter - stop")
+        if self.callback_task:
+            self.callback_task.cancel()
 
 
 class MockHw(BaseMock):
