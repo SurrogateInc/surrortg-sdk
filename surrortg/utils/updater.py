@@ -162,7 +162,7 @@ async def local_printer(msg, progress=0):
 
 
 async def send_status(api_client, msg, progress=0):
-    await local_printer(msg, progress)
+    logging.info(f"[{int(progress * 100)}%] {msg}")
     await api_client.send(
         "updateProgress",
         {"robot": config["device_id"], "progress": progress, "message": msg},
