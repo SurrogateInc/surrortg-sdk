@@ -5,6 +5,7 @@ from board import SCL, SDA
 
 from games.surrobot.DRV8833 import DRV8833, DRV8833Motor, MotorController
 from surrortg.devices import SafeTCS34725, Servo, i2c_connected
+from surrortg.devices.led_matrix import LedMatrix
 from surrortg.devices.oled import Oled
 
 # Motor driver control pins
@@ -86,6 +87,8 @@ class Hw:
         self.motor_controller = MotorController(
             self.motor_fl, self.motor_fr, self.motor_rr, self.motor_rl
         )
+
+        self.led_matrix = LedMatrix(size=1, led_count=64, enabled=False)
 
     def reset_eyes(self):
         self.left_eye.show_text("left eye")
