@@ -1,8 +1,20 @@
 import asyncio
 import logging
 import random
+from enum import Enum, auto
 
 SERVO_PINS = [17, 27, 22, 25, 24, 23, 5, 18]
+
+
+# TODO: figure out how to get rid of this mock
+class MockOledImage(Enum):
+    DEFAULT_EYE = auto()
+    BLINK = auto()
+    ARUCO_DEF = auto()
+    RACING_STRAIGHT = auto()
+    RACING_TURN_R = auto()
+    RACING_TURN_L = auto()
+    DOING_ACTION = auto()
 
 
 class BaseMock:
@@ -36,12 +48,26 @@ class MockServo(BaseMock):
         logging.info(f"Moving servo {self.pin} to position: {position}")
 
 
+class MockLedMatrix(BaseMock):
+    def enable(self):
+        logging.info("Led matrix enabled")
+
+    def disable(self):
+        logging.info("Led matrix disabled")
+
+    def show_image(self, image):
+        logging.info("Showing image on led matrix")
+
+
 class MockOled(BaseMock):
     def show_text(self, txt):
         logging.info(f"Writing text to eye: {txt}")
 
     def show_image(self, image):
         logging.info("Showing image on eye")
+
+    def show_default_image(self, image):
+        logging.info("Showing default image on eye")
 
     def clear(self):
         logging.info("Clearing eye")
@@ -130,10 +156,15 @@ class MockHw(BaseMock):
         self.motor_rr = MockMotor("rr")
         self.motor_rl = MockMotor("rl")
         self.motor_controller = MockMotorController()
+        self.led_matrix = MockLedMatrix()
 
     def reset_eyes(self):
-        self.left_eye.show_text("left eye")
-        self.right_eye.show_text("right eye")
+        self.def_img_to_eyes(MockOledImage.BLINK)
+
+    # TODO: better name
+    def def_img_to_eyes(self, img_enum):
+        self.left_eye.show_default_image(img_enum)
+        self.right_eye.show_default_image(img_enum)
 
     def get_cpu_temperature(self):
         return 0

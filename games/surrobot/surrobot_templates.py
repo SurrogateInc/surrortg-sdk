@@ -15,7 +15,9 @@ from surrortg.game_io import ConfigType
 
 if os.getenv("MOCK_HW", False):
     from games.surrobot.mock_hw import MockArucoFilter as ArucoFilter
+    from games.surrobot.mock_hw import MockOledImage as OledImage
 else:
+    from surrortg.devices.oled.assets import OledImage
     from surrortg.image_recognition.aruco import ArucoFilter
 
 
@@ -34,6 +36,9 @@ class GameTemplate:
     def slot_limits(self):
         return None
 
+    def call_eyes(self, image_enum):
+        self.game.hw.def_img_to_eyes(image_enum)
+
     def custom_overlay(self):
         return overlay_config([], {})
 
@@ -45,6 +50,9 @@ class GameTemplate:
             self.game.hw.led_matrix.show_image(image)
         else:
             self.game.hw.led_matrix.disable()
+
+    async def input_callback(self, slot, extension, obj):
+        pass
 
     async def on_template_selected(self):
         pass
@@ -95,6 +103,7 @@ class ExplorationGame(GameTemplate):
             ScoreType.TOTAL_GAMES, SortOrder.DESCENDING
         )
         self.handle_led_matrix()
+        self.game.hw.reset_eyes()
 
     async def on_start(self):
         self.game.io.send_score(score=1)
@@ -154,6 +163,16 @@ class StarterGame(GameTemplate):
             ScoreType.TOTAL_GAMES, SortOrder.DESCENDING
         )
         self.handle_led_matrix()
+        self.game.hw.reset_eyes()
+
+    # TODO: better handling
+    async def input_callback(self, slot, extension, obj):
+        logging.info(f"input cb slot {slot} ext {extension} obj {obj}")
+        if obj["type"] == "button":
+            if obj["val"] > 0:
+                self.call_eyes(OledImage.DOING_ACTION)
+            else:
+                self.game.hw.reset_eyes()
 
 
 class RacingGame(GameTemplate):
@@ -198,6 +217,25 @@ class RacingGame(GameTemplate):
             }
         }
 
+    # TODO: implement this for other templates/abstract this
+    async def input_callback(self, slot, extension, obj):
+        logging.info(f"input cb slot {slot} ext {extension} obj {obj}")
+        if slot is Slot.MOVEMENT and obj["type"] == "joystick":
+            if obj["x"] > -0.5 and obj["x"] < 0.5:
+                logging.info("straight eyes")
+                self.call_eyes(OledImage.RACING_STRAIGHT)
+            if obj["x"] < -0.5:
+                logging.info("turn left eyes")
+                self.call_eyes(OledImage.RACING_TURN_L)
+            elif obj["x"] > 0.5:
+                logging.info("turn right eyes")
+                self.call_eyes(OledImage.RACING_TURN_R)
+        elif obj["type"] == "button":
+            if obj["val"] == 1:
+                self.call_eyes(OledImage.DOING_ACTION)
+            elif obj["val"] == -1:
+                self.call_eyes(OledImage.RACING_STRAIGHT)
+
     def custom_overlay(self):
         return overlay_config(
             [player_list(), timer(TimerType.ELAPSED)],
@@ -230,6 +268,7 @@ class RacingGame(GameTemplate):
             self.filter.min_dist = self.aruco_min_distance
 
         self.handle_led_matrix("racing")
+        self.game.hw.reset_eyes()
 
     def update_lap_overlay(self):
         current_lap = max(1, min(self.lap, self.max_laps))
@@ -243,6 +282,7 @@ class RacingGame(GameTemplate):
         self.filter.ids = [1]
         self.filter.start()
         self.update_lap_overlay()
+        self.call_eyes(OledImage.RACING_STRAIGHT)
 
     async def on_finish(self):
         self.game.io.disable_inputs()
@@ -346,6 +386,7 @@ class ObjectHuntGame(GameTemplate):
             self.filter.min_dist = self.aruco_min_distance
 
         self.handle_led_matrix("searching")
+        self.game.hw.reset_eyes()
 
     def update_marker_overlay(self):
         found = self.max_markers - len(self.filter.ids)
@@ -359,6 +400,7 @@ class ObjectHuntGame(GameTemplate):
         self.marker_max_score = 100
         self.total_score = 0
         self.update_marker_overlay()
+        self.call_eyes(OledImage.ARUCO_DEF)
 
     async def on_finish(self):
         self.game.io.disable_inputs()

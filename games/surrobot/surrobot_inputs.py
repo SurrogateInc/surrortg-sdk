@@ -1,3 +1,5 @@
+from functools import partial
+
 from games.surrobot.surrobot_config import Extension, Slot
 from surrortg.inputs import (
     Joystick,
@@ -15,57 +17,70 @@ SMALL_BUTTON_SIZE = 10
 
 
 class MotorJoystick(Joystick):
-    def __init__(self, motor_controller, defaults=None):
+    def __init__(self, motor_controller, callback, defaults=None):
         super().__init__(defaults)
         self.motor_controller = motor_controller
+        self.callback = callback
 
     async def handle_coordinates(self, x, y, seat=0):
         self.motor_controller.rotational_speed = x
         self.motor_controller.longitudinal_speed = y
+        await self.callback(obj={"type": "joystick", "x": x, "y": y})
 
 
 class MotorActuator(LinearActuator):
-    def __init__(self, motor, defaults=None):
+    def __init__(self, motor, callback, defaults=None):
         super().__init__(defaults)
         self.motor = motor
+        self.callback = callback
 
     async def drive_actuator(self, val, seat=0):
         self.motor.speed = val
+        await self.callback(obj={"type": "actuator", "val": val})
 
 
 class ServoJoystick(Joystick):
-    def __init__(self, servo_x, servo_y=None, defaults=None):
+    def __init__(self, servo_x, callback, servo_y=None, defaults=None):
         super().__init__(defaults)
         self.servo_x = servo_x
         self.servo_y = servo_y
+        self.callback = callback
 
     async def handle_coordinates(self, x, y, seat=0):
         self.servo_x.rotation_speed = x
         if self.servo_y:
             self.servo_y.rotation_speed = y
+        await self.callback(obj={"type": "joystick", "x": x, "y": y})
 
 
 class ServoActuator(LinearActuator):
-    def __init__(self, servo, defaults=None):
+    def __init__(self, servo, callback, defaults=None):
         super().__init__(defaults)
         self.servo = servo
+        self.callback = callback
 
     async def drive_actuator(self, val, seat=0):
         self.servo.rotation_speed = val
+        await self.callback(obj={"type": "actuator", "val": val})
 
 
 class ServoButton(Switch):
-    def __init__(self, servo, on_position=1, off_position=-1, defaults=None):
+    def __init__(
+        self, servo, callback, on_position=1, off_position=-1, defaults=None
+    ):
         super().__init__(defaults)
         self.servo = servo
         self.on_position = on_position
         self.off_position = off_position
+        self.callback = callback
 
     async def off(self, seat=0):
         await self.servo.rotate_to(self.off_position)
+        await self.callback(obj={"type": "button", "val": self.off_position})
 
     async def on(self, seat=0):
         await self.servo.rotate_to(self.on_position)
+        await self.callback(obj={"type": "button", "val": self.on_position})
 
 
 class BidirectionalServoTurner(Switch):
@@ -75,16 +90,21 @@ class BidirectionalServoTurner(Switch):
     or positive speed.
     """
 
-    def __init__(self, servo, speed, defaults=None):
+    def __init__(self, servo, speed, callback, defaults=None):
         super().__init__(defaults)
         self.servo = servo
         self.speed = speed
+        self.callback = callback
 
     async def off(self, seat=0):
-        self.servo.rotation_speed = 0
+        new_speed = 0
+        self.servo.rotation_speed = new_speed
+        await self.callback(obj={"type": "turner", "val": new_speed})
 
     async def on(self, seat=0):
-        self.servo.rotation_speed = self.speed
+        new_speed = self.speed
+        self.servo.rotation_speed = new_speed
+        await self.callback(obj={"type": "turner", "val": new_speed})
 
 
 class ButtonPositioner:
@@ -118,11 +138,16 @@ class ButtonPositioner:
         return on_screen_position(self.x, self.y, size)
 
 
-def generate_movement_slot(hw, extension, custom, inputs):
+def generate_partial_input_cb(callback, slot, extension):
+    return partial(callback, slot=slot, extension=extension)
+
+
+def generate_movement_slot(hw, extension, custom, inputs, callback):
     if extension in [Extension.DRIVE_4_WHEELS, Extension.DRIVE_2_WHEELS]:
         # TODO: Set the motor_controller to some 4 or 2 wheel mode
         motor_joystick = MotorJoystick(
             hw.motor_controller,
+            generate_partial_input_cb(callback, Slot.MOVEMENT, extension),
             defaults={
                 "humanReadableName": "movement",
                 "onScreenPosition": on_screen_position(10, 85, JOYSTICK_SIZE),
@@ -146,6 +171,9 @@ def generate_movement_slot(hw, extension, custom, inputs):
             if extension is Extension.SEPARATE_MOTOR:
                 motor_actuator = MotorActuator(
                     motors[i],
+                    generate_partial_input_cb(
+                        callback, Slot.MOVEMENT, extension
+                    ),
                     defaults={
                         "humanReadableName": f"Motor {i}",
                         "onScreenPosition": on_screen_position(
@@ -159,12 +187,13 @@ def generate_movement_slot(hw, extension, custom, inputs):
 
 
 def generate_servo_extensions(
-    slot, extensions, servos, inputs, binds, positioner
+    slot, extensions, servos, inputs, binds, positioner, callback
 ):
     for i, extension in enumerate(extensions):
         if extension is Extension.BUTTON_PRESSER:
             presser = ServoButton(
                 servos[i],
+                generate_partial_input_cb(callback, slot, extension),
                 defaults={
                     "humanReadableName": "button",
                     "onScreenPosition": positioner.next_place(
@@ -177,6 +206,7 @@ def generate_servo_extensions(
         elif extension is Extension.KNOB_TURNER:
             turner = ServoActuator(
                 servos[i],
+                generate_partial_input_cb(callback, slot, extension),
                 defaults={
                     "humanReadableName": "knob turner",
                     "onScreenPosition": positioner.next_place(
@@ -194,6 +224,7 @@ def generate_servo_extensions(
             for n, direction in enumerate(directions):
                 button = ServoButton(
                     servos[i],
+                    generate_partial_input_cb(callback, slot, extension),
                     on_position=servo_positions[n],
                     off_position=servo_positions[n],
                     defaults={
@@ -212,11 +243,12 @@ def generate_servo_extensions(
                 inputs[f"{slot}Flicker{i}{direction.capitalize()}"] = button
 
 
-def generate_top_front_slot(hw, extension, custom, inputs):
+def generate_top_front_slot(hw, extension, custom, inputs, callback):
     top_front_servos = hw.servos[:4]
     if extension is Extension.CAMERA_2_AXIS:
         camera = ServoJoystick(
             top_front_servos[1],
+            generate_partial_input_cb(callback, Slot.TOP_FRONT, extension),
             top_front_servos[2],
             defaults={
                 "humanReadableName": "look",
@@ -243,10 +275,11 @@ def generate_top_front_slot(hw, extension, custom, inputs):
             inputs,
             binds,
             positioner,
+            callback,
         )
 
 
-def generate_top_back_slot(hw, extension, custom, inputs):
+def generate_top_back_slot(hw, extension, custom, inputs, callback):
     top_back_servos = hw.servos[4:7]
     top_back_keys = [
         [KeyCode.KEY_Y, KeyCode.KEY_U],
@@ -258,6 +291,7 @@ def generate_top_back_slot(hw, extension, custom, inputs):
         for i, pivot in enumerate(pivots):
             pivot_actuator = ServoActuator(
                 top_back_servos[i],
+                generate_partial_input_cb(callback, Slot.TOP_BACK, extension),
                 defaults={
                     "humanReadableName": pivot,
                     "onScreenPosition": on_screen_position(
@@ -282,6 +316,7 @@ def generate_top_back_slot(hw, extension, custom, inputs):
             inputs,
             top_back_keys,
             positioner,
+            callback,
         )
     elif extension is Extension.CUSTOM:
         generate_servo_extensions(
@@ -291,10 +326,11 @@ def generate_top_back_slot(hw, extension, custom, inputs):
             inputs,
             top_back_keys,
             positioner,
+            callback,
         )
 
 
-def generate_bottom_front_slot(hw, extension, inputs):
+def generate_bottom_front_slot(hw, extension, inputs, callback):
     bottom_front_servo = hw.servos[7]
     binds = [KeyCode.KEY_N, KeyCode.KEY_M]
     if extension is Extension.CLAW:
@@ -304,6 +340,9 @@ def generate_bottom_front_slot(hw, extension, inputs):
             speed_button = BidirectionalServoTurner(
                 bottom_front_servo,
                 speeds[i],
+                generate_partial_input_cb(
+                    callback, Slot.BOTTOM_FRONT, extension
+                ),
                 defaults={
                     "humanReadableName": f"claw {direction}",
                     "onScreenPosition": on_screen_position(
@@ -328,22 +367,29 @@ def generate_bottom_front_slot(hw, extension, inputs):
             inputs,
             [binds],
             positioner,
+            callback,
         )
 
 
-def generate_inputs(hw, config_parser):
+def generate_inputs(hw, config_parser, callback):
     inputs = {}
 
     movement_extension = config_parser.get_slot_config(Slot.MOVEMENT)
     movement_custom = config_parser.get_slot_custom_config(Slot.MOVEMENT)
-    generate_movement_slot(hw, movement_extension, movement_custom, inputs)
+    generate_movement_slot(
+        hw, movement_extension, movement_custom, inputs, callback
+    )
     top_front_slot = config_parser.get_slot_config(Slot.TOP_FRONT)
     top_front_custom = config_parser.get_slot_custom_config(Slot.TOP_FRONT)
-    generate_top_front_slot(hw, top_front_slot, top_front_custom, inputs)
+    generate_top_front_slot(
+        hw, top_front_slot, top_front_custom, inputs, callback
+    )
     top_back_slot = config_parser.get_slot_config(Slot.TOP_BACK)
     top_back_custom = config_parser.get_slot_custom_config(Slot.TOP_BACK)
-    generate_top_back_slot(hw, top_back_slot, top_back_custom, inputs)
+    generate_top_back_slot(
+        hw, top_back_slot, top_back_custom, inputs, callback
+    )
     bottom_front_slot = config_parser.get_slot_config(Slot.BOTTOM_FRONT)
-    generate_bottom_front_slot(hw, bottom_front_slot, inputs)
+    generate_bottom_front_slot(hw, bottom_front_slot, inputs, callback)
 
     return inputs
