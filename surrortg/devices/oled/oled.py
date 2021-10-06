@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import time
+from enum import Enum
 
 import adafruit_ssd1306
 import board
@@ -11,6 +12,9 @@ ASSETS_PATH = os.path.join(os.path.dirname(__file__), "assets")
 FONT_PATH = os.path.join(ASSETS_PATH, "FreeMono.ttf")
 LOGO_PATH = os.path.join(ASSETS_PATH, "surrogatetv_logo.png")
 LOADING_GIF_PATH = os.path.join(ASSETS_PATH, "loading_balls_2.gif")
+
+LEFT_EYE_ADDR = 0x3C
+RIGHT_EYE_ADDR = 0x3D
 
 
 class Oled:
@@ -26,6 +30,9 @@ class Oled:
     :type width: int, optional
     :param height: OLED screen height, defaults to 64
     :type height: int, optional
+    :param side: Which side the eye is on. If set, also modifies addr. Used to
+        determine which images to use (left/right). Defaults to None.
+    :type side: Oled.EyePosition, optional
     """
 
     def __init__(
@@ -35,6 +42,7 @@ class Oled:
         max_update_interval=0.5,
         width=128,
         height=64,
+        side=None,
     ):
         self._working = False
         self._i2c = i2c
@@ -45,6 +53,9 @@ class Oled:
         self._last_update_ts = time.time()
         self._last_text_written = ""
         self._render_task = None
+        self._side = side
+
+        self._determine_side_and_addr()
 
         # Prevent RuntimeError from asyncio by ignoring max_update_interval
         # if no asyncio loop is running
@@ -59,6 +70,10 @@ class Oled:
 
         # Show empty display if working
         self.clear()
+
+    class EyePosition(Enum):
+        LEFT = "left"
+        RIGHT = "right"
 
     def is_working(self):
         return self._working
@@ -332,6 +347,35 @@ class Oled:
         except OSError:
             logging.error(f"Oled show() failed at address {hex(self._addr)}")
             self._working = False
+
+    def _determine_side_and_addr(self):
+        # TODO: keep this for backwards compatibility or change interface now?
+        #       Could determine address only in Oled class and make side
+        #       parameter mandatory or default to left or right
+        if self._side is self.EyePosition.RIGHT:
+            self._addr = RIGHT_EYE_ADDR
+            logging.info(
+                f"Creating {self._side} side eye."
+                f" Setting i2c address to {self._addr}"
+            )
+        elif self._side is self.EyePosition.LEFT:
+            self._addr = LEFT_EYE_ADDR
+            logging.info(
+                f"Creating {self._side} side eye."
+                f"Setting i2c address to {self._addr}"
+            )
+        elif self._addr == LEFT_EYE_ADDR:
+            self._side = self.EyePosition.LEFT
+            logging.warning(
+                "Eye side (left/right) not provided, determined side to be"
+                f" ({self._side}) based on provided i2c address: {self._addr}"
+            )
+        elif self._addr == RIGHT_EYE_ADDR:
+            self._side = self.EyePosition.RIGHT
+            logging.warning(
+                "Eye side (left/right) not provided, determined side to be"
+                f" ({self._side}) based on provided i2c address: {self._addr}"
+            )
 
 
 if __name__ == "__main__":
