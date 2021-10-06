@@ -30,8 +30,8 @@ class Extension(Enum):
 
 SLOT_SIZES = {
     Slot.MOVEMENT: 4,
-    Slot.TOP_FRONT: 3,
-    Slot.TOP_BACK: 4,
+    Slot.TOP_FRONT: 4,
+    Slot.TOP_BACK: 3,
 }
 
 CUSTOM_EXTENSIONS = {
