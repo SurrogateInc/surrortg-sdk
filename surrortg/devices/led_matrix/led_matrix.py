@@ -423,7 +423,7 @@ class LedMatrix:
                     f" Image size:{img.size[0]}, {img.size[1]}; matrix size:"
                     f" {dim}, {dim}. Resizing.."
                 )
-                img = img.resize((dim, dim), Image.BICUBIC)
+                img = img.resize((dim, dim), Image.NEAREST)
             pixels = img.load()
             width, height = img.size
             pixels = [
