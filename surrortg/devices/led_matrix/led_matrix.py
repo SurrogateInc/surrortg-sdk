@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import os
+import time
 from functools import partial
 from math import sqrt
 
@@ -9,7 +11,6 @@ from rpi_ws281x import Color, PixelStrip
 from surrortg.game_io import ConfigType
 
 # LED strip configuration:
-LED_COUNT = 1024  # Number of LED pixels.
 LED_PIN = 18  # GPIO pin connected to the pixels (18 uses PWM!).
 # LED_PIN = 10 # GPIO pin connected to the pixels (10 uses SPI /dev/spidev0.0).
 LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
@@ -20,8 +21,8 @@ LED_INVERT = (
 )
 LED_CHANNEL = 0  # set to '1' for GPIOs 13, 19, 41, 45 or 53
 
-OUT_OF_TIME_BLINK_SECONDS = 3
-OUT_OF_TIME_BLINK_INTERVAL = 0.2
+BEGIN_BLINKING_TIME_LEFT = 3
+BLINK_INTERVAL = 0.3
 
 GAME_AREA_SIZE_KEY = "Game area side length (number of squares)"
 BLINK_TIME_KEY = "Time left to start blinking"
@@ -32,10 +33,10 @@ BG_COLOR_G_KEY = "Background color blue value"
 BG_COLOR_B_KEY = "Background color green value"
 LED_BRIGHTNESS_KEY = "Led brightness"
 
-BACKGROUND_COLOR = Color(65, 10, 79)
+BACKGROUND_RGB = (65, 10, 79)
+BACKGROUND_COLOR = Color(*BACKGROUND_RGB)
 
-# TODO: use relative path
-IMAGE_DIR_PATH = "/home/pi/surrortg-sdk/surrortg/devices/led_matrix/images/"
+SUPPORTED_IMG_TYPES = (".jpg", ".jpeg", ".png")
 
 
 class LedMatrix:
@@ -87,71 +88,160 @@ class LedMatrix:
     :type led_count: int, optional
     """
 
-    def __init__(self, io, size=4, led_count=LED_COUNT):
+    def __init__(
+        self,
+        io=None,
+        size=1,
+        led_count=64,
+        brightness=LED_BRIGHTNESS,
+        enabled=True,
+    ):
         self.io = io
-        self.io.register_config(
-            BLINK_TIME_KEY, ConfigType.INTEGER, 3, False, minimum=1, maximum=10
-        )
-        self.io.register_config(
-            BLINK_INTERVAL_KEY,
-            ConfigType.NUMBER,
-            0.3,
-            False,
-            minimum=0.05,
-            maximum=3,
-        )
-        self.io.register_config(
-            BG_COLOR_R_KEY,
-            ConfigType.INTEGER,
-            0,
-            False,
-            minimum=0,
-            maximum=255,
-        )
-        self.io.register_config(
-            BG_COLOR_G_KEY,
-            ConfigType.INTEGER,
-            0,
-            False,
-            minimum=0,
-            maximum=255,
-        )
-        self.io.register_config(
-            BG_COLOR_B_KEY,
-            ConfigType.INTEGER,
-            0,
-            False,
-            minimum=0,
-            maximum=255,
-        )
-        self.io.register_config(
-            LED_BRIGHTNESS_KEY,
-            ConfigType.INTEGER,
-            20,
-            False,
-            minimum=0,
-            maximum=255,
-        )
+        if self.io is not None:
+            self.io.register_config(
+                BLINK_TIME_KEY,
+                ConfigType.INTEGER,
+                3,
+                False,
+                minimum=1,
+                maximum=10,
+            )
+            self.io.register_config(
+                BLINK_INTERVAL_KEY,
+                ConfigType.NUMBER,
+                0.3,
+                False,
+                minimum=0.05,
+                maximum=3,
+            )
+            self.io.register_config(
+                BG_COLOR_R_KEY,
+                ConfigType.INTEGER,
+                0,
+                False,
+                minimum=0,
+                maximum=255,
+            )
+            self.io.register_config(
+                BG_COLOR_G_KEY,
+                ConfigType.INTEGER,
+                0,
+                False,
+                minimum=0,
+                maximum=255,
+            )
+            self.io.register_config(
+                BG_COLOR_B_KEY,
+                ConfigType.INTEGER,
+                0,
+                False,
+                minimum=0,
+                maximum=255,
+            )
+            self.io.register_config(
+                LED_BRIGHTNESS_KEY,
+                ConfigType.INTEGER,
+                20,
+                False,
+                minimum=0,
+                maximum=255,
+            )
+
+        self.brightness = brightness
+        self.enabled = enabled
+        self.led_count = led_count
 
         self.strip = PixelStrip(
-            led_count,
+            self.led_count,
             LED_PIN,
             LED_FREQ_HZ,
             LED_DMA,
             LED_INVERT,
-            LED_BRIGHTNESS,
+            self.brightness,
             LED_CHANNEL,
         )
         self.bg_color = BACKGROUND_COLOR
-
-        self.strip.begin()
+        self.bg_rgb = BACKGROUND_RGB
 
         self.color_timer = None
         self.area_dim = size
-        if self.strip.numPixels() == 1024:
-            self.img_one = self.read_image_file(IMAGE_DIR_PATH + "32/1.jpg")
-            self.img_two = self.read_image_file(IMAGE_DIR_PATH + "32/2.jpg")
-            self.img_three = self.read_image_file(IMAGE_DIR_PATH + "32/3.jpg")
+        self.num_squares = self.area_dim ** 2
+        self.pixel_map = self._generate_pixel_map(
+            self.num_squares, self.led_count
+        )
+        self.blink_time = 3
+        self.blink_interval = 0.3
+        self.images = {}
+        self.image_dim = int(sqrt(led_count))
+        image_dir = "images/" + str(self.image_dim)
+        self.image_dir = os.path.join(os.path.dirname(__file__), image_dir)
+        self.images = self._generate_image_map()
+        if self.enabled:
+            self.begin()
+
+    def begin(self):
+        self.strip.begin()
+        self.reset_leds()
+
+    def _generate_image_map(self):
+        img_map = {}
+        for filename in os.listdir(self.image_dir):
+            if self.is_supported_image(filename):
+                full_path = self.image_dir + "/" + filename
+                key = filename.split(".", 1)[0]
+                img = self.read_image_file(full_path)
+                logging.info(
+                    f"adding img to dict: {filename}, key in map: {key},"
+                    f" full path: {full_path}"
+                )
+                img_map[key] = img
+        return img_map
+
+    async def image_gallery(self, duration=5):
+        """Show all images found in images dict in infinite loop"""
+        if not self.enabled:
+            logging.warning("led matrix disabled")
+            return
+        while True:
+            for img in self.images:
+                self.show_image(img)
+                await asyncio.sleep(duration)
+
+    def show_image(self, image_name, fill_bg=False):
+        if not self.enabled:
+            logging.warning("led matrix disabled, not showing image")
+            return
+        if image_name not in self.images:
+            if os.path.isfile(image_name) and self.is_supported_image(
+                image_name
+            ):
+                logging.info(f"adding image {image_name} to led matrix images")
+                self.images[image_name] = self.read_image_file(image_name)
+            else:
+                logging.warning(
+                    f"led matrix image {image_name} not found or not supported"
+                )
+                return
+        logging.info(f"showing image {image_name}")
+        self.draw_pixels(self.images[image_name], fill_bg)
+
+    def is_supported_image(self, filename):
+        return filename.endswith(SUPPORTED_IMG_TYPES)
+
+    def enable(self):
+        logging.info("enabling led matrix")
+        was_enabled = self.enabled
+        self.enabled = True
+        if not was_enabled:
+            self.begin()
+
+    def disable(self):
+        logging.info("disabling led matrix")
+        if self.enabled:
+            if self.color_timer is not None:
+                self.color_timer.cancel()
+            self.turn_off_leds()
+        self.enabled = False
 
     class TimedColorChange:
         """Calls color changes at regular intervals for given duration.
@@ -202,39 +292,77 @@ class LedMatrix:
             await asyncio.sleep(self.time_interval)
             self.callback(color=Color(255, 0, 0))
             await asyncio.sleep(self.time_interval)
-            while True:
-                self.callback(color=self.bg_color)
-                await asyncio.sleep(self.blink_interval)
+            began_blinking = time.time()
+            while time.time() - began_blinking < self.begin_blinking:
                 self.callback(color=Color(255, 0, 0))
                 await asyncio.sleep(self.blink_interval)
+                self.callback(color=self.bg_color)
+                await asyncio.sleep(self.blink_interval)
 
-    def solid_color(self, strip, color, pixels):
+    def solid_color(self, color, pixels):
         """Set all LEDs in the pixels-argument to the same color
 
-        :param strip: LED strip object
-        :type strip: PixelStrip
         :param color: color which will be set for all given LEDs
         :type color: Color()
-        :param pixels: pixel indices and their colors
+        :param pixels: pixel indices
         :type pixels: list of int
         """
+        if not self.enabled:
+            logging.warning("led matrix disabled")
+            return
         for i in pixels:
-            strip.setPixelColor(i, color)
-        strip.show()
+            self.strip.setPixelColor(i, color)
+        self.strip.show()
 
-    def draw_pixels(self, strip, pixels):
+    def set_all_leds_to_color(self, color):
+        if not self.enabled:
+            logging.warning("led matrix disabled")
+            return
+        self.solid_color(color, [i for i in range(self.led_count)])
+
+    def set_all_leds_to_rgb(self, rgb):
+        if not self.enabled:
+            logging.warning("led matrix disabled")
+            return
+        self.solid_color(Color(*rgb), [i for i in range(self.led_count)])
+
+    def draw_pixels(self, pixels, fill_bg=False):
         """Set color for LEDs at indices given in the pixels-parameter
 
-        :param strip: LED strip object
-        :type strip: PixelStrip
         :param pixels: pixel indices and their colors
         :type pixels: list of (int, (int, int, int)) tuples
+        :param fill_bg: fill empty (all color values < 30) pixels with
+            background color
+        :type fill_bg: bool, optional
         """
+        if not self.enabled:
+            logging.warning("led matrix disabled")
+            return
+        if fill_bg:
+            self.set_empty_pixels_to_bg(pixels, self.bg_rgb)
         for pixel in pixels:
-            strip.setPixelColor(
+            self.strip.setPixelColor(
                 pixel[0], Color(pixel[1][0], pixel[1][1], pixel[1][2])
             )
-        strip.show()
+        self.strip.show()
+
+    async def test_pixels(self):
+        for i in range(self.led_count):
+            self.strip.setPixelColor(i, Color(255, 0, 0))
+            self.strip.show()
+            await asyncio.sleep(0.1)
+            self.turn_off_leds()
+
+    async def test_pixel_mapping(self):
+        dim = int(sqrt(self.led_count))
+        for y in range(dim):
+            for x in range(dim):
+                pixel = self.map_pixel_to_led_small_no_snake(x, y)
+                logging.info(f"mapped coord {x, y} to pixel {pixel}")
+                self.strip.setPixelColor(pixel, Color(255, 0, 0))
+                self.strip.show()
+                await asyncio.sleep(0.1)
+                self.turn_off_leds()
 
     def map_pixel_to_led_idx(self, x, y):
         """Maps pixel coordinates to LED index on the LED strip
@@ -247,6 +375,8 @@ class LedMatrix:
         :return: index of led
         :rtype: int
         """
+        if self.led_count == 64:
+            return self.map_pixel_to_led_small_no_snake(x, y)
         sq_row = y // 8
         sq_col = x // 8
         sq_idx = sq_row * 4 + sq_col
@@ -263,6 +393,9 @@ class LedMatrix:
             led_idx = sq_idx * 64 + col * 8 + row
         return led_idx
 
+    def map_pixel_to_led_small_no_snake(self, x, y):
+        return x + 8 * (y % 8)
+
     def read_rgb_file(self, filename):
         lines = []
         pixels = []
@@ -278,11 +411,19 @@ class LedMatrix:
             pixels.append((pixel, (r, g, b)))
         return pixels
 
-    # TODO: use opencv for reading images
     def read_image_file(self, filename):
         pixels = []
         with Image.open(filename) as img:
+            logging.info(f"reading img file into pixels: {filename}")
             img = img.convert("RGB")
+            dim = int(sqrt(self.led_count))
+            if img.size[0] > dim + 1 or img.size[1] > dim + 1:
+                logging.info(
+                    f"image {filename} doesn't fit into LED matrix."
+                    f" Image size:{img.size[0]}, {img.size[1]}; matrix size:"
+                    f" {dim}, {dim}. Resizing.."
+                )
+                img = img.resize((dim, dim), Image.BICUBIC)
             pixels = img.load()
             width, height = img.size
             pixels = [
@@ -291,6 +432,20 @@ class LedMatrix:
                 for y in range(height)
             ]
         return pixels
+
+    def dampen_colors(self, rgb):
+        new_rgb = list(rgb)
+        highest_val = max(new_rgb)
+        max_val = 80
+        mult = 1
+        if highest_val > max_val:
+            mult = max_val / highest_val
+
+        new_rgb[0] = int(new_rgb[0] * mult)
+        new_rgb[1] = int(new_rgb[1] * mult)
+        new_rgb[2] = int(new_rgb[2] * mult)
+
+        return tuple(new_rgb)
 
     def set_empty_pixels_to_bg(self, pixels, bg_color):
         for i, pixel in enumerate(pixels):
@@ -314,32 +469,51 @@ class LedMatrix:
         self.num_squares = self.area_dim ** 2
 
     def reset_leds(self):
+        if not self.enabled:
+            logging.warning("led matrix disabled")
+            return
         """Calling this resets all LEDs to background color"""
         self.solid_color(
-            self.strip,
             self.bg_color,
-            [i for i in range(self.strip.numPixels())],
+            [i for i in range(self.led_count)],
+        )
+
+    def turn_off_leds(self):
+        if not self.enabled:
+            logging.warning("led matrix disabled")
+            return
+        """Calling this resets all LEDs to background color"""
+        self.solid_color(
+            Color(0, 0, 0),
+            [i for i in range(self.led_count)],
         )
 
     async def countdown(self):
-        logging.info(f"on_countdown {self.strip.numPixels()}")
-        if self.strip.numPixels() != 1024:
+        if not self.enabled:
+            logging.warning("led matrix disabled")
+            return
+        logging.info(f"on_countdown {self.led_count}")
+        if not {"1", "2", "3"} <= self.images.keys():
+            logging.error("images 1,2,3 not found, aborting countdown display")
             return
         await asyncio.sleep(3.85)
         logging.info("drawing 3")
-        self.draw_pixels(self.strip, self.img_three)
-        await asyncio.sleep(0.85)
+        self.draw_pixels(self.images["3"])
+        await asyncio.sleep(2.85)
         logging.info("drawing 2")
-        self.reset_leds()
-        self.draw_pixels(self.strip, self.img_two)
-        await asyncio.sleep(0.85)
-        self.reset_leds()
+        self.turn_off_leds()
+        self.draw_pixels(self.images["2"])
+        await asyncio.sleep(2.85)
+        self.turn_off_leds()
         logging.info("drawing 1")
-        self.draw_pixels(self.strip, self.img_one)
-        await asyncio.sleep(0.85)
+        self.draw_pixels(self.images["1"])
+        await asyncio.sleep(2.85)
         self.reset_leds()
 
     def end_game(self):
+        if not self.enabled:
+            logging.warning("led matrix disabled")
+            return
         """Resets all LEDs to background color and stops color timer"""
         self.color_timer.cancel()
         self.reset_leds()
@@ -353,21 +527,26 @@ class LedMatrix:
             instance
         :type configs: dict
         """
+        if self.io is None:
+            return
+        if not self.enabled:
+            logging.warning("led matrix disabled")
+            return
         self.configs = configs
         self.blink_time = self.configs[CUSTOM_KEY][BLINK_TIME_KEY]
         self.blink_interval = self.configs[CUSTOM_KEY][BLINK_INTERVAL_KEY]
         self.pixel_map = self._generate_pixel_map(
-            self.num_squares, self.strip.numPixels()
+            self.num_squares, self.led_count
         )
         self.strip.setBrightness(self.configs[CUSTOM_KEY][LED_BRIGHTNESS_KEY])
         bg_red = self.configs[CUSTOM_KEY][BG_COLOR_R_KEY]
         bg_blue = self.configs[CUSTOM_KEY][BG_COLOR_G_KEY]
         bg_green = self.configs[CUSTOM_KEY][BG_COLOR_B_KEY]
-        self.bg_color = Color(bg_red, bg_green, bg_blue)
-        if self.strip.numPixels() == 1024:
-            self.increase_contrast(self.img_one, (bg_red, bg_green, bg_blue))
-            self.increase_contrast(self.img_two, (bg_red, bg_green, bg_blue))
-            self.increase_contrast(self.img_three, (bg_red, bg_green, bg_blue))
+        self.bg_rbg = (bg_red, bg_blue, bg_green)
+        self.bg_color = Color(*self.bg_rbg)
+        self.increase_contrast(self.images["1"], self.bg_rbg)
+        self.increase_contrast(self.images["2"], self.bg_rbg)
+        self.increase_contrast(self.images["3"], self.bg_rbg)
         self.reset_leds()
 
     def _generate_pixel_map(self, num_squares, pixel_count):
@@ -406,7 +585,7 @@ class LedMatrix:
             pixel_map.append(pixels)
         return pixel_map
 
-    def set_timed_area(self, idx, timeout):
+    def set_timed_area(self, idx=0, timeout=10):
         """Make a square at given index change colors and finally blink
 
         The square will go from green, to yellow, to red, and finally blink
@@ -419,12 +598,13 @@ class LedMatrix:
             divided between green, yellow, and red colors.
         :type timeout: number
         """
+        if not self.enabled:
+            logging.warning("led matrix disabled")
+            return
         if self.color_timer is not None:
             self.color_timer.cancel()
         self.color_timer = self.TimedColorChange(
-            partial(
-                self.solid_color, strip=self.strip, pixels=self.pixel_map[idx]
-            ),
+            partial(self.solid_color, pixels=self.pixel_map[idx]),
             timeout,
             self.blink_time,
             self.blink_interval,
@@ -433,6 +613,9 @@ class LedMatrix:
 
     def on_exit(self):
         """Call this before exiting program to turn off all LEDs"""
-        self.solid_color(self.strip, Color(0, 0, 0), self.strip.numPixels())
+        if not self.enabled:
+            logging.warning("led matrix disabled")
+            return
+        self.turn_off_leds()
         if self.color_timer is not None:
             self.color_timer.cancel()
