@@ -143,6 +143,11 @@ class StarterGame(GameTemplate):
 
 
 class RacingGame(GameTemplate):
+    def __init__(self, game):
+        super().__init__(game)
+        self.filter = None
+        self.auruco_min_distance = 0.1
+
     def game_configs(self):
         return {
             "maxLaps": {
@@ -158,6 +163,13 @@ class RacingGame(GameTemplate):
                 "default": 3,
                 "minimum": 3,
                 "maximum": 50,
+            },
+            "arucoDetectionDistance": {
+                "title": "Aruco Marker Detection Distance",
+                "valueType": ConfigType.NUMBER,
+                "default": 0.1,
+                "minimum": 0,
+                "maximum": 0.5,
             },
         }
 
@@ -182,6 +194,7 @@ class RacingGame(GameTemplate):
         self.filter = ArucoFilter(
             self.marker_callback,
             self.game.aruco_source,
+            detect_distance=self.auruco_min_distance,
             detection_cooldown=0.5,
         )
 
@@ -196,6 +209,11 @@ class RacingGame(GameTemplate):
         self.max_markers = self.game.config_parser.get_game_config(
             "maxMarkers"
         )
+        self.auruco_min_distance = self.game.config_parser.get_game_config(
+            "arucoDetectionDistance"
+        )
+        if self.filter:
+            self.filter.min_dist = self.auruco_min_distance
 
     def update_lap_overlay(self):
         current_lap = max(1, min(self.lap, self.max_laps))
@@ -249,10 +267,16 @@ class RacingGame(GameTemplate):
 
 
 class ObjectHuntGame(GameTemplate):
+    def __init__(self, game):
+        super().__init__(game)
+        self.filter = None
+        self.auruco_min_distance = 0.2
+
     async def on_template_selected(self):
         self.filter = ArucoFilter(
             self.marker_callback,
             self.game.aruco_source,
+            detect_distance=self.auruco_min_distance,
         )
 
     def game_configs(self):
@@ -263,7 +287,14 @@ class ObjectHuntGame(GameTemplate):
                 "default": 3,
                 "minimum": 1,
                 "maximum": 50,
-            }
+            },
+            "arucoDetectionDistance": {
+                "title": "Aruco Marker Detection Distance",
+                "valueType": ConfigType.NUMBER,
+                "default": 0.2,
+                "minimum": 0,
+                "maximum": 0.5,
+            },
         }
 
     def slot_limits(self):
@@ -292,10 +323,15 @@ class ObjectHuntGame(GameTemplate):
         self.max_markers = self.game.config_parser.get_game_config(
             "maxMarkers"
         )
+        self.auruco_min_distance = self.game.config_parser.get_game_config(
+            "arucoDetectionDistance"
+        )
+        if self.filter:
+            self.filter.min_dist = self.auruco_min_distance
 
     def update_marker_overlay(self):
         found = self.max_markers - len(self.filter.ids)
-        marker_text = f"{found}/{self.max_markers} Markers Found"
+        marker_text = f"Found {found}/{self.max_markers}"
         self.game.io.set_custom_overlay_text("markers", marker_text)
 
     async def on_start(self):

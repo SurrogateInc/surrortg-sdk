@@ -213,11 +213,11 @@ def generate_servo_extensions(
 
 
 def generate_top_front_slot(hw, extension, custom, inputs):
-    top_front_servos = hw.servos[:3]
+    top_front_servos = hw.servos[:4]
     if extension is Extension.CAMERA_2_AXIS:
         camera = ServoJoystick(
-            top_front_servos[0],
             top_front_servos[1],
+            top_front_servos[2],
             defaults={
                 "humanReadableName": "look",
                 "onScreenPosition": on_screen_position(90, 85, JOYSTICK_SIZE),
@@ -234,6 +234,7 @@ def generate_top_front_slot(hw, extension, custom, inputs):
             [KeyCode.KEY_ARROW_LEFT, KeyCode.KEY_ARROW_RIGHT],
             [KeyCode.KEY_ARROW_DOWN, KeyCode.KEY_ARROW_UP],
             [KeyCode.KEY_C, KeyCode.KEY_V],
+            [KeyCode.KEY_Z, KeyCode.KEY_X],
         ]
         generate_servo_extensions(
             Slot.TOP_FRONT.value,
@@ -246,12 +247,11 @@ def generate_top_front_slot(hw, extension, custom, inputs):
 
 
 def generate_top_back_slot(hw, extension, custom, inputs):
-    top_back_servos = hw.servos[3:7]
+    top_back_servos = hw.servos[4:7]
     top_back_keys = [
         [KeyCode.KEY_Y, KeyCode.KEY_U],
         [KeyCode.KEY_H, KeyCode.KEY_J],
         [KeyCode.KEY_I, KeyCode.KEY_O],
-        [KeyCode.KEY_K, KeyCode.KEY_F],
     ]
     if extension is Extension.ROBOT_ARM:
         pivots = ["shoulder", "elbow", "wrist"]

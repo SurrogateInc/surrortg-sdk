@@ -40,7 +40,7 @@ class Hw:
             )
 
         self.i2c = busio.I2C(SCL, SDA)
-        self.servos = [Servo(pin) for pin in SERVO_PINS]
+        self.servos = [Servo(pin, min_full_sweep_time=0.2) for pin in SERVO_PINS]
         self.left_eye = Oled(
             self.i2c, max_update_interval=OLED_UPDATE_INTERVAL
         )
@@ -53,31 +53,31 @@ class Hw:
         self.color_sensor.active = False
 
         # Create motor drivers, one for front and one for rear motors
-        self.motor_driver_front = DRV8833(
+        self.motor_driver_left = DRV8833(
             ain1=MOTOR_FL_IN_1,
             ain2=MOTOR_FL_IN_2,
-            bin1=MOTOR_FR_IN_1,
-            bin2=MOTOR_FR_IN_2,
-        )
-        self.motor_driver_rear = DRV8833(
-            ain1=MOTOR_RR_IN_1,
-            ain2=MOTOR_RR_IN_2,
             bin1=MOTOR_RL_IN_1,
             bin2=MOTOR_RL_IN_2,
+        )
+        self.motor_driver_right = DRV8833(
+            bin1=MOTOR_FR_IN_1,
+            bin2=MOTOR_FR_IN_2,
+            ain1=MOTOR_RR_IN_1,
+            ain2=MOTOR_RR_IN_2,
         )
 
         # Abstract motor drivers into 4 individual motors
         self.motor_fl = DRV8833Motor(
-            drv8833=self.motor_driver_front, motor_number=1, direction="-"
-        )
-        self.motor_fr = DRV8833Motor(
-            drv8833=self.motor_driver_front, motor_number=2, direction="-"
-        )
-        self.motor_rr = DRV8833Motor(
-            drv8833=self.motor_driver_rear, motor_number=1, direction="+"
+            drv8833=self.motor_driver_left, motor_number=1, direction="-"
         )
         self.motor_rl = DRV8833Motor(
-            drv8833=self.motor_driver_rear, motor_number=2, direction="+"
+            drv8833=self.motor_driver_left, motor_number=2, direction="+"
+        )
+        self.motor_fr = DRV8833Motor(
+            drv8833=self.motor_driver_right, motor_number=1, direction="-"
+        )
+        self.motor_rr = DRV8833Motor(
+            drv8833=self.motor_driver_right, motor_number=2, direction="+"
         )
 
         # Create motor controller for all 4 motors
