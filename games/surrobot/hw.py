@@ -7,6 +7,7 @@ from games.surrobot.DRV8833 import DRV8833, DRV8833Motor, MotorController
 from surrortg.devices import SafeTCS34725, Servo, i2c_connected
 from surrortg.devices.led_matrix import LedMatrix
 from surrortg.devices.oled import Oled
+from surrortg.devices.oled.assets import OledImage
 
 # Motor driver control pins
 # Front left motor
@@ -45,10 +46,15 @@ class Hw:
             Servo(pin, min_full_sweep_time=0.2) for pin in SERVO_PINS
         ]
         self.left_eye = Oled(
-            self.i2c, max_update_interval=OLED_UPDATE_INTERVAL
+            self.i2c,
+            max_update_interval=OLED_UPDATE_INTERVAL,
+            side=Oled.EyePosition.LEFT,
         )
         self.right_eye = Oled(
-            self.i2c, addr=0x3D, max_update_interval=OLED_UPDATE_INTERVAL
+            self.i2c,
+            addr=0x3D,
+            max_update_interval=OLED_UPDATE_INTERVAL,
+            side=Oled.EyePosition.RIGHT,
         )
         # These should be lazy generated?
         self.color_sensor = SafeTCS34725(self.i2c)
@@ -91,8 +97,12 @@ class Hw:
         self.led_matrix = LedMatrix(size=1, led_count=64, enabled=False)
 
     def reset_eyes(self):
-        self.left_eye.show_text("left eye")
-        self.right_eye.show_text("right eye")
+        self.def_img_to_eyes(OledImage.BLINK)
+
+    # TODO: better name
+    def def_img_to_eyes(self, img_enum):
+        self.left_eye.show_default_image(img_enum)
+        self.right_eye.show_default_image(img_enum)
 
     def get_cpu_temperature(self):
         with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
