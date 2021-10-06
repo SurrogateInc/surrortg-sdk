@@ -265,6 +265,35 @@ class Oled:
             self._oled.image(im)
             self._safe_show()
 
+    def _render_frame(self, image, invert_colors):
+        # Resize and convert image to 1-bit
+        im = image.resize((self._width, self._height), Image.BICUBIC).convert(
+            "1"
+        )
+
+        if invert_colors:
+            im = ImageChops.invert(im)
+
+        # Display the image
+        self._oled.image(im)
+        self._safe_show()
+
+    async def _render_gif(self, image, invert_colors, wait_time):
+        i = 0
+        # TODO: use frame[0].info['loop'] to get number of loops (0==inf)
+        while True:
+            if i > image.n_frames - 1:
+                i = 0
+            image.seek(i)
+            self._render_frame(image, invert_colors)
+            i += 1
+            duration = (
+                image.info["duration"]
+                if "duration" in image.info
+                else wait_time
+            )
+            await asyncio.sleep(duration / 1000)
+
     async def _render_image_after_wait(self, image, invert_colors, wait_time):
         await asyncio.sleep(wait_time)
         self._render_image(image, invert_colors)
