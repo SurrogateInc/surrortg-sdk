@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import functools
+import logging
 from subprocess import run
 
 from .. import ApiClient, Message, get_config
@@ -41,7 +42,7 @@ def rollback_git(rev):
         ["git", "reset", "--hard", rev], cwd=args.path
     )  # TODO what about errors here, I guess nothing?
     if result.returncode != 0:
-        print("Failed to rollback git")
+        logging.info("Failed to rollback git")
 
 
 async def update_controller(git_branch, msg_func):
@@ -108,19 +109,19 @@ async def update_apt_packages(msg_func):
             (pkg, get_package_version(pkg)) for pkg in APT_PACKAGES
         )
     except Exception:
-        print("Failed to get package versions")
+        logging.info("Failed to get package versions")
         return False
 
     await msg_func(f"Apt package versions: {versions}", 0.33)
 
     result = run(["apt-get", "update", "-y"])
     if result.returncode != 0:
-        print("Failed to update apt cache")
+        logging.info("Failed to update apt cache")
         return False
 
     result = run(["systemctl", "stop", *APT_UNITS])
     if result.returncode != 0:
-        print("Failed to stop streamer units")
+        logging.info("Failed to stop streamer units")
         return False
 
     await msg_func("Stopped streamer, ready to update", 0.45)
@@ -156,12 +157,12 @@ async def run_upgrade(msg_func, branch):
 
 
 async def local_printer(msg, progress=0):
-    print(f"[{int(progress * 100)}%] {msg}")
+    logging.info(f"[{int(progress * 100)}%] {msg}")
     msg_times.append((progress, time.time()))
 
 
 async def send_status(api_client, msg, progress=0):
-    await local_printer(msg, progress)
+    logging.info(f"[{int(progress * 100)}%] {msg}")
     await api_client.send(
         "updateProgress",
         {"robot": config["device_id"], "progress": progress, "message": msg},
@@ -169,6 +170,13 @@ async def send_status(api_client, msg, progress=0):
 
 
 def is_controller_up_to_date(target_branch):
+    updated = run(
+        ["git", "fetch", "origin", target_branch], cwd=args.path
+    ).returncode
+    if updated != 0:
+        # TODO: handling?
+        logging.warning("failed to fetch from controller repo")
+
     local = run(
         ["git", "rev-parse", "HEAD"],
         capture_output=True,
@@ -187,10 +195,10 @@ def is_controller_up_to_date(target_branch):
         raise Exception("Failed to get controller revisions")
 
     if local.stdout == remote.stdout:
-        print("Controller is up to date")
+        logging.info("Controller is up to date")
         return True
     else:
-        print("Controller needs an update")
+        logging.info("Controller needs an update")
         return False
 
 
@@ -214,9 +222,9 @@ def are_apt_packages_up_to_date(packages):
 def is_apt_package_up_to_date(package, apt_output):
     result = [i for i in apt_output if package in i]
     if len(result) > 0:
-        print(f"Apt package {package} needs update")
+        logging.info(f"Apt package {package} needs update")
         return False
-    print(f"Apt package {package} up to date")
+    logging.info(f"Apt package {package} up to date")
     return True
 
 
@@ -234,30 +242,30 @@ async def message_handler(raw_msg):
     try:
         msg = Message.from_dict(raw_msg)
     except Exception as e:
-        print(f"Malformed updater message {e}")
+        logging.info(f"Malformed updater message {e}")
 
-    print(f"updater msg {msg}")
+    logging.info(f"updater msg {msg}")
     if msg.event == "startUpdate":
         branch = msg.payload["branch"]
         if is_everything_up_to_date(branch):
-            print("No need to update")
+            logging.info("No need to update")
         else:
-            print(f"Updating to branch {branch}")
+            logging.info(f"Updating to branch {branch}")
             await run_upgrade(
                 functools.partial(send_status, api_client), branch
             )
-            print("Update successful!")
+            logging.info("Update successful!")
             restart_self()
         await api_client.send(
             "updateSuccessful", {"robot": config["device_id"]}
         )
     elif msg.event == "checkForUpdates":
-        print("Checking for updates..")
+        logging.info("Checking for updates..")
         branch = msg.payload["branch"]
         if is_everything_up_to_date(branch):
-            print("Software is up to date!")
+            logging.info("Software is up to date!")
         else:
-            print("Software is not up to date")
+            logging.info("Software is not up to date")
             version = ""
             current = run(
                 ["git", "rev-parse", "HEAD"],
@@ -274,6 +282,12 @@ async def message_handler(raw_msg):
 
 
 if __name__ == "__main__":
+    logger = logging.getLogger()
+    logging.basicConfig(
+        format=("conn-chck-{levelname}: {message:<40} ({filename}:{lineno})"),
+        style="{",
+        level=logging.INFO,
+    )
     parser = argparse.ArgumentParser("surrobot updater")
     parser.add_argument(
         "-p",
@@ -329,9 +343,9 @@ if __name__ == "__main__":
         msg_times = []
         if args.check_only:
             if is_everything_up_to_date(args.branch):
-                print("Software is up to date!")
+                logging.info("Software is up to date!")
             else:
-                print("Software is not up to date")
+                logging.info("Software is not up to date")
         else:
             loop.run_until_complete(
                 local_printer("Starting a local update..", 0.00)
@@ -339,10 +353,10 @@ if __name__ == "__main__":
             loop.run_until_complete(run_upgrade(local_printer, args.branch))
         end_time = time.time()
         run_time = end_time - start_time
-        print(f"Total run time {run_time}")
+        logging.info(f"Total run time {run_time}")
         for logtime in msg_times:
             real = logtime[1] - start_time
-            print(
+            logging.info(
                 f"Real vs expected progress: {real / run_time} | {logtime[0]}"
             )
     else:
@@ -357,14 +371,14 @@ if __name__ == "__main__":
             message_handler,
         )
 
-        print("Starting updater..")
-        print(f"Connecting to {ge_config['url']}")
+        logging.info("Starting updater..")
+        logging.info(f"Connecting to {ge_config['url']}")
 
         loop.run_until_complete(api_client.connect())
-        print("Registering updater..")
+        logging.info("Registering updater..")
         loop.run_until_complete(
             api_client.send("registerUpdater", {"robot": config["device_id"]})
         )
 
-        print("Registered updater..")
+        logging.info("Registered updater..")
         loop.run_until_complete(api_client.run())
