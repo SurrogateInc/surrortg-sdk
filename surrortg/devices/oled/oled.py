@@ -7,7 +7,7 @@ import adafruit_ssd1306
 import board
 from PIL import Image, ImageChops, ImageDraw, ImageFont
 
-from surrortg.devices.oled import (
+from surrortg.devices.oled.assets import (
     FONT_PATH,
     OledImage,
     OledImagePath,

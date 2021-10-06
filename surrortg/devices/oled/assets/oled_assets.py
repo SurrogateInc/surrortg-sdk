@@ -1,7 +1,7 @@
 import os
 from enum import Enum, auto
 
-ASSET_PATH = os.path.join(os.path.dirname(__file__), "assets")
+ASSET_PATH = os.path.dirname(__file__)
 FONT_PATH = os.path.join(ASSET_PATH, "FreeMono.ttf")
 
 # How to add eye assets:
