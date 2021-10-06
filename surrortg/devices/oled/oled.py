@@ -299,7 +299,10 @@ class Oled:
             self._safe_show()
 
     def _render_frame(self, image, invert_colors):
+        if not self._working:
+            return
         # Resize and convert image to 1-bit
+        # TODO: only if necessary? or does the library handle that?
         im = image.resize((self._width, self._height), Image.BICUBIC).convert(
             "1"
         )
@@ -313,6 +316,13 @@ class Oled:
 
     async def _render_gif(self, image, invert_colors, wait_time):
         i = 0
+        # Try to re-init if broken
+        if not self._working:
+            self._safe_init()
+
+        # Try showing only if in a working state
+        if not self._working:
+            return
         # TODO: use frame[0].info['loop'] to get number of loops (0==inf)
         while True:
             if i > image.n_frames - 1:
