@@ -1,16 +1,21 @@
 import asyncio
 import logging
-import os
 import time
+from enum import Enum
 
 import adafruit_ssd1306
 import board
 from PIL import Image, ImageChops, ImageDraw, ImageFont
 
-ASSETS_PATH = os.path.join(os.path.dirname(__file__), "assets")
-FONT_PATH = os.path.join(ASSETS_PATH, "FreeMono.ttf")
-LOGO_PATH = os.path.join(ASSETS_PATH, "surrogatetv_logo.png")
-LOADING_GIF_PATH = os.path.join(ASSETS_PATH, "loading_balls_2.gif")
+from surrortg.devices.oled.assets import (
+    FONT_PATH,
+    OledImage,
+    OledImagePath,
+    TestAssets,
+)
+
+LEFT_EYE_ADDR = 0x3C
+RIGHT_EYE_ADDR = 0x3D
 
 
 class Oled:
@@ -26,6 +31,9 @@ class Oled:
     :type width: int, optional
     :param height: OLED screen height, defaults to 64
     :type height: int, optional
+    :param side: Which side the eye is on. If set, also modifies addr. Used to
+        determine which images to use (left/right). Defaults to None.
+    :type side: Oled.EyePosition, optional
     """
 
     def __init__(
@@ -35,6 +43,7 @@ class Oled:
         max_update_interval=0.5,
         width=128,
         height=64,
+        side=None,
     ):
         self._working = False
         self._i2c = i2c
@@ -45,6 +54,10 @@ class Oled:
         self._last_update_ts = time.time()
         self._last_text_written = ""
         self._render_task = None
+        self._side = side
+
+        self._determine_side_and_addr()
+        self._img_map = self._generate_image_map()
 
         # Prevent RuntimeError from asyncio by ignoring max_update_interval
         # if no asyncio loop is running
@@ -59,6 +72,10 @@ class Oled:
 
         # Show empty display if working
         self.clear()
+
+    class EyePosition(Enum):
+        LEFT = "left"
+        RIGHT = "right"
 
     def is_working(self):
         return self._working
@@ -168,6 +185,37 @@ class Oled:
                     )
                 )
 
+    def show_default_image(self, image_enum):
+        """Show an image defined in OledImage enums.
+
+        Left/Right side path is chosen automatically at init.
+
+        :param image_enum: Image/gif
+        :type image_enum: OledImage enum
+        """
+        assert isinstance(
+            image_enum, OledImage
+        ), "argument must be OledImage enum"
+
+        logging.info(
+            f"showing def image: {image_enum.name} {image_enum.value}"
+        )
+
+        image_enum = self._img_map[image_enum.name]
+        if ".gif" in image_enum.value:
+            try:
+                image = Image.open(image_enum.value)
+            except FileNotFoundError:
+                logging.error(f"File '{image_enum.value}' not found!")
+                return
+            self._cancel_ongoing_render_tasks()
+            self._render_task = asyncio.create_task(
+                self._render_gif(image, False, 0.1)
+            )
+        else:
+            self._cancel_ongoing_render_tasks()
+            self.show_image(image_enum.value)
+
     def clear(self, invert_colors=False):
         """Clears the OLED screen
 
@@ -249,6 +297,35 @@ class Oled:
             # Display the image
             self._oled.image(im)
             self._safe_show()
+
+    def _render_frame(self, image, invert_colors):
+        # Resize and convert image to 1-bit
+        im = image.resize((self._width, self._height), Image.BICUBIC).convert(
+            "1"
+        )
+
+        if invert_colors:
+            im = ImageChops.invert(im)
+
+        # Display the image
+        self._oled.image(im)
+        self._safe_show()
+
+    async def _render_gif(self, image, invert_colors, wait_time):
+        i = 0
+        # TODO: use frame[0].info['loop'] to get number of loops (0==inf)
+        while True:
+            if i > image.n_frames - 1:
+                i = 0
+            image.seek(i)
+            self._render_frame(image, invert_colors)
+            i += 1
+            duration = (
+                image.info["duration"]
+                if "duration" in image.info
+                else wait_time
+            )
+            await asyncio.sleep(duration / 1000)
 
     async def _render_image_after_wait(self, image, invert_colors, wait_time):
         await asyncio.sleep(wait_time)
@@ -333,6 +410,43 @@ class Oled:
             logging.error(f"Oled show() failed at address {hex(self._addr)}")
             self._working = False
 
+    def _generate_image_map(self):
+        """Map OledImage enums to correct paths for this eye"""
+        img_map = {}
+        side_str = "_R" if self._side == self.EyePosition.RIGHT else "_L"
+        for img in OledImage:
+            img_map[img.name] = OledImagePath[img.name + side_str]
+        return img_map
+
+    def _determine_side_and_addr(self):
+        # TODO: keep this for backwards compatibility or change interface now?
+        #       Could determine address only in Oled class and make side
+        #       parameter mandatory or default to left or right
+        if self._side is self.EyePosition.RIGHT:
+            self._addr = RIGHT_EYE_ADDR
+            logging.info(
+                f"Creating {self._side} side eye."
+                f" Setting i2c address to {self._addr}"
+            )
+        elif self._side is self.EyePosition.LEFT:
+            self._addr = LEFT_EYE_ADDR
+            logging.info(
+                f"Creating {self._side} side eye."
+                f"Setting i2c address to {self._addr}"
+            )
+        elif self._addr == LEFT_EYE_ADDR:
+            self._side = self.EyePosition.LEFT
+            logging.warning(
+                "Eye side (left/right) not provided, determined side to be"
+                f" ({self._side}) based on provided i2c address: {self._addr}"
+            )
+        elif self._addr == RIGHT_EYE_ADDR:
+            self._side = self.EyePosition.RIGHT
+            logging.warning(
+                "Eye side (left/right) not provided, determined side to be"
+                f" ({self._side}) based on provided i2c address: {self._addr}"
+            )
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
@@ -349,9 +463,9 @@ if __name__ == "__main__":
         "NO WRAP HERE", invert_colors=True, font_size=18, fit_to_screen=False
     )
     time.sleep(2)
-    oled.show_image(LOGO_PATH)
+    oled.show_image(TestAssets.LOGO)
     time.sleep(2)
-    oled.show_image(LOADING_GIF_PATH, invert_colors=True)
+    oled.show_image(TestAssets.LOADING_GIF, invert_colors=True)
     oled.clear()
     time.sleep(0.5)
     oled.clear(invert_colors=True)
