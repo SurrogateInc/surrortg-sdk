@@ -37,6 +37,15 @@ class GameTemplate:
     def custom_overlay(self):
         return overlay_config([], {})
 
+    def handle_led_matrix(self, image="surrobot-logo-even-bigger"):
+        top_back_ext = self.game.config_parser.get_slot_config(Slot.TOP_BACK)
+        if top_back_ext == Extension.LED_MATRIX:
+            logging.info("led matrix enabled by user")
+            self.game.hw.led_matrix.enable()
+            self.game.hw.led_matrix.show_image(image)
+        else:
+            self.game.hw.led_matrix.disable()
+
     async def on_template_selected(self):
         pass
 
@@ -85,6 +94,7 @@ class ExplorationGame(GameTemplate):
         await self.game.io.set_score_type(
             ScoreType.TOTAL_GAMES, SortOrder.DESCENDING
         )
+        self.handle_led_matrix()
 
     async def on_start(self):
         self.game.io.send_score(score=1)
@@ -93,6 +103,9 @@ class ExplorationGame(GameTemplate):
 class CustomGame(GameTemplate):
     async def on_start(self):
         logging.info("CustomGame on_start")
+
+    async def on_config(self):
+        self.handle_led_matrix()
 
 
 class StarterGame(GameTemplate):
@@ -140,6 +153,7 @@ class StarterGame(GameTemplate):
         await self.game.io.set_score_type(
             ScoreType.TOTAL_GAMES, SortOrder.DESCENDING
         )
+        self.handle_led_matrix()
 
 
 class RacingGame(GameTemplate):
@@ -214,6 +228,8 @@ class RacingGame(GameTemplate):
         )
         if self.filter:
             self.filter.min_dist = self.aruco_min_distance
+
+        self.handle_led_matrix("racing")
 
     def update_lap_overlay(self):
         current_lap = max(1, min(self.lap, self.max_laps))
@@ -328,6 +344,8 @@ class ObjectHuntGame(GameTemplate):
         )
         if self.filter:
             self.filter.min_dist = self.aruco_min_distance
+
+        self.handle_led_matrix("searching")
 
     def update_marker_overlay(self):
         found = self.max_markers - len(self.filter.ids)
