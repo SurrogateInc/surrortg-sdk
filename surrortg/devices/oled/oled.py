@@ -197,10 +197,6 @@ class Oled:
             image_enum, OledImage
         ), "argument must be OledImage enum"
 
-        logging.info(
-            f"showing def image: {image_enum.name} {image_enum.value}"
-        )
-
         image_enum = self._img_map[image_enum.name]
         if ".gif" in image_enum.value:
             try:
