@@ -26,6 +26,9 @@ class ApiClient(socketio.AsyncClientNamespace):
             else url
         )
         self.socketio_logger = logging.getLogger("socketio")
+        self.socketio_logger.setLevel(logging.WARNING)
+        self.engineio_logger = logging.getLogger("engineio")
+        self.engineio_logger.setLevel(logging.WARNING)
         self.url = self._get_query_url(url, query)
         self.connected = False
         self.message_listener = message_listener
@@ -76,7 +79,9 @@ class ApiClient(socketio.AsyncClientNamespace):
 
     async def connect(self):
         self.sio = socketio.AsyncClient(
-            logger=self.socketio_logger, reconnection=False
+            logger=self.socketio_logger,
+            engineio_logger=self.engineio_logger,
+            reconnection=False,
         )
 
         @self.sio.event(namespace=SOCKETIO_NAMESPACE)

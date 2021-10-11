@@ -8,7 +8,7 @@ REQUIRED_CONFIG_KEYS = ["device_id", "game_engine"]
 REQUIRED_CONFIG_GE_KEYS = ["url", "token"]
 
 
-def get_config(config_path, default_config_path="/etc/srtg/srtg.toml"):
+def get_config(config_path=None, default_config_path="/etc/srtg/srtg.toml"):
     """A separate static method makes testing easier"""
     if config_path is None:
         config_path = default_config_path
