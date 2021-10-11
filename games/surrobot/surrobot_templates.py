@@ -219,16 +219,12 @@ class RacingGame(GameTemplate):
 
     # TODO: implement this for other templates/abstract this
     async def input_callback(self, slot, extension, obj):
-        logging.info(f"input cb slot {slot} ext {extension} obj {obj}")
         if slot is Slot.MOVEMENT and obj["type"] == "joystick":
             if obj["x"] > -0.5 and obj["x"] < 0.5:
-                logging.info("straight eyes")
                 self.call_eyes(OledImage.RACING_STRAIGHT)
             if obj["x"] < -0.5:
-                logging.info("turn left eyes")
                 self.call_eyes(OledImage.RACING_TURN_L)
             elif obj["x"] > 0.5:
-                logging.info("turn right eyes")
                 self.call_eyes(OledImage.RACING_TURN_R)
         elif obj["type"] == "button":
             if obj["val"] == 1:
