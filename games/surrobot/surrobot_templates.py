@@ -3,6 +3,7 @@ import os
 import time
 
 from games.surrobot.surrobot_config import Extension, Slot
+from games.surrobot.surrobot_inputs import CallbackObjType
 from surrortg import ScoreType, SortOrder
 from surrortg.custom_overlay import (
     TimerType,
@@ -164,8 +165,8 @@ class StarterGame(GameTemplate):
     # TODO: better handling
     async def input_callback(self, slot, extension, obj):
         logging.info(f"input cb slot {slot} ext {extension} obj {obj}")
-        if obj["type"] == "button":
-            if obj["val"] > 0:
+        if obj.type == CallbackObjType.BUTTON:
+            if obj.is_on:
                 self.call_eyes(OledImage.DOING_ACTION)
             else:
                 self.game.hw.reset_eyes()
@@ -215,17 +216,21 @@ class RacingGame(GameTemplate):
 
     # TODO: implement this for other templates/abstract this
     async def input_callback(self, slot, extension, obj):
-        if slot is Slot.MOVEMENT and obj["type"] == "joystick":
-            if obj["x"] > -0.5 and obj["x"] < 0.5:
-                self.call_eyes(OledImage.RACING_STRAIGHT)
-            if obj["x"] < -0.5:
+        if (
+            slot is Slot.MOVEMENT
+            and obj.type == CallbackObjType.JOYSTICK
+            and obj.limit_to == "x"
+        ):
+            if obj.x < -0.5:
                 self.call_eyes(OledImage.RACING_TURN_L)
-            elif obj["x"] > 0.5:
+            elif obj.x > 0.5:
                 self.call_eyes(OledImage.RACING_TURN_R)
-        elif obj["type"] == "button":
-            if obj["val"] == 1:
+            else:
+                self.call_eyes(OledImage.RACING_STRAIGHT)
+        elif obj.type == CallbackObjType.BUTTON:
+            if obj.is_on:
                 self.call_eyes(OledImage.DOING_ACTION)
-            elif obj["val"] == -1:
+            else:
                 self.call_eyes(OledImage.RACING_STRAIGHT)
 
     def custom_overlay(self):

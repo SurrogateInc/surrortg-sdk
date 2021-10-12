@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+from enum import Enum, auto
 from functools import partial
 
 from games.surrobot.surrobot_config import Extension, Slot
@@ -16,6 +18,32 @@ BUTTON_SIZE = 15
 SMALL_BUTTON_SIZE = 10
 
 
+class CallbackObjType(Enum):
+    BUTTON = auto()
+    JOYSTICK = auto()
+    ACTUATOR = auto()
+
+
+@dataclass
+class CallbackObjButton:
+    is_on: bool
+    type: CallbackObjType = CallbackObjType.BUTTON
+
+
+@dataclass
+class CallbackObjActuator:
+    val: float
+    type: CallbackObjType = CallbackObjType.ACTUATOR
+
+
+@dataclass
+class CallbackObjJoystick:
+    x: float
+    y: float
+    limit_to: str = None
+    type: CallbackObjType = CallbackObjType.JOYSTICK
+
+
 class MotorJoystick(Joystick):
     def __init__(
         self, motor_controller, callback, limit_to=None, defaults=None
@@ -29,13 +57,15 @@ class MotorJoystick(Joystick):
         if self.limit_to:
             if self.limit_to == "x":
                 self.motor_controller.rotational_speed = x
-                await self.callback(obj={"type": "joystick", "x": x, "y": y})
             else:
                 self.motor_controller.longitudinal_speed = y
+            await self.callback(
+                obj=CallbackObjJoystick(x=x, y=y, limit_to=self.limit_to)
+            )
         else:
             self.motor_controller.rotational_speed = x
             self.motor_controller.longitudinal_speed = y
-            await self.callback(obj={"type": "joystick", "x": x, "y": y})
+            await self.callback(obj=CallbackObjJoystick(x=x, y=y))
 
 
 class MotorActuator(LinearActuator):
@@ -46,7 +76,7 @@ class MotorActuator(LinearActuator):
 
     async def drive_actuator(self, val, seat=0):
         self.motor.speed = val
-        await self.callback(obj={"type": "actuator", "val": val})
+        await self.callback(obj=CallbackObjActuator(val=val))
 
 
 class ServoJoystick(Joystick):
@@ -60,7 +90,7 @@ class ServoJoystick(Joystick):
         self.servo_x.rotation_speed = x
         if self.servo_y:
             self.servo_y.rotation_speed = y
-        await self.callback(obj={"type": "joystick", "x": x, "y": y})
+        await self.callback(obj=CallbackObjJoystick(x=x, y=y))
 
 
 class ServoActuator(LinearActuator):
@@ -71,7 +101,7 @@ class ServoActuator(LinearActuator):
 
     async def drive_actuator(self, val, seat=0):
         self.servo.rotation_speed = val
-        await self.callback(obj={"type": "actuator", "val": val})
+        await self.callback(obj=CallbackObjActuator(val=val))
 
 
 class ServoButton(Switch):
@@ -86,11 +116,11 @@ class ServoButton(Switch):
 
     async def off(self, seat=0):
         await self.servo.rotate_to(self.off_position)
-        await self.callback(obj={"type": "button", "val": self.off_position})
+        await self.callback(obj=CallbackObjButton(is_on=False))
 
     async def on(self, seat=0):
         await self.servo.rotate_to(self.on_position)
-        await self.callback(obj={"type": "button", "val": self.on_position})
+        await self.callback(obj=CallbackObjButton(is_on=True))
 
 
 class BidirectionalServoTurner(Switch):
@@ -109,12 +139,12 @@ class BidirectionalServoTurner(Switch):
     async def off(self, seat=0):
         new_speed = 0
         self.servo.rotation_speed = new_speed
-        await self.callback(obj={"type": "turner", "val": new_speed})
+        await self.callback(obj=CallbackObjButton(is_on=False))
 
     async def on(self, seat=0):
         new_speed = self.speed
         self.servo.rotation_speed = new_speed
-        await self.callback(obj={"type": "turner", "val": new_speed})
+        await self.callback(obj=CallbackObjButton(is_on=True))
 
 
 class ButtonPositioner:

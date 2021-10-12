@@ -72,10 +72,10 @@ class MockOled(BaseMock):
         logging.info(f"Writing text to eye: {txt}")
 
     def show_image(self, image):
-        logging.info("Showing image on eye")
+        logging.info(f"Showing image on eye {image}")
 
     def show_default_image(self, image):
-        logging.info("Showing default image on eye")
+        logging.info(f"Showing default image on eye {image}")
 
     def clear(self):
         logging.info("Clearing eye")
