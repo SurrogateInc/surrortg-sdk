@@ -49,14 +49,22 @@ class MockServo(BaseMock):
 
 
 class MockLedMatrix(BaseMock):
+    def __init__(self, enabled=True, *args, **kwargs):
+        super().__init__({"enabled": enabled})
+
     def enable(self):
-        logging.info("Led matrix enabled")
+        self.enabled = True
 
     def disable(self):
-        logging.info("Led matrix disabled")
+        self.enabled = False
 
     def show_image(self, image):
-        logging.info("Showing image on led matrix")
+        if not self.enable:
+            logging.warning(
+                "Trying to show image in led matrix while not enabled"
+            )
+        else:
+            logging.info(f"Showing image in led matrix: {image}")
 
 
 class MockOled(BaseMock):

@@ -42,14 +42,10 @@ class GameTemplate:
     def custom_overlay(self):
         return overlay_config([], {})
 
-    def handle_led_matrix(self, image="surrobot-logo-even-bigger"):
-        top_back_ext = self.game.config_parser.get_slot_config(Slot.TOP_BACK)
-        if top_back_ext == Extension.LED_MATRIX:
-            logging.info("led matrix enabled by user")
-            self.game.hw.led_matrix.enable()
-            self.game.hw.led_matrix.show_image(image)
-        else:
-            self.game.hw.led_matrix.disable()
+    def show_image_led_matrix(self, image="surrobot-logo-even-bigger"):
+        matrix = self.game.hw.led_matrix
+        if matrix.enabled:
+            matrix.show_image(image)
 
     async def input_callback(self, slot, extension, obj):
         pass
@@ -102,7 +98,7 @@ class ExplorationGame(GameTemplate):
         await self.game.io.set_score_type(
             ScoreType.TOTAL_GAMES, SortOrder.DESCENDING
         )
-        self.handle_led_matrix()
+        self.show_image_led_matrix()
         self.game.hw.reset_eyes()
 
     async def on_start(self):
@@ -114,7 +110,7 @@ class CustomGame(GameTemplate):
         logging.info("CustomGame on_start")
 
     async def on_config(self):
-        self.handle_led_matrix()
+        self.show_image_led_matrix()
 
 
 class StarterGame(GameTemplate):
@@ -162,7 +158,7 @@ class StarterGame(GameTemplate):
         await self.game.io.set_score_type(
             ScoreType.TOTAL_GAMES, SortOrder.DESCENDING
         )
-        self.handle_led_matrix()
+        self.show_image_led_matrix()
         self.game.hw.reset_eyes()
 
     # TODO: better handling
@@ -263,7 +259,7 @@ class RacingGame(GameTemplate):
         if self.filter:
             self.filter.min_dist = self.aruco_min_distance
 
-        self.handle_led_matrix("racing")
+        self.show_image_led_matrix("racing")
         self.game.hw.reset_eyes()
 
     def update_lap_overlay(self):
@@ -381,7 +377,7 @@ class ObjectHuntGame(GameTemplate):
         if self.filter:
             self.filter.min_dist = self.aruco_min_distance
 
-        self.handle_led_matrix("searching")
+        self.show_image_led_matrix("searching")
         self.game.hw.reset_eyes()
 
     def update_marker_overlay(self):

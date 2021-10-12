@@ -305,12 +305,20 @@ def generate_top_front_slot(hw, extension, custom, inputs, callback):
 
 
 def generate_top_back_slot(hw, extension, custom, inputs, callback):
+    # Handle led matrix enable/disable
+    if extension is Extension.LED_MATRIX:
+        hw.led_matrix.enable()
+    else:
+        hw.led_matrix.disable()
+
     top_back_servos = hw.servos[4:7]
     top_back_keys = [
         [KeyCode.KEY_Y, KeyCode.KEY_U],
         [KeyCode.KEY_H, KeyCode.KEY_J],
         [KeyCode.KEY_I, KeyCode.KEY_O],
     ]
+    positioner = ButtonPositioner(10, 10, (0, 1.5), 2)
+
     if extension is Extension.ROBOT_ARM:
         pivots = ["shoulder", "elbow", "wrist"]
         for i, pivot in enumerate(pivots):
@@ -327,9 +335,7 @@ def generate_top_back_slot(hw, extension, custom, inputs, callback):
                 },
             )
             inputs[f"robotArm{pivot.capitalize()}"] = pivot_actuator
-        return
-    positioner = ButtonPositioner(10, 10, (0, 1.5), 2)
-    if extension in [
+    elif extension in [
         Extension.BUTTON_PRESSER,
         Extension.KNOB_TURNER,
         Extension.SWITCH_FLICKER,
