@@ -17,15 +17,25 @@ SMALL_BUTTON_SIZE = 10
 
 
 class MotorJoystick(Joystick):
-    def __init__(self, motor_controller, callback, defaults=None):
+    def __init__(
+        self, motor_controller, callback, limit_to=None, defaults=None
+    ):
         super().__init__(defaults)
         self.motor_controller = motor_controller
+        self.limit_to = limit_to
         self.callback = callback
 
     async def handle_coordinates(self, x, y, seat=0):
-        self.motor_controller.rotational_speed = x
-        self.motor_controller.longitudinal_speed = y
-        await self.callback(obj={"type": "joystick", "x": x, "y": y})
+        if self.limit_to:
+            if self.limit_to == "x":
+                self.motor_controller.rotational_speed = x
+                await self.callback(obj={"type": "joystick", "x": x, "y": y})
+            else:
+                self.motor_controller.longitudinal_speed = y
+        else:
+            self.motor_controller.rotational_speed = x
+            self.motor_controller.longitudinal_speed = y
+            await self.callback(obj={"type": "joystick", "x": x, "y": y})
 
 
 class MotorActuator(LinearActuator):
@@ -145,19 +155,34 @@ def generate_partial_input_cb(callback, slot, extension):
 def generate_movement_slot(hw, extension, custom, inputs, callback):
     if extension in [Extension.DRIVE_4_WHEELS, Extension.DRIVE_2_WHEELS]:
         # TODO: Set the motor_controller to some 4 or 2 wheel mode
-        motor_joystick = MotorJoystick(
+        motor_joystick_y = MotorJoystick(
             hw.motor_controller,
             generate_partial_input_cb(callback, Slot.MOVEMENT, extension),
+            limit_to="y",
             defaults={
                 "humanReadableName": "movement",
                 "onScreenPosition": on_screen_position(10, 85, JOYSTICK_SIZE),
-                "xMinKeys": keys_object("left", [KeyCode.KEY_A]),
-                "xMaxKeys": keys_object("right", [KeyCode.KEY_D]),
+                "xMinKeys": keys_object("left", []),
+                "xMaxKeys": keys_object("right", []),
                 "yMinKeys": keys_object("back", [KeyCode.KEY_S]),
                 "yMaxKeys": keys_object("forward", [KeyCode.KEY_W]),
             },
         )
-        inputs["movement"] = motor_joystick
+        inputs["movementSpeed"] = motor_joystick_y
+        motor_joystick_x = MotorJoystick(
+            hw.motor_controller,
+            generate_partial_input_cb(callback, Slot.MOVEMENT, extension),
+            limit_to="x",
+            defaults={
+                "humanReadableName": "movement",
+                "onScreenPosition": on_screen_position(90, 85, JOYSTICK_SIZE),
+                "xMinKeys": keys_object("left", [KeyCode.KEY_A]),
+                "xMaxKeys": keys_object("right", [KeyCode.KEY_D]),
+                "yMinKeys": keys_object("back", []),
+                "yMaxKeys": keys_object("forward", []),
+            },
+        )
+        inputs["movementTurn"] = motor_joystick_x
     elif extension is Extension.CUSTOM:
         motors = [hw.motor_fl, hw.motor_fr, hw.motor_rr, hw.motor_rl]
         binds = [
@@ -252,7 +277,7 @@ def generate_top_front_slot(hw, extension, custom, inputs, callback):
             top_front_servos[2],
             defaults={
                 "humanReadableName": "look",
-                "onScreenPosition": on_screen_position(90, 85, JOYSTICK_SIZE),
+                "onScreenPosition": on_screen_position(90, 60, JOYSTICK_SIZE),
                 "xMinKeys": keys_object("left", [KeyCode.KEY_ARROW_LEFT]),
                 "xMaxKeys": keys_object("right", [KeyCode.KEY_ARROW_RIGHT]),
                 "yMinKeys": keys_object("down", [KeyCode.KEY_ARROW_DOWN]),
@@ -261,7 +286,7 @@ def generate_top_front_slot(hw, extension, custom, inputs, callback):
         )
         inputs["camera2Axis"] = camera
     elif extension is Extension.CUSTOM:
-        positioner = ButtonPositioner(90, 85, (0, -1.5), 2)
+        positioner = ButtonPositioner(90, 60, (0, -1.5), 0)
         binds = [
             [KeyCode.KEY_ARROW_LEFT, KeyCode.KEY_ARROW_RIGHT],
             [KeyCode.KEY_ARROW_DOWN, KeyCode.KEY_ARROW_UP],
@@ -311,7 +336,7 @@ def generate_top_back_slot(hw, extension, custom, inputs, callback):
     ]:
         generate_servo_extensions(
             Slot.TOP_BACK.value,
-            [extension] * 4,
+            [extension] * 3,
             top_back_servos,
             inputs,
             top_back_keys,
