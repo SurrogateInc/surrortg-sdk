@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+from enum import Enum, auto
 from functools import partial
 
 from games.surrobot.surrobot_config import Extension, Slot
@@ -16,16 +18,54 @@ BUTTON_SIZE = 15
 SMALL_BUTTON_SIZE = 10
 
 
+class CallbackObjType(Enum):
+    BUTTON = auto()
+    JOYSTICK = auto()
+    ACTUATOR = auto()
+
+
+@dataclass
+class CallbackObjButton:
+    is_on: bool
+    type: CallbackObjType = CallbackObjType.BUTTON
+
+
+@dataclass
+class CallbackObjActuator:
+    val: float
+    type: CallbackObjType = CallbackObjType.ACTUATOR
+
+
+@dataclass
+class CallbackObjJoystick:
+    x: float
+    y: float
+    limit_to: str = None
+    type: CallbackObjType = CallbackObjType.JOYSTICK
+
+
 class MotorJoystick(Joystick):
-    def __init__(self, motor_controller, callback, defaults=None):
+    def __init__(
+        self, motor_controller, callback, limit_to=None, defaults=None
+    ):
         super().__init__(defaults)
         self.motor_controller = motor_controller
+        self.limit_to = limit_to
         self.callback = callback
 
     async def handle_coordinates(self, x, y, seat=0):
-        self.motor_controller.rotational_speed = x
-        self.motor_controller.longitudinal_speed = y
-        await self.callback(obj={"type": "joystick", "x": x, "y": y})
+        if self.limit_to:
+            if self.limit_to == "x":
+                self.motor_controller.rotational_speed = x
+            else:
+                self.motor_controller.longitudinal_speed = y
+            await self.callback(
+                obj=CallbackObjJoystick(x=x, y=y, limit_to=self.limit_to)
+            )
+        else:
+            self.motor_controller.rotational_speed = x
+            self.motor_controller.longitudinal_speed = y
+            await self.callback(obj=CallbackObjJoystick(x=x, y=y))
 
 
 class MotorActuator(LinearActuator):
@@ -36,7 +76,7 @@ class MotorActuator(LinearActuator):
 
     async def drive_actuator(self, val, seat=0):
         self.motor.speed = val
-        await self.callback(obj={"type": "actuator", "val": val})
+        await self.callback(obj=CallbackObjActuator(val=val))
 
 
 class ServoJoystick(Joystick):
@@ -50,7 +90,7 @@ class ServoJoystick(Joystick):
         self.servo_x.rotation_speed = x
         if self.servo_y:
             self.servo_y.rotation_speed = y
-        await self.callback(obj={"type": "joystick", "x": x, "y": y})
+        await self.callback(obj=CallbackObjJoystick(x=x, y=y))
 
 
 class ServoActuator(LinearActuator):
@@ -61,7 +101,7 @@ class ServoActuator(LinearActuator):
 
     async def drive_actuator(self, val, seat=0):
         self.servo.rotation_speed = val
-        await self.callback(obj={"type": "actuator", "val": val})
+        await self.callback(obj=CallbackObjActuator(val=val))
 
 
 class ServoButton(Switch):
@@ -76,11 +116,11 @@ class ServoButton(Switch):
 
     async def off(self, seat=0):
         await self.servo.rotate_to(self.off_position)
-        await self.callback(obj={"type": "button", "val": self.off_position})
+        await self.callback(obj=CallbackObjButton(is_on=False))
 
     async def on(self, seat=0):
         await self.servo.rotate_to(self.on_position)
-        await self.callback(obj={"type": "button", "val": self.on_position})
+        await self.callback(obj=CallbackObjButton(is_on=True))
 
 
 class BidirectionalServoTurner(Switch):
@@ -99,12 +139,12 @@ class BidirectionalServoTurner(Switch):
     async def off(self, seat=0):
         new_speed = 0
         self.servo.rotation_speed = new_speed
-        await self.callback(obj={"type": "turner", "val": new_speed})
+        await self.callback(obj=CallbackObjButton(is_on=False))
 
     async def on(self, seat=0):
         new_speed = self.speed
         self.servo.rotation_speed = new_speed
-        await self.callback(obj={"type": "turner", "val": new_speed})
+        await self.callback(obj=CallbackObjButton(is_on=True))
 
 
 class ButtonPositioner:
@@ -145,19 +185,34 @@ def generate_partial_input_cb(callback, slot, extension):
 def generate_movement_slot(hw, extension, custom, inputs, callback):
     if extension in [Extension.DRIVE_4_WHEELS, Extension.DRIVE_2_WHEELS]:
         # TODO: Set the motor_controller to some 4 or 2 wheel mode
-        motor_joystick = MotorJoystick(
+        motor_joystick_y = MotorJoystick(
             hw.motor_controller,
             generate_partial_input_cb(callback, Slot.MOVEMENT, extension),
+            limit_to="y",
             defaults={
                 "humanReadableName": "movement",
                 "onScreenPosition": on_screen_position(10, 85, JOYSTICK_SIZE),
-                "xMinKeys": keys_object("left", [KeyCode.KEY_A]),
-                "xMaxKeys": keys_object("right", [KeyCode.KEY_D]),
+                "xMinKeys": keys_object("left", []),
+                "xMaxKeys": keys_object("right", []),
                 "yMinKeys": keys_object("back", [KeyCode.KEY_S]),
                 "yMaxKeys": keys_object("forward", [KeyCode.KEY_W]),
             },
         )
-        inputs["movement"] = motor_joystick
+        inputs["movementSpeed"] = motor_joystick_y
+        motor_joystick_x = MotorJoystick(
+            hw.motor_controller,
+            generate_partial_input_cb(callback, Slot.MOVEMENT, extension),
+            limit_to="x",
+            defaults={
+                "humanReadableName": "movement",
+                "onScreenPosition": on_screen_position(90, 85, JOYSTICK_SIZE),
+                "xMinKeys": keys_object("left", [KeyCode.KEY_A]),
+                "xMaxKeys": keys_object("right", [KeyCode.KEY_D]),
+                "yMinKeys": keys_object("back", []),
+                "yMaxKeys": keys_object("forward", []),
+            },
+        )
+        inputs["movementTurn"] = motor_joystick_x
     elif extension is Extension.CUSTOM:
         motors = [hw.motor_fl, hw.motor_fr, hw.motor_rr, hw.motor_rl]
         binds = [
@@ -252,7 +307,7 @@ def generate_top_front_slot(hw, extension, custom, inputs, callback):
             top_front_servos[2],
             defaults={
                 "humanReadableName": "look",
-                "onScreenPosition": on_screen_position(90, 85, JOYSTICK_SIZE),
+                "onScreenPosition": on_screen_position(90, 60, JOYSTICK_SIZE),
                 "xMinKeys": keys_object("left", [KeyCode.KEY_ARROW_LEFT]),
                 "xMaxKeys": keys_object("right", [KeyCode.KEY_ARROW_RIGHT]),
                 "yMinKeys": keys_object("down", [KeyCode.KEY_ARROW_DOWN]),
@@ -261,7 +316,7 @@ def generate_top_front_slot(hw, extension, custom, inputs, callback):
         )
         inputs["camera2Axis"] = camera
     elif extension is Extension.CUSTOM:
-        positioner = ButtonPositioner(90, 85, (0, -1.5), 2)
+        positioner = ButtonPositioner(90, 60, (0, -1.5), 0)
         binds = [
             [KeyCode.KEY_ARROW_LEFT, KeyCode.KEY_ARROW_RIGHT],
             [KeyCode.KEY_ARROW_DOWN, KeyCode.KEY_ARROW_UP],
@@ -280,12 +335,20 @@ def generate_top_front_slot(hw, extension, custom, inputs, callback):
 
 
 def generate_top_back_slot(hw, extension, custom, inputs, callback):
+    # Handle led matrix enable/disable
+    if extension is Extension.LED_MATRIX:
+        hw.led_matrix.enable()
+    else:
+        hw.led_matrix.disable()
+
     top_back_servos = hw.servos[4:7]
     top_back_keys = [
         [KeyCode.KEY_Y, KeyCode.KEY_U],
         [KeyCode.KEY_H, KeyCode.KEY_J],
         [KeyCode.KEY_I, KeyCode.KEY_O],
     ]
+    positioner = ButtonPositioner(10, 10, (0, 1.5), 2)
+
     if extension is Extension.ROBOT_ARM:
         pivots = ["shoulder", "elbow", "wrist"]
         for i, pivot in enumerate(pivots):
@@ -302,16 +365,14 @@ def generate_top_back_slot(hw, extension, custom, inputs, callback):
                 },
             )
             inputs[f"robotArm{pivot.capitalize()}"] = pivot_actuator
-        return
-    positioner = ButtonPositioner(10, 10, (0, 1.5), 2)
-    if extension in [
+    elif extension in [
         Extension.BUTTON_PRESSER,
         Extension.KNOB_TURNER,
         Extension.SWITCH_FLICKER,
     ]:
         generate_servo_extensions(
             Slot.TOP_BACK.value,
-            [extension] * 4,
+            [extension] * 3,
             top_back_servos,
             inputs,
             top_back_keys,

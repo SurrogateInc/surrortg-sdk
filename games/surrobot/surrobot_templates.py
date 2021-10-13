@@ -3,6 +3,7 @@ import os
 import time
 
 from games.surrobot.surrobot_config import Extension, Slot
+from games.surrobot.surrobot_inputs import CallbackObjType
 from surrortg import ScoreType, SortOrder
 from surrortg.custom_overlay import (
     TimerType,
@@ -42,14 +43,10 @@ class GameTemplate:
     def custom_overlay(self):
         return overlay_config([], {})
 
-    def handle_led_matrix(self, image="surrobot-logo-even-bigger"):
-        top_back_ext = self.game.config_parser.get_slot_config(Slot.TOP_BACK)
-        if top_back_ext == Extension.LED_MATRIX:
-            logging.info("led matrix enabled by user")
-            self.game.hw.led_matrix.enable()
-            self.game.hw.led_matrix.show_image(image)
-        else:
-            self.game.hw.led_matrix.disable()
+    def show_image_led_matrix(self, image="surrobot-logo-even-bigger"):
+        matrix = self.game.hw.led_matrix
+        if matrix.enabled:
+            matrix.show_image(image)
 
     async def input_callback(self, slot, extension, obj):
         pass
@@ -102,7 +99,7 @@ class ExplorationGame(GameTemplate):
         await self.game.io.set_score_type(
             ScoreType.TOTAL_GAMES, SortOrder.DESCENDING
         )
-        self.handle_led_matrix()
+        self.show_image_led_matrix()
         self.game.hw.reset_eyes()
 
     async def on_start(self):
@@ -114,7 +111,7 @@ class CustomGame(GameTemplate):
         logging.info("CustomGame on_start")
 
     async def on_config(self):
-        self.handle_led_matrix()
+        self.show_image_led_matrix()
 
 
 class StarterGame(GameTemplate):
@@ -162,14 +159,14 @@ class StarterGame(GameTemplate):
         await self.game.io.set_score_type(
             ScoreType.TOTAL_GAMES, SortOrder.DESCENDING
         )
-        self.handle_led_matrix()
+        self.show_image_led_matrix()
         self.game.hw.reset_eyes()
 
     # TODO: better handling
     async def input_callback(self, slot, extension, obj):
         logging.info(f"input cb slot {slot} ext {extension} obj {obj}")
-        if obj["type"] == "button":
-            if obj["val"] > 0:
+        if obj.type == CallbackObjType.BUTTON:
+            if obj.is_on:
                 self.call_eyes(OledImage.DOING_ACTION)
             else:
                 self.game.hw.reset_eyes()
@@ -219,17 +216,21 @@ class RacingGame(GameTemplate):
 
     # TODO: implement this for other templates/abstract this
     async def input_callback(self, slot, extension, obj):
-        if slot is Slot.MOVEMENT and obj["type"] == "joystick":
-            if obj["x"] > -0.5 and obj["x"] < 0.5:
-                self.call_eyes(OledImage.RACING_STRAIGHT)
-            if obj["x"] < -0.5:
+        if (
+            slot is Slot.MOVEMENT
+            and obj.type == CallbackObjType.JOYSTICK
+            and obj.limit_to == "x"
+        ):
+            if obj.x < -0.5:
                 self.call_eyes(OledImage.RACING_TURN_L)
-            elif obj["x"] > 0.5:
+            elif obj.x > 0.5:
                 self.call_eyes(OledImage.RACING_TURN_R)
-        elif obj["type"] == "button":
-            if obj["val"] == 1:
+            else:
+                self.call_eyes(OledImage.RACING_STRAIGHT)
+        elif obj.type == CallbackObjType.BUTTON:
+            if obj.is_on:
                 self.call_eyes(OledImage.DOING_ACTION)
-            elif obj["val"] == -1:
+            else:
                 self.call_eyes(OledImage.RACING_STRAIGHT)
 
     def custom_overlay(self):
@@ -263,7 +264,7 @@ class RacingGame(GameTemplate):
         if self.filter:
             self.filter.min_dist = self.aruco_min_distance
 
-        self.handle_led_matrix("racing")
+        self.show_image_led_matrix("racing")
         self.game.hw.reset_eyes()
 
     def update_lap_overlay(self):
@@ -381,7 +382,7 @@ class ObjectHuntGame(GameTemplate):
         if self.filter:
             self.filter.min_dist = self.aruco_min_distance
 
-        self.handle_led_matrix("searching")
+        self.show_image_led_matrix("searching")
         self.game.hw.reset_eyes()
 
     def update_marker_overlay(self):

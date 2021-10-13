@@ -23,7 +23,7 @@ MOTOR_RR_IN_2 = 13
 MOTOR_RL_IN_1 = 16
 MOTOR_RL_IN_2 = 20
 
-SERVO_PINS = [17, 27, 22, 25, 24, 23, 5, 18]
+SERVO_PINS = [17, 27, 22, 23, 25, 18, 24, 5]
 
 I2C_DEVICES = {
     "right oled": "0x3d",
@@ -77,16 +77,16 @@ class Hw:
 
         # Abstract motor drivers into 4 individual motors
         self.motor_fl = DRV8833Motor(
-            drv8833=self.motor_driver_left, motor_number=2, direction="-"
+            drv8833=self.motor_driver_left, motor_number=2, direction="+"
         )
         self.motor_rl = DRV8833Motor(
-            drv8833=self.motor_driver_left, motor_number=1, direction="-"
+            drv8833=self.motor_driver_left, motor_number=1, direction="+"
         )
         self.motor_fr = DRV8833Motor(
-            drv8833=self.motor_driver_right, motor_number=2, direction="+"
+            drv8833=self.motor_driver_right, motor_number=2, direction="-"
         )
         self.motor_rr = DRV8833Motor(
-            drv8833=self.motor_driver_right, motor_number=1, direction="+"
+            drv8833=self.motor_driver_right, motor_number=1, direction="-"
         )
 
         # Create motor controller for all 4 motors
