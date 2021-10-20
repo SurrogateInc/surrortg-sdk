@@ -227,7 +227,7 @@ class RacingGame(GameTemplate):
                 "title": "Aruco Marker Detection Distance (cm)",
                 "valueType": ConfigType.INTEGER,
                 "default": 100,
-                "minimum": 0,
+                "minimum": 20,
                 "maximum": 300,
             },
             # TODO: support inches as well?
@@ -384,7 +384,7 @@ class ObjectHuntGame(GameTemplate):
                 "title": "Aruco Marker Detection Distance (cm)",
                 "valueType": ConfigType.INTEGER,
                 "default": 100,
-                "minimum": 0,
+                "minimum": 20,
                 "maximum": 300,
             },
             "arucoMarkerSize": {
