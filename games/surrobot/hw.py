@@ -96,6 +96,11 @@ class Hw:
 
         self.led_matrix = LedMatrix(size=1, led_count=64, enabled=False)
 
+        # Camera physical parameters used for aruco distance estimation
+        # Unit is micrometers
+        self.sensor_height = 2738.4
+        self.focal_length = 3.6 * 1000
+
     def reset_eyes(self):
         self.def_img_to_eyes(OledImage.BLINK)
 

@@ -1,4 +1,3 @@
-import logging
 from math import sqrt
 
 
@@ -55,19 +54,24 @@ class ArucoMarker:
         )
         return distance
 
-    def get_real_distance(self, marker_size, sensor_height, focal_length):
+    def get_real_distance(
+        self, marker_size, sensor_height, focal_length, crop_factor=0.75
+    ):
         """Calculates physical distance to marker.
 
         Experimental feature that can measure real distance to marker with
         relatively good accuracy. Requires knowledge of the physical size of
         the aruco marker and hardware parameters of the camera.
 
-        :param marker_size: length of marker in millimeters*100
+        :param marker_size: length of marker in micrometers
         :type id: Int
-        :param sensor_height: height of sensor in millimeters*100
+        :param sensor_height: height of sensor in micrometers
         :type sensor_height: Int
-        :param focal_length: focal length of camera in millimeters*100
+        :param focal_length: focal length of camera in micrometers
         :type focal_length: Int
+        :param crop_factor: amount of vertical cropping due to difference in
+            sensor size and video aspect ratio. Defaults to 0.75.
+        :type crop_factor: float, optional
 
         :return: distance to marker in millimeters
         :rtype: float
@@ -79,13 +83,12 @@ class ArucoMarker:
             )
             for i in range(len(self.corners))
         ]
-        fix_factor = 8 / 5
+
         distance = (
-            (fix_factor * focal_length * marker_size * self.resolution[1])
+            (crop_factor * focal_length * marker_size * self.resolution[1])
             / (max(edge_lengths) * sensor_height)
-            / 100
+            / 1000
         )
-        logging.info(f"real distance: {distance}")
         return distance
 
     def get_location(self):

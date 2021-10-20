@@ -21,9 +21,14 @@ else:
     from surrortg.devices.oled.assets import OledImage
     from surrortg.image_recognition.aruco import ArucoFilter
 
+# Side length of aruco marker in millimeters
+# TODO: move this elsewhere?
+DEFAULT_MARKER_SIZE = 75
 
 # TODO some cleanup function when a template is changed
 # for example: to stop the ArucoFinder running if not used
+
+
 class GameTemplate:
     def __init__(self, game):
         self.game = game
@@ -47,6 +52,29 @@ class GameTemplate:
         matrix = self.game.hw.led_matrix
         if matrix.enabled:
             matrix.show_image(image)
+
+    def aruco_distance_filter(self, marker):
+        """Filter aruco markers based on physical distance
+
+        Uses a magic formula to fix measurement error. Magic formula unlikely
+        to work with other cameras.
+
+        param marker: aruco marker
+        type: ArucoMarker
+        """
+        distance = marker.get_real_distance(
+            self.marker_size * 1000,
+            self.game.hw.sensor_height,
+            self.game.hw.focal_length,
+        )
+        # Fix measurement errors due to fish eye lens and other imperfections.
+        # Formula is based on observed data, no theoretical backing.
+        correction = (
+            (200 / self.marker_size) ** 1.9 * (distance / 200) ** 1.11
+        ) ** 1.1
+        fixed_distance = distance - correction
+        # convert max distance to millimeters
+        return fixed_distance < self.aruco_max_distance * 10
 
     async def input_callback(self, slot, extension, obj):
         pass
@@ -176,7 +204,8 @@ class RacingGame(GameTemplate):
     def __init__(self, game):
         super().__init__(game)
         self.filter = None
-        self.aruco_min_distance = 0.1
+        self.aruco_max_distance = 100
+        self.marker_size = DEFAULT_MARKER_SIZE
 
     def game_configs(self):
         return {
@@ -195,11 +224,19 @@ class RacingGame(GameTemplate):
                 "maximum": 50,
             },
             "arucoDetectionDistance": {
-                "title": "Aruco Marker Detection Distance",
-                "valueType": ConfigType.NUMBER,
-                "default": 0.1,
+                "title": "Aruco Marker Detection Distance (cm)",
+                "valueType": ConfigType.INTEGER,
+                "default": 100,
                 "minimum": 0,
-                "maximum": 0.5,
+                "maximum": 300,
+            },
+            # TODO: support inches as well?
+            "arucoMarkerSize": {
+                "title": "Size of Aruco Markers (millimeters)",
+                "valueType": ConfigType.INTEGER,
+                "default": DEFAULT_MARKER_SIZE,
+                "minimum": 10,
+                "maximum": 200,
             },
         }
 
@@ -243,9 +280,9 @@ class RacingGame(GameTemplate):
         self.filter = ArucoFilter(
             self.marker_callback,
             self.game.aruco_source,
-            detect_distance=self.aruco_min_distance,
             detection_cooldown=0.5,
         )
+        self.filter.add_filter(self.aruco_distance_filter)
 
     async def on_config(self):
         # Set correct score type and order
@@ -258,11 +295,12 @@ class RacingGame(GameTemplate):
         self.max_markers = self.game.config_parser.get_game_config(
             "maxMarkers"
         )
-        self.aruco_min_distance = self.game.config_parser.get_game_config(
+        self.aruco_max_distance = self.game.config_parser.get_game_config(
             "arucoDetectionDistance"
         )
-        if self.filter:
-            self.filter.min_dist = self.aruco_min_distance
+        self.marker_size = self.game.config_parser.get_game_config(
+            "arucoMarkerSize"
+        )
 
         self.show_image_led_matrix("racing")
         self.game.hw.reset_eyes()
@@ -323,14 +361,15 @@ class ObjectHuntGame(GameTemplate):
     def __init__(self, game):
         super().__init__(game)
         self.filter = None
-        self.aruco_min_distance = 0.2
+        self.aruco_max_distance = 100
+        self.marker_size = DEFAULT_MARKER_SIZE
 
     async def on_template_selected(self):
         self.filter = ArucoFilter(
             self.marker_callback,
             self.game.aruco_source,
-            detect_distance=self.aruco_min_distance,
         )
+        self.filter.add_filter(self.aruco_distance_filter)
 
     def game_configs(self):
         return {
@@ -342,11 +381,18 @@ class ObjectHuntGame(GameTemplate):
                 "maximum": 50,
             },
             "arucoDetectionDistance": {
-                "title": "Aruco Marker Detection Distance",
-                "valueType": ConfigType.NUMBER,
-                "default": 0.2,
+                "title": "Aruco Marker Detection Distance (cm)",
+                "valueType": ConfigType.INTEGER,
+                "default": 100,
                 "minimum": 0,
-                "maximum": 0.5,
+                "maximum": 300,
+            },
+            "arucoMarkerSize": {
+                "title": "Size of Aruco Markers (side length, in millimeters)",
+                "valueType": ConfigType.INTEGER,
+                "default": DEFAULT_MARKER_SIZE,
+                "minimum": 10,
+                "maximum": 200,
             },
         }
 
@@ -376,11 +422,12 @@ class ObjectHuntGame(GameTemplate):
         self.max_markers = self.game.config_parser.get_game_config(
             "maxMarkers"
         )
-        self.aruco_min_distance = self.game.config_parser.get_game_config(
+        self.aruco_max_distance = self.game.config_parser.get_game_config(
             "arucoDetectionDistance"
         )
-        if self.filter:
-            self.filter.min_dist = self.aruco_min_distance
+        self.game.hw.marker_size = self.game.config_parser.get_game_config(
+            "arucoMarkerSize"
+        )
 
         self.show_image_led_matrix("searching")
         self.game.hw.reset_eyes()

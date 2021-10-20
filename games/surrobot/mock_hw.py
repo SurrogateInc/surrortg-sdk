@@ -124,6 +124,10 @@ class MockArucoMarker:
         self.corners = corners
         self.resolution = resolution
 
+    # Not needed, but included to prevent future issues
+    def get_real_distance(self, *args, **kwargs):
+        return 1000
+
 
 class MockArucoFilter:
     def __init__(self, callback, aruco_source, ids=[], *args, **kwargs):
@@ -151,6 +155,9 @@ class MockArucoFilter:
         if self.callback_task:
             self.callback_task.cancel()
 
+    def add_filter(self, filter_func):
+        logging.info("MockArucoFilter - add_filter")
+
 
 class MockHw(BaseMock):
     def __init__(self):
@@ -165,6 +172,8 @@ class MockHw(BaseMock):
         self.motor_rl = MockMotor("rl")
         self.motor_controller = MockMotorController()
         self.led_matrix = MockLedMatrix()
+        self.sensor_height = 2738.4
+        self.focal_length = 3.6 * 1000
 
     def reset_eyes(self):
         self.def_img_to_eyes(MockOledImage.BLINK)
