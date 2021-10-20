@@ -38,13 +38,14 @@ class ArucoDetectionProcess:
     :type conn: multiprocessing.connection.Connection
     """
 
-    def __init__(self, source, conn, apiPreference):  # noqa: N803
+    def __init__(self, source, conn, apiPreference, flip):  # noqa: N803
         self._source = source
         self._conn = conn
         self._apiPreference = apiPreference
         self.arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_50)
         self.arucoParams = cv2.aruco.DetectorParameters_create()
         self.crop_params = (0, 0, 0, 0)
+        self._flip = flip
 
     def run(self):
         # initialize self._cap cv2.VideoCapture
@@ -107,6 +108,8 @@ class ArucoDetectionProcess:
         success, frame = self._cap.read()
         if not success or len(frame) == 0:
             return markers
+        if self._flip:
+            frame = cv2.flip(frame, 0)
         if any(self.crop_params):
             frame = cv2.getRectSubPix(frame, self.patch_size, self.center)
         (corners, ids, rejected) = cv2.aruco.detectMarkers(
@@ -141,6 +144,7 @@ class ArucoDetector:
         release_timeout=2,
         process_class=ArucoDetectionProcess,
         apiPreference=cv2.CAP_V4L2,  # noqa: N803
+        flip=False,
     ):
         """Factory method for ArucoDetector, use this instead of __init__
 
@@ -173,6 +177,7 @@ class ArucoDetector:
         self._release_timeout = release_timeout
         self._process_class = process_class
         self._apiPreference = apiPreference
+        self._flip = flip
         self._released = False
         self._start_time = None
         self.callbacks = []
@@ -231,7 +236,7 @@ class ArucoDetector:
     async def _start_process(self):
         self._conn_main, self._conn_process = multiprocessing.Pipe()
         cap_process = self._process_class(
-            self._source, self._conn_process, self._apiPreference
+            self._source, self._conn_process, self._apiPreference, self._flip
         )
         self._cap_process = multiprocessing.Process(
             target=cap_process.run,
