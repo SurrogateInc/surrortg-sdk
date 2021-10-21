@@ -38,14 +38,17 @@ class ArucoDetectionProcess:
     :type conn: multiprocessing.connection.Connection
     """
 
-    def __init__(self, source, conn, apiPreference, flip):  # noqa: N803
+    def __init__(
+        self, source, conn, api_preference, vertical_flip, horizontal_flip
+    ):  # noqa: N803
         self._source = source
         self._conn = conn
-        self._apiPreference = apiPreference
+        self._api_preference = api_preference
         self.arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_50)
         self.arucoParams = cv2.aruco.DetectorParameters_create()
         self.crop_params = (0, 0, 0, 0)
-        self._flip = flip
+        self._vertical_flip = vertical_flip
+        self._horizontal_flip = horizontal_flip
 
     def run(self):
         # initialize self._cap cv2.VideoCapture
@@ -77,7 +80,7 @@ class ArucoDetectionProcess:
                 break
 
     def _create_cap(self):
-        self._cap = cv2.VideoCapture(self._source, self._apiPreference)
+        self._cap = cv2.VideoCapture(self._source, self._api_preference)
         self._cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         # When not using loopback device, default resolution can be 1080p
         # which is too much for raspi to handle with streamer also running
@@ -108,8 +111,12 @@ class ArucoDetectionProcess:
         success, frame = self._cap.read()
         if not success or len(frame) == 0:
             return markers
-        if self._flip:
+        if self._vertical_flip and self._horizontal_flip:
+            frame = cv2.flip(frame, -1)
+        elif self._vertical_flip:
             frame = cv2.flip(frame, 0)
+        elif self._horizontal_flip:
+            frame = cv2.flip(frame, 1)
         if any(self.crop_params):
             frame = cv2.getRectSubPix(frame, self.patch_size, self.center)
         (corners, ids, rejected) = cv2.aruco.detectMarkers(
@@ -143,8 +150,9 @@ class ArucoDetector:
         read_timeout=2,
         release_timeout=2,
         process_class=ArucoDetectionProcess,
-        apiPreference=cv2.CAP_V4L2,  # noqa: N803
-        flip=False,
+        api_preference=cv2.CAP_V4L2,  # noqa: N803
+        vertical_flip=False,
+        horizontal_flip=False,
     ):
         """Factory method for ArucoDetector, use this instead of __init__
 
@@ -164,9 +172,15 @@ class ArucoDetector:
         :param process_class: Video capture process class implementation,
             option mainly for easier testing
         :type process_class: VideoCaptureProcess, optional
-        :param apiPreference: backend apiPreference for cv2.VideoCapture,
+        :param api_preference: backend api_preference for cv2.VideoCapture,
             defaults to cv2.CAP_V4L2
-        :type apiPreference: cv2 VideoCaptureAPI, optional
+        :type api_preference: cv2 VideoCaptureAPI, optional
+        :param vertical_flip: Flip frames vertically before aruco detection.
+            Defaults to False
+        :type vertical_flip: boolean, optional
+        :param horizontal_flip: Flip frames horizontally before aruco
+            detection. Defaults to False
+        :type horizontal_flip: boolean, optional
         """
         self = cls()
 
@@ -176,8 +190,9 @@ class ArucoDetector:
         self._read_timeout = read_timeout
         self._release_timeout = release_timeout
         self._process_class = process_class
-        self._apiPreference = apiPreference
-        self._flip = flip
+        self._api_preference = api_preference
+        self._vertical_flip = vertical_flip
+        self._horizontal_flip = horizontal_flip
         self._released = False
         self._start_time = None
         self.callbacks = []
@@ -236,7 +251,11 @@ class ArucoDetector:
     async def _start_process(self):
         self._conn_main, self._conn_process = multiprocessing.Pipe()
         cap_process = self._process_class(
-            self._source, self._conn_process, self._apiPreference, self._flip
+            self._source,
+            self._conn_process,
+            self._api_preference,
+            self._vertical_flip,
+            self._horizontal_flip,
         )
         self._cap_process = multiprocessing.Process(
             target=cap_process.run,
