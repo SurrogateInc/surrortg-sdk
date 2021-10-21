@@ -38,7 +38,9 @@ class SurrobotGame(Game):
         self.hw = Hw()
 
         self.hw.reset_eyes()
-        self.aruco_source = await ArucoDetector.create()
+        self.aruco_source = await ArucoDetector.create(
+            vertical_flip=True, horizontal_flip=True
+        )
         self.template = None
 
     async def on_config(self):
